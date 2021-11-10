@@ -1,9 +1,11 @@
+import Head from 'next/head';
+import type { AppProps } from 'next/app';
 import * as React from 'react';
+import { SWRConfig } from 'swr'
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
-import type { AppProps } from 'next/app';
-import Head from 'next/head';
-import theme from '../src/theme';
+import theme from '@src/theme';
+import fetchJson from '@lib/fetch-json'
 
 export default function MyApp(props: AppProps) {
   const { Component, pageProps } = props;
@@ -16,7 +18,16 @@ export default function MyApp(props: AppProps) {
       </Head>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <SWRConfig
+          value={{
+            fetcher: fetchJson,
+            onError: (err) => {
+              console.error(err)
+            },
+          }}
+        >
         <Component {...pageProps} />
+        </SWRConfig>
       </ThemeProvider>
     </React.Fragment>
   );

@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
+    "baseUrl":".",
     "lib": [
       "dom",
       "dom.iterable",
@@ -20,14 +21,24 @@
     "paths": {
       "@mui/styled-engine": [
         "./node_modules/@mui/styled-engine-sc"
-      ] // this mapping is relative to "baseUrl"
+      ], // this mapping is relative to "baseUrl"
+      "@src/*": [
+        "src/*"
+      ],
+      "@lib/*": [
+        "lib/*"
+      ],
+      "@components/*": [
+        "components/*"
+      ]
     },
     "incremental": true
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "**/*.d.ts"
   ],
   "exclude": [
     "node_modules"
