@@ -9,8 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@mui/material": "latest",
-    "@mui/styled-engine-sc": "latest",    
+    "@adobe/react-spectrum": "^3.14.1",
     "iron-session": "latest",
     "moment": "latest",
     "next": "latest",
@@ -19,27 +18,25 @@
     "octokit": "latest",
     "pdfkit": "latest",
     "react": "latest",
+    "react-aria": "^3.10.0",
     "react-dom": "latest",
-    "react-is": "latest",
+    "react-spectrum": "^1.2.2",
+    "react-stately": "^3.9.0",
     "slonik": "latest",
     "slonik-interceptor-field-name-transformation": "latest",
     "slonik-interceptor-query-cache": "latest",
     "slonik-interceptor-query-normalisation": "latest",
-    "styled-components": "latest",
     "svg-to-pdfkit": "latest",
     "swr": "latest"
   },
   "devDependencies": {
-    "core-js": "latest",
-    "@emotion/styled": "latest",
+    "@octokit/types": "latest",
     "@types/pdfkit": "latest",
     "@types/react": "latest",
     "@types/slonik": "latest",
-    "@types/styled-components": "latest",
-    "babel-plugin-styled-components": "latest",
+    "core-js": "latest",
     "eslint": "latest",
     "eslint-config-next": "latest",
-    "@octokit/types": "latest",
     "typescript": "latest"
   }
 }
