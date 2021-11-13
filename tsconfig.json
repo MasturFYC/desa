@@ -27,6 +27,12 @@
       ],
       "@components/*": [
         "components/*"
+      ],
+      "@model/*": [
+        "pages/api/models/*"
+      ],
+      "@api/*": [
+        "pages/api/*"
       ]
     },
     "incremental": true

@@ -6,6 +6,7 @@ import { iUserLogin } from "@components/interfaces";
 import { Grid } from "@react-spectrum/layout";
 import { View } from "@react-spectrum/view";
 import { Divider } from "@react-spectrum/divider";
+import MainMenu from "./main-menu";
 
 export const siteTitle = "SPBU";
 
@@ -37,16 +38,19 @@ const Layout: NextPage<LayoutProps> = ({
       }}
       columns={["1fr", "3fr"]}
       rows={["size-1000", "auto", "size-1000"]}
-      minHeight={"100vh - (size-100 * 2))"}
-      columnGap={"size-100"}
+      minHeight={"100vh"}
+      
     >
       <View gridArea="header" backgroundColor="gray-50" />
       <View
         isHidden={{ base: true, M: false, L: false }}
         gridArea="sidebar"
         backgroundColor={"gray-100"}
-      ></View>
-      <View gridArea="content" backgroundColor="gray-50">
+        padding={"size-125"}
+      >
+        <MainMenu activeMenu={home ? "Home" : activeMenu} />
+      </View>
+      <View gridArea="content" backgroundColor="gray-50" height={"100%"}>
         <View paddingX={{ base: "size-50", M: "size-200", L: "size-400" }}>
           {children}
         </View>

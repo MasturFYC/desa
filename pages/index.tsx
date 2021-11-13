@@ -4,7 +4,7 @@ import * as React from "react";
 
 export default function Index() {
   return (
-    <Layout>
+    <Layout home>
       <View>Index</View>
     </Layout>
   );

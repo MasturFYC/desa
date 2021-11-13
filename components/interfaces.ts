@@ -20,10 +20,26 @@ export interface iUser {
   updatedAt?: string;
 }
 
+export enum customerType { BANDENG = "Bandeng", RUMPUT = "Rumput Laut" }
+export const isNullOrEmpty = (s: string | undefined): string | null => {
+  if (undefined === s) return null;
+  if (s === null) return null;
+  if (s.trim().length === 0) return null;
+  return s.trim();
+}
 export interface iUserLogin {
   userId: number;
   login: string;
   role: string;
   isLoggedIn: boolean;
   avatarUrl?: string;
+}
+
+export interface iCustomer {
+  id: number,
+  name: string,
+  street?: string,
+  city?: string,
+  phone?: string,
+  customerType: customerType
 }
