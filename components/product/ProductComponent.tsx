@@ -1,47 +1,43 @@
 import Head from "next/head";
 import Link from "next/link";
-import router from "next/router";
-import React, { FormEvent, Fragment, useState } from "react";
+import React, { FormEvent, Fragment, useEffect, useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import Layout from "@components/layout";
-import { customerType, iCustomer } from "@components/interfaces";
+import { iUnit, iProduct } from "@components/interfaces";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
 import { Divider } from "@react-spectrum/divider";
 import { ActionButton } from "@react-spectrum/button";
 import { NextPage } from "next";
-import CustomerForm from "./form";
-import customer from ".";
+import ProductForm, { initProduct } from "./form";
 import { SearchField } from "@react-spectrum/searchfield";
-import InfoIcon from '@spectrum-icons/workflow/Info'
+import { FormatNumber } from "@lib/format";
+import Pin from '@spectrum-icons/workflow/PinOff'
+import UnitComponent from "@components/unit/UnitComponent";
+import { ToggleButton } from "@react-spectrum/button";
+import { Text } from "@react-spectrum/text";
 
-const siteTitle = "Pelanggan";
+const siteTitle = "Produk";
 
-const initCustomer: iCustomer = {
-  id: 0,
-  name: "",
-  customerType: customerType.BANDENG,
-};
-
-const CustomerComponent: NextPage = () => {
+const ProductComponent: NextPage = () => {
   let [selectedId, setSelectedId] = React.useState<number>(-1);
   let [txtSearch, setTxtSearch] = React.useState<string>("");
   let [message, setMessage] = React.useState<string>("");
 
-  let customers = useAsyncList<iCustomer>({
+  let products = useAsyncList<iProduct>({
     async load({ signal }) {
-      let res = await fetch("/api/customer", { signal });
+      let res = await fetch("/api/product", { signal });
       let json = await res.json();
-      return { items: [initCustomer, ...json] };
+      return { items: [initProduct, ...json] };
     },
-    getKey: (item: iCustomer) => item.id,
+    getKey: (item: iProduct) => item.id,
   });
 
-  const searchCustomer = async () => {
+  const searchProduct = async () => {
 
     const txt = txtSearch.toLocaleLowerCase();
-    const url = `/api/customer/search/${txt}`;
+    const url = `/api/product/search/${txt}`;
     const fetchOptions = {
       method: "GET",
       headers: {
@@ -59,9 +55,9 @@ const CustomerComponent: NextPage = () => {
         });
       })
       .then((data) => {
-        customers.setSelectedKeys("all");
-        customers.removeSelectedItems();
-        customers.insert(0, initCustomer, ...data);
+        products.setSelectedKeys("all");
+        products.removeSelectedItems();
+        products.insert(0, initProduct, ...data);
       })
       .catch((error) => {
         console.log(error);
@@ -69,7 +65,7 @@ const CustomerComponent: NextPage = () => {
   };
 
   const deleteData = async (id: number) => {
-    const url = `/api/customer/${id}`;
+    const url = `/api/product/${id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {
@@ -78,33 +74,40 @@ const CustomerComponent: NextPage = () => {
     };
 
     const res = await fetch(url, fetchOptions);
-    const data: iCustomer | any = await res.json();
+    const data: iProduct | any = await res.json();
 
     if (res.status === 200) {
-      //customers.selectedKeys= new Set(id.toString());
-      customers.remove(id);
+      products.remove(id);
     } else {
-      console.log("Pelanggan tidak dapat dihapus!");
-      setMessage(data)
+      console.log("Produk tidak dapat dihapus!");
+      setMessage('Produk tidak dapat dihapus')
     }
   };
 
-  const postCustomer = (method: string, id: number, p: iCustomer) => {
+  const postProduct = (method: string, id: number, p: iProduct) => {
     if (method === "DELETE") {
       deleteData(id);
     } else {
-      updateCustomer(method, id, p);
+      updateProduct(method, id, p);
     }
   };
 
-  async function updateCustomer(method: string, id: number, p: iCustomer) {
-    const url = `/api/customer/${id}`;
+  async function updateProduct(method: string, id: number, p: iProduct) {
+    const url = `/api/product/${id}`;
     const fetchOptions = {
       method: method,
       headers: {
         "Content-type": "application/json; charset=UTF-8",
       },
-      body: JSON.stringify({ data: p }),
+      body: JSON.stringify({ data: {
+        id: p.id,
+        name: p.name,
+        spec: p.spec,
+        price: p.price,
+        stock: p.stock,
+        firstStock: p.firstStock,
+        unit: p.unit
+      } }),
     };
 
     const res = await fetch(url, fetchOptions);
@@ -112,14 +115,14 @@ const CustomerComponent: NextPage = () => {
 
     if (res.status === 200) {
       if (method === "POST") {
-        customers.insert(1, json);
+        products.insert(1, json);
       } else {
-        customers.update(id, json);
+        products.update(id, {...json, units: p.units});
       }
       closeForm();
     } else {
       console.log(json.message)
-      setMessage('Data pelanggan tidak dapat diupdate, mungkin nama pelanggan sama.')
+      setMessage('Data produk tidak dapat diupdate, mungkin nama produk sama.')
     }
   }
 
@@ -129,7 +132,7 @@ const CustomerComponent: NextPage = () => {
   };
 
   return (
-    <Layout activeMenu={"Pelanggan"}>
+    <Layout activeMenu={siteTitle}>
       <Head>
         <title>{siteTitle}</title>
       </Head>
@@ -139,29 +142,29 @@ const CustomerComponent: NextPage = () => {
         </span>
       </View>
       <Flex justifyContent={"center"} marginY={"size-250"}>
-        <SearchField
+        <SearchField        
           alignSelf="center"
           justifySelf="center"
           aria-label="Search product"
-          placeholder="e.g. turbo"
+          placeholder="e.g. abachel"
           width="auto"
           maxWidth="size-3600"
           value={txtSearch}
-          onClear={() => customers.reload()}
+          onClear={() => products.reload()}
           onChange={(e) => setTxtSearch(e)}
-          onSubmit={() => searchCustomer()}
+          onSubmit={() => searchProduct()}
         />
       </Flex>
-      {customers.isLoading && <WaitMe />}
+      {products.isLoading && <WaitMe />}
       <Divider size="S" />
-      {customers &&
-        customers.items.map((x, i) => (
+      {products &&
+        products.items.map((x, i) => (
           <View key={x.id}>
             <View
               borderColor={selectedId === x.id ? "indigo-500" : "transparent"}
               paddingStart={selectedId === x.id ? "size-100" : 0}
               borderStartWidth={"thickest"}
-              marginY={"size-125"}
+              marginY={"size-100"}
             >
               <Flex
                 direction={{ base: "column", M: "row" }}
@@ -176,36 +179,28 @@ const CustomerComponent: NextPage = () => {
                       setSelectedId(selectedId === x.id ? -1 : x.id);
                     }}
                   >
-                    <span style={{ fontWeight: 700 }}>{x.id === 0 ? 'Pelanggan Baru' : x.name}</span>
-                  </ActionButton>
+                    <span style={{ fontWeight: 700 }}>{x.id === 0 ? 'Produk Baru' : `${x.name}${x.spec && ', '+ x.spec}`}</span>
+                  </ActionButton>                  
                 </View>
                 {x.id > 0 && (
                   <View flex>
-                    <strong>{x.customerType}</strong>
+                    Harga: <strong>{FormatNumber(x.price)}</strong>
                     <br />
-                    {x.street}
-                    {", "}
-                    {x.city}
-                    {" - "}
-                    {x.phone}
+                    Stock Awal: <strong>{FormatNumber(x.firstStock)} {x.unit}</strong>{", "}
+                    Sisa Stock: <strong>{FormatNumber(x.stock)} {x.unit}</strong>
                   </View>
                 )}
-                {x.id > 0 && (
-                <View>
-                  <ActionButton isQuiet
-                  onPress={()=>router.push("/customer/"+x.id)}
-                  ><InfoIcon size="S" /></ActionButton>
-                </View>)}
               </Flex>
+              {x.id > 0 && selectedId !== x.id && <ToggleUnit data={x} />}
               {selectedId === x.id && (
                 <Fragment>
                   <View paddingX={{ base: 0, M: "size-1000" }}>
-                    <CustomerForm
+                    <ProductForm
                       data={x}
-                      updateCustomer={postCustomer}
+                      updateProduct={postProduct}
                       closeForm={closeForm}
                     />
-                    <View marginY={"size-250"}><span style={{ color: 'red' }}>{message}</span></View>
+                    <View marginY={"size-100"}><span style={{ color: 'red' }}>{message}</span></View>
                   </View>
                 </Fragment>
               )}
@@ -213,9 +208,32 @@ const CustomerComponent: NextPage = () => {
             <Divider size="S" />
           </View>
         ))}
-      <div style={{ marginBottom: '24px' }} />
+        <div style={{marginBottom: '24px'}} />
     </Layout>
   );
 };
 
-export default CustomerComponent;
+
+type ToggleUnitProps = {
+  data: iProduct
+}
+
+function ToggleUnit({
+  data
+}: ToggleUnitProps) {
+  let [isShow, setIsShow] = useState<boolean>(false);
+  return (
+    <View flex marginTop={{ base: 8, M: -8 }}>
+      <ToggleButton flex isEmphasized isSelected={isShow} onChange={setIsShow} isQuiet marginBottom={"size-100"}>
+        <Pin aria-label="Pin" />
+        <Text>Unit</Text>
+      </ToggleButton>
+
+      {isShow && <UnitComponent productId={data.id} price={data.price} unit={data.unit} />}
+    </View>
+  )
+}
+
+export default ProductComponent;
+
+

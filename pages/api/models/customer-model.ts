@@ -19,7 +19,7 @@ const apiCustomer: apiFunction = {
 
     const query = sql`SELECT c.id, c.name, c.street, c.city, c.phone, c.customer_type
     FROM customers AS c
-    WHERE id = ${id}`;
+    WHERE c.id = ${id}`;
 
     //      console.log(query.sql, query.values)
 
@@ -33,7 +33,7 @@ const apiCustomer: apiFunction = {
 
     const query = sql`SELECT c.id, c.name, c.street, c.city, c.phone, c.customer_type
     FROM customers AS c
-    ORDER BY name`;
+    ORDER BY c.name`;
 
     //      console.log(query.sql, query.values)
 
@@ -48,8 +48,8 @@ const apiCustomer: apiFunction = {
 
     const query = sql`SELECT c.id, c.name, c.street, c.city, c.phone, c.customer_type
     FROM customers AS c
-    WHERE POSITION(${name} IN LOWER(name)) > 0
-    ORDER BY name`;
+    WHERE POSITION(${name} IN LOWER(c.name)) > 0
+    ORDER BY c.name`;
 
     //      console.log(query.sql, query.values)
 

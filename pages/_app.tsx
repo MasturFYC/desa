@@ -3,6 +3,7 @@ import type { AppProps } from "next/app";
 import * as React from "react";
 import { SWRConfig } from "swr";
 import { SSRProvider, Provider, defaultTheme } from "@adobe/react-spectrum";
+import { I18nProvider } from '@react-aria/i18n';
 import fetchJson from "@lib/fetch-json";
 
 export default function MyApp(props: AppProps) {
@@ -18,7 +19,8 @@ export default function MyApp(props: AppProps) {
         />
       </Head>
       <SSRProvider>
-        <Provider theme={defaultTheme}>
+        <Provider theme={defaultTheme}
+          colorScheme="light">
           {/*  locale={locale}> */}
           <SWRConfig
             value={{
@@ -28,7 +30,9 @@ export default function MyApp(props: AppProps) {
               },
             }}
           >
+            <I18nProvider locale="id-ID">
             <Component {...pageProps} />
+            </I18nProvider>
           </SWRConfig>
         </Provider>
       </SSRProvider>

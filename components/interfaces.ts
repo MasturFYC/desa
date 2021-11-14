@@ -41,5 +41,39 @@ export interface iCustomer {
   street?: string,
   city?: string,
   phone?: string,
-  customerType: customerType
+  customerType: customerType;
+  orders?: iOrder[];
+}
+
+export interface iProduct {
+  id: number,
+  name: string,
+  spec?: string,
+  price: number,
+  stock: number,
+  firstStock: number,
+  unit: string,
+  units?: iUnit[]
+}
+
+export interface iUnit {
+  productId: number,
+  id: number,
+  name: string,
+  content: number,
+  price: number,
+  buyPrice: number,
+  margin: number,
+  product?: iProduct
+}
+
+export interface iOrder {
+  id: number;
+  customerId: number;
+  orderDate: string;
+  total: number;
+  payment: number;
+  remainPayment: number;
+  descriptions: string;
+  customer?: iCustomer;
 }
