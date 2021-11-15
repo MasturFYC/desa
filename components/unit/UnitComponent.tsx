@@ -28,9 +28,12 @@ type UnitComponentProps = {
   unit: string
 }
 
+
+
 const UnitComponent: NextPage<UnitComponentProps> = ({ productId, price, unit }) => {
   let [selectedId, setSelectedId] = React.useState<number>(-1);
   let [message, setMessage] = React.useState<string>("");
+  let columnWidth = {base:"auto", M: "25%"} 
 
   let units = useAsyncList<iUnit>({
     async load({ signal }) {
@@ -117,7 +120,7 @@ const UnitComponent: NextPage<UnitComponentProps> = ({ productId, price, unit })
             >
               <View flex width={"auto"}>
                 <ActionButton
-                  flex
+                  width={columnWidth}
                   isQuiet
                   onPress={() => {
                     setSelectedId(selectedId === x.id ? -1 : x.id);
@@ -127,14 +130,14 @@ const UnitComponent: NextPage<UnitComponentProps> = ({ productId, price, unit })
                 </ActionButton>
               </View>
               {x.id > 0 && (
-                <View width={"33.3%"} paddingY={6}>
-                  Harga Jual: <strong>{FormatNumber(x.price)}</strong>
-                </View>)}
-              {x.id > 0 && (
-                <View width={"33.3%"} paddingY={6}>
+                <View width={columnWidth} paddingY={6}>
                   Isi: <strong>{FormatNumber(x.content)}</strong>
                 </View>
               )}
+              {x.id > 0 && (
+                <View flex paddingY={6}>
+                  Harga Jual: <strong>{FormatNumber(x.price)}</strong>
+                </View>)}
             </Flex>
             {selectedId === x.id && (
               <Fragment>

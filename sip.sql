@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
--- Dumped by pg_dump version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
+-- Dumped from database version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
+-- Dumped by pg_dump version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -27,6 +27,90 @@ CREATE TYPE public.cust_type AS ENUM (
 
 
 ALTER TYPE public.cust_type OWNER TO postgres;
+
+--
+-- Name: od_delete_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.od_delete_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+update products 
+set stock = stock - (OLD.real_qty)
+WHERE product_id = OLD.product_id;
+
+update orders 
+set total = total - OLD.subtotal
+where id = OLD.order_id;
+
+RETURN OLD;
+
+end; $$;
+
+
+ALTER FUNCTION public.od_delete_func() OWNER TO postgres;
+
+--
+-- Name: od_insert_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.od_insert_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+NEW.real_qty = NEW.content - NEW.qty;
+NEW.subtotal = NEW.qty * NEW.price;
+
+RETURN NEW;
+
+end; $$;
+
+
+ALTER FUNCTION public.od_insert_func() OWNER TO postgres;
+
+--
+-- Name: od_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.od_update_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+
+declare m_qty decimal(8,2);
+declare m_subtotal decimal(12,2);
+declare m_old_qty decimal(8,2);
+declare m_old_subtotal decimal(12,2);
+
+begin
+
+m_qty := NEW.content - NEW.qty;
+m_subtotal := NEW.qty * NEW.price;
+m_old_qty := OLD.real_qty;
+m_old_subtotal := OLD.subtotal;
+
+update products
+set stock = stock + m_qty
+where product_id = NEW.product_id;
+
+update products
+set stock = stock - m_old_qty
+WHERE product_id = OLD.product_id;
+
+update orders
+set total = total + (m_subtotal - m_old_subtotal)
+where id = NEW.order_id;
+
+
+end; $$;
+
+
+ALTER FUNCTION public.od_update_func() OWNER TO postgres;
 
 --
 -- Name: order_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -107,6 +191,42 @@ CREATE TABLE public.customers (
 
 
 ALTER TABLE public.customers OWNER TO postgres;
+
+--
+-- Name: order_detail_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.order_detail_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.order_detail_seq OWNER TO postgres;
+
+--
+-- Name: order_details; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.order_details (
+    order_id integer NOT NULL,
+    id integer DEFAULT nextval('public.order_detail_seq'::regclass) NOT NULL,
+    unit_id integer NOT NULL,
+    qty numeric(10,2) DEFAULT 0 NOT NULL,
+    content numeric(8,2) DEFAULT 0 NOT NULL,
+    unit_name character varying(6) NOT NULL,
+    real_qty numeric(10,2) DEFAULT 0 NOT NULL,
+    price numeric(12,2) DEFAULT 0 NOT NULL,
+    subtotal numeric(12,2) DEFAULT 0 NOT NULL,
+    buy_price numeric(12,2) DEFAULT 0 NOT NULL,
+    product_id integer NOT NULL
+);
+
+
+ALTER TABLE public.order_details OWNER TO postgres;
 
 --
 -- Name: order_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -215,13 +335,20 @@ COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
 
 
 --
+-- Data for Name: order_details; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_qty, price, subtotal, buy_price, product_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.orders (id, customer_id, order_date, total, payment, remain_payment, descriptions) FROM stdin;
-4	2	2021-11-17 00:00:00	0.00	0.00	0.00	Pembelian Obat
 6	2	2021-11-15 02:27:00	0.00	25000.00	-25000.00	Pembelian Barang
-5	2	2021-11-14 00:00:00	0.00	35000.00	-35000.00	Pembelian Barang
+5	2	2021-11-14 00:00:00	0.00	35000.00	-35000.00	Pembelian Obat
 \.
 
 
@@ -259,10 +386,17 @@ SELECT pg_catalog.setval('public.customer_seq', 2, true);
 
 
 --
+-- Name: order_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.order_detail_seq', 1, false);
+
+
+--
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 6, true);
+SELECT pg_catalog.setval('public.order_seq', 8, true);
 
 
 --
@@ -285,6 +419,14 @@ SELECT pg_catalog.setval('public.unit_seq', 22, true);
 
 ALTER TABLE ONLY public.customers
     ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: order_details order_details_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.order_details
+    ADD CONSTRAINT order_details_pkey PRIMARY KEY (id);
 
 
 --
@@ -312,6 +454,13 @@ ALTER TABLE ONLY public.units
 
 
 --
+-- Name: ix_detail_product; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_detail_product ON public.order_details USING btree (product_id);
+
+
+--
 -- Name: ix_order_customer; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -333,6 +482,13 @@ CREATE UNIQUE INDEX uq_customer_name ON public.customers USING btree (name);
 
 
 --
+-- Name: uq_order_detail; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX uq_order_detail ON public.order_details USING btree (order_id, unit_id);
+
+
+--
 -- Name: uq_product_name; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -344,6 +500,27 @@ CREATE UNIQUE INDEX uq_product_name ON public.products USING btree (name);
 --
 
 CREATE UNIQUE INDEX uq_unit_name ON public.units USING btree (product_id, name);
+
+
+--
+-- Name: order_details od_delete_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER od_delete_trig AFTER DELETE ON public.order_details FOR EACH ROW EXECUTE FUNCTION public.od_delete_func();
+
+
+--
+-- Name: order_details od_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER od_insert_trig BEFORE INSERT ON public.order_details FOR EACH ROW EXECUTE FUNCTION public.od_insert_func();
+
+
+--
+-- Name: order_details od_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER od_update_trig AFTER INSERT OR UPDATE ON public.order_details FOR EACH ROW EXECUTE FUNCTION public.od_update_func();
 
 
 --
@@ -366,6 +543,30 @@ CREATE TRIGGER product_update_trig BEFORE INSERT OR UPDATE ON public.products FO
 
 ALTER TABLE ONLY public.orders
     ADD CONSTRAINT fk_customer_orders FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: order_details fk_detail_product; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.order_details
+    ADD CONSTRAINT fk_detail_product FOREIGN KEY (product_id) REFERENCES public.products(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: order_details fk_detail_unit; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.order_details
+    ADD CONSTRAINT fk_detail_unit FOREIGN KEY (unit_id) REFERENCES public.units(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: order_details fk_order_details; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.order_details
+    ADD CONSTRAINT fk_order_details FOREIGN KEY (order_id) REFERENCES public.orders(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --

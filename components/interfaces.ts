@@ -77,3 +77,21 @@ export interface iOrder {
   descriptions: string;
   customer?: iCustomer;
 }
+
+export interface iOrderDetail {
+  orderId: number;
+  id: number;
+  unitId: number;
+  productId: number;
+  productName?: string;
+  spec?: string;
+  qty: number;
+  content: number;
+  unitName: string;
+  realQty: number;
+  price: number;
+  buyPrice: number;
+  subtotal: number;
+  unit?: iUnit
+  product?: iProduct;
+}

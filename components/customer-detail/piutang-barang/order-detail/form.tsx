@@ -1,6 +1,6 @@
 import { NextPage } from "next";
 import React, { FormEvent, useState } from "react";
-import { customerType, dateOnly, iCustomer, iOrder } from "@components/interfaces";
+import { dateOnly, iOrder, iOrderDetail } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
@@ -11,25 +11,25 @@ import { Item } from "@react-spectrum/combobox";
 import { NumberField } from "@react-spectrum/numberfield";
 import { FormatNumber } from "@lib/format";
 
-type OrderFormProps = {
-  data: iOrder;
-  updateOrder: (method: string, data: iOrder) => void;
+export type OrderDetailFormProps = {
+  data: iOrderDetail;
+  updateDetail: (method: string, data: iOrderDetail) => void;
   closeForm: () => void;
 };
 
-const OrderForm: NextPage<OrderFormProps> = ({
+const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
   data,
-  updateOrder,
+  updateDetail,
   closeForm,
 }) => {
-  let [order, setOrder] = React.useState<iOrder>({} as iOrder);
+  let [orderDetail, setOrderDetail] = React.useState<iOrderDetail>({} as iOrderDetail);
   let [message, setMessage] = useState<string>('');
 
   React.useEffect(() => {
     let isLoaded = false;
 
     if (!isLoaded) {
-      setOrder(data);
+      setOrderDetail(data);
     }
 
     return () => {
@@ -38,36 +38,36 @@ const OrderForm: NextPage<OrderFormProps> = ({
   }, [data]);
 
 
-  async function postOrder(method: string) {
-    const url = `/api/order/${order.id}`;
+  async function postOrderDetail(method: string) {
+    const url = `/api/order-detail/${orderDetail.id}`;
     const fetchOptions = {
       method: method,
       headers: {
         "Content-type": "application/json; charset=UTF-8",
       },
-      body: JSON.stringify({ data: order }),
+      body: JSON.stringify({ data: orderDetail }),
     };
 
     const res = await fetch(url, fetchOptions);
     const json = await res.json();
 
     if (res.status === 200) {
-      updateOrder(order.id === 0 ? 'POST' : 'PUT', json);
+      updateDetail(orderDetail.id === 0 ? 'POST' : 'PUT', json);
       closeForm();
     } else {
       console.log(json.message)
-      setMessage('Data order tidak bisa dipost, lihat log.')
+      setMessage('Order detail tidak bisa dipost, lihat log.')
     }
   }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    postOrder(order.id === 0 ? 'POST' : 'PUT');
+    postOrderDetail(orderDetail.id === 0 ? 'POST' : 'PUT');
   };
 
 
-  const deleteOrder = async () => {
-    const url = `/api/order/${order.id}`;
+  const deleteOrderDetail = async () => {
+    const url = `/api/order-detail/${orderDetail.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {
@@ -79,7 +79,7 @@ const OrderForm: NextPage<OrderFormProps> = ({
     const data: iOrder | any = await res.json();
 
     if (res.status === 200) {
-      updateOrder('DELETE', order)
+      updateDetail('DELETE', orderDetail)
       closeForm();
     } else {
       console.log(data);
@@ -97,51 +97,44 @@ const OrderForm: NextPage<OrderFormProps> = ({
           //width={{ base: "auto", M: "67%" }}
           isRequired
           placeholder={"e.g. Piutang bibit bandeng"}
-          label={"Keterangan"}
-          value={order.descriptions}
-          onChange={(e) => setOrder((o) => ({ ...o, descriptions: e }))}
+          label={"Nama Barang"}
+          value={orderDetail.productName}
+          onChange={(e) => setOrderDetail((o) => ({ ...o, productName: e }))}
         />
-        <TextField
-          type={"date"}
-          width={{ base: "auto", M: "35%" }}
-          placeholder={"e.g. dd/mm/yyyy"}
-          isRequired
-          label={"Tanggal piutang"}
-          value={dateOnly(order.orderDate)}
-          onChange={(e) => setOrder((o) => ({ ...o, orderDate: e }))}
-        />
+          <NumberField
+            flex
+            isReadOnly
+            isDisabled
+            hideStepper={true}
+            width={"auto"}
+            label={"Qty"}
+            onChange={(e) => setOrderDetail((o) => ({ ...o, qty: e }))}
+            value={orderDetail.qty} />
       </Flex>
-      {order.id > 0 ? (
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
+        <TextField
+          autoFocus
+          width={"auto"}
+          flex
+          //width={{ base: "auto", M: "67%" }}
+          isRequired
+          placeholder={"e.g. pcs"}
+          label={"Unit"}
+          value={orderDetail.productName}
+          onChange={(e) => setOrderDetail((o) => ({ ...o, unitName: e }))}
+        />
           <NumberField
             flex
             isReadOnly
             isDisabled
             hideStepper={true}
             width={"auto"}
-            label={"Total"}
-            onChange={(e) => setOrder((o) => ({ ...o, total: e }))}
-            value={order.total} />
-          <NumberField
-            flex
-            hideStepper={true}
-            width={"auto"}
-            label={"Bayar"}
-            value={order.payment}
+            label={"Subtotal"}
+            value={orderDetail.subtotal}
             onChange={(e) =>
-              setOrder((o) => ({ ...o, payment: e, remainPayment: o.total - e }))
+              setOrderDetail((o) => ({ ...o, payment: e, subtotal: e }))
             } />
-          <NumberField
-            flex
-            isReadOnly
-            isDisabled
-            hideStepper={true}
-            width={"auto"}
-            label={"Piutang"}
-            onChange={(e) => setOrder((o) => ({ ...o, remainPayment: e }))}
-            value={order.remainPayment} />
         </Flex>
-      ) : <></>}
       <Flex direction="row" gap="size-100" marginBottom={"size-100"} marginTop={"size-200"}>
         <View flex>
           <Button type={"submit"} variant="cta">
@@ -156,10 +149,10 @@ const OrderForm: NextPage<OrderFormProps> = ({
             Cancel
           </Button>
         </View>
-        {order.id > 0 && (
+        {orderDetail.id > 0 && (
           <View>
             <Button type={"button"} variant="negative"
-              onPress={() => deleteOrder()}>
+              onPress={() => deleteOrderDetail()}>
               Delete
             </Button>
           </View>
@@ -170,4 +163,4 @@ const OrderForm: NextPage<OrderFormProps> = ({
   );
 };
 
-export default OrderForm;
+export default OrderDetailForm;

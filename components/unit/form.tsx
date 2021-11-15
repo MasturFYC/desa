@@ -54,18 +54,16 @@ const UnitForm: NextPage<UnitFormProps> = ({
             placeholder={"e.g. " + unit.name}
             isRequired
             autoFocus
-            flex
-            width={"auto"}
+            width={{base: "auto", M:"25%"}}
             label={"Nama Unit"}
             value={unit.name}
             onChange={(e) => setUnit((o) => ({ ...o, name: e }))}
           />
           <NumberField
             hideStepper={true}
-            flex
             isRequired
             label={"Isi"}
-            width={"auto"}
+            width={{base: "auto", M:"25%"}}
             value={unit.content}
             onChange={(e) => {
               const buyPrice = price * e;
@@ -73,8 +71,7 @@ const UnitForm: NextPage<UnitFormProps> = ({
               setUnit((o) => ({ ...o, content: e, buyPrice: buyPrice, price: salePrice }))
             }}
           />
-        </Flex>
-        <Flex direction={"row"} gap={"size-200"} marginX={"size-100"}>
+          <Flex flex columnGap={"size-100"}>
           <NumberField
             flex
             hideStepper={true}
@@ -88,6 +85,7 @@ const UnitForm: NextPage<UnitFormProps> = ({
             }}
           />
           <View marginTop={{ base: "34px", M: "30px" }}>{FormatNumber(unit.margin * 100.0)}{'%'}</View>
+          </Flex>
         </Flex>
         <Flex marginTop={"size-200"} direction="row" gap="size-100" margin={"size-100"}>
           <View flex>
