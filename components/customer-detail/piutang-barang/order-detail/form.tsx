@@ -11,18 +11,21 @@ import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { Item } from "@react-spectrum/combobox";
 import { NumberField } from "@react-spectrum/numberfield";
-import { useAsyncList } from "@react-stately/data";
+import { AsyncListData } from "@react-stately/data";
 import { ComboBox } from "@adobe/react-spectrum";
-import { Text } from "@adobe/react-spectrum";
+//import { Text } from "@adobe/react-spectrum";
+//import WaitMe from "@components/ui/wait-me";
 
 
 export type OrderDetailFormProps = {
+  products: AsyncListData<iProduct>;
   data: iOrderDetail;
   updateDetail: (method: string, data: iOrderDetail) => void;
   closeForm: () => void;
 };
 
 const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
+  products,
   data,
   updateDetail,
   closeForm,
@@ -32,15 +35,6 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
   );
   let [message, setMessage] = useState<string>("");
   //let [units, setUnits] = useState<iUnit[] | undefined>([]);
-
-  let products = useAsyncList<iProduct>({
-    async load({ signal }) {
-      let res = await fetch(`/api/product/list`, { signal });
-      let json = await res.json();
-      return { items: json };
-    },
-    getKey: (item: iProduct) => item.id,
-  });
 
   React.useEffect(() => {
     let isLoaded = false;

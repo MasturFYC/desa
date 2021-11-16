@@ -1,4 +1,5 @@
 import Head from "next/head";
+import dynamic from "next/dynamic";
 import React, { FormEvent, Fragment, useEffect, useState } from "react";
 import Layout from "@components/layout";
 import { iCustomer } from "@components/interfaces";
@@ -7,7 +8,7 @@ import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { Item, TabList, Tabs } from '@adobe/react-spectrum'
-import dynamic from "next/dynamic";
+
 
 const siteTitle = "Pelanggan";
 const PiutangBarang = dynamic(() => import("./piutang-barang"), {

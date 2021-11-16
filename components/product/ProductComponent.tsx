@@ -1,5 +1,5 @@
 import Head from "next/head";
-import Link from "next/link";
+import dynamic from "next/dynamic";
 import React, { FormEvent, Fragment, useEffect, useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import Layout from "@components/layout";
@@ -10,13 +10,18 @@ import { Flex } from "@react-spectrum/layout";
 import { Divider } from "@react-spectrum/divider";
 import { ActionButton } from "@react-spectrum/button";
 import { NextPage } from "next";
-import ProductForm, { initProduct } from "./form";
 import { SearchField } from "@react-spectrum/searchfield";
 import { FormatNumber } from "@lib/format";
 import Pin from '@spectrum-icons/workflow/PinOff'
 import UnitComponent from "@components/unit/UnitComponent";
 import { ToggleButton } from "@react-spectrum/button";
 import { Text } from "@react-spectrum/text";
+import { initProduct } from "./form";
+
+const ProductForm = dynamic(() => import("./form"), {
+  loading: () => <WaitMe />,
+  ssr: false
+})
 
 const siteTitle = "Produk";
 
@@ -164,7 +169,7 @@ const ProductComponent: NextPage = () => {
               borderColor={selectedId === x.id ? "indigo-500" : "transparent"}
               paddingStart={selectedId === x.id ? "size-100" : 0}
               borderStartWidth={"thickest"}
-              marginY={"size-100"}
+              marginY={"size-50"}
             >
               <Flex
                 direction={{ base: "column", M: "row" }}
@@ -174,6 +179,7 @@ const ProductComponent: NextPage = () => {
                 <View width={{ base: "auto", M: "35%" }}>
                   <ActionButton
                     flex
+                    height={"auto"}
                     isQuiet
                     onPress={() => {
                       setSelectedId(selectedId === x.id ? -1 : x.id);
@@ -184,6 +190,7 @@ const ProductComponent: NextPage = () => {
                 </View>
                 {x.id > 0 && (
                   <View flex>
+                    ID#: <strong>{x.id}</strong>{", "}
                     Harga: <strong>{FormatNumber(x.price)}</strong>
                     <br />
                     Stock Awal: <strong>{FormatNumber(x.firstStock)} {x.unit}</strong>{", "}
@@ -223,9 +230,9 @@ function ToggleUnit({
 }: ToggleUnitProps) {
   let [isShow, setIsShow] = useState<boolean>(false);
   return (
-    <View flex marginTop={{ base: 8, M: -8 }}>
-      <ToggleButton flex isEmphasized isSelected={isShow} onChange={setIsShow} isQuiet marginBottom={"size-100"}>
-        <Pin aria-label="Pin" />
+    <View flex marginTop={{ base: 18, M: -18 }}>
+      <ToggleButton flex height={"auto"} isEmphasized isSelected={isShow} onChange={setIsShow} isQuiet marginBottom={"size-100"}>
+        <Pin aria-label="Pin" size="S" />
         <Text>Unit</Text>
       </ToggleButton>
 

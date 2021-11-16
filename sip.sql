@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
--- Dumped by pg_dump version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
+-- Dumped from database version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
+-- Dumped by pg_dump version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -59,13 +59,12 @@ CREATE FUNCTION public.od_delete_func() RETURNS trigger
 
 begin
 
-	update products 
-	set stock = stock - (OLD.real_qty), update_notif = false
+	update products
+	set stock = stock + OLD.real_qty
 	WHERE id = OLD.product_id;
 
 	update orders set
 	total = total - OLD.subtotal
-	--, remain_payment = remain_payment - OLD.subtotal
 	where id = OLD.order_id;
 
 	RETURN OLD;
@@ -88,7 +87,7 @@ begin
 	--raise notice 'value: %', NEW.subtotal;
 
 	update products
-	set stock = stock - NEW.real_qty, update_notif = false
+	set stock = stock - NEW.real_qty
 	where id = NEW.product_id;
 
 	update orders set total = total + NEW.subtotal where id = NEW.order_id;
@@ -112,11 +111,11 @@ CREATE FUNCTION public.od_update_func() RETURNS trigger
 begin
 
 	update products
-	set stock = stock - NEW.real_qty, update_notif = false
+	set stock = stock - NEW.real_qty
 	where id = NEW.product_id;
 
 	update products 
-	set stock = stock + OLD.real_qty, update_notif = false
+	set stock = stock + OLD.real_qty
 	where id = OLD.product_id;
 
 	update orders
@@ -156,6 +155,26 @@ $$;
 ALTER FUNCTION public.order_update_func() OWNER TO postgres;
 
 --
+-- Name: product_stock_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.product_stock_update_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    raise notice 'test %', NEW.first_stock;
+    NEW.stock = NEW.stock + NEW.first_stock - OLD.first_stock;
+
+    RETURN NEW;
+
+end; $$;
+
+
+ALTER FUNCTION public.product_stock_update_func() OWNER TO postgres;
+
+--
 -- Name: product_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -168,14 +187,10 @@ begin
 
     buyPrice := NEW.price;
 
-
-    IF (NEW.update_notif = true) THEN
- 	-- raise notice 'notif %', NEW.update_notif;
-        update units set 
-	buy_price = buyPrice * content, 
-	price = (buyPrice * content) + ((buyPrice * content) * margin) 
+    update units set
+	buy_price = buyPrice * content,
+	price = (buyPrice * content) + ((buyPrice * content) * margin)
 	where product_id = NEW.id;
-    END IF;
 
     RETURN NEW;
 
@@ -367,11 +382,10 @@ COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
 --
 
 COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_qty, price, subtotal, buy_price, product_id) FROM stdin;
-25	69	22	1.00	3.00	pak3	3.00	950000.00	950000.00	750000.00	15
-25	70	1	1.00	1.00	btl	1.00	15000.00	15000.00	10000.00	7
-26	67	22	2.00	3.00	pak3	6.00	950000.00	1900000.00	750000.00	15
-26	71	17	10.00	1.00	pcs	10.00	39000.00	390000.00	30000.00	1
-25	65	19	1.00	12.00	ls	12.00	468000.00	468000.00	360000.00	1
+28	74	21	2.00	1.00	zak	2.00	325000.00	650000.00	250000.00	15
+27	77	1	2.00	1.00	btl	2.00	15000.00	30000.00	10000.00	7
+27	78	17	3.00	1.00	pcs	3.00	39000.00	117000.00	30000.00	1
+29	84	24	5.00	3.00	pak	15.00	5850.00	29250.00	4500.00	16
 \.
 
 
@@ -380,8 +394,9 @@ COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_
 --
 
 COPY public.orders (id, customer_id, order_date, total, payment, remain_payment, descriptions) FROM stdin;
-25	2	2021-11-16 14:23:00	1433000.00	0.00	1433000.00	Piutang Pakan
-26	2	2021-11-16 15:32:00	2290000.00	0.00	2290000.00	Pembelian Pakan
+28	2	2021-11-16 23:15:00	650000.00	600000.00	50000.00	Pembelian Barang
+27	2	2021-11-16 21:25:00	147000.00	72000.00	75000.00	Pembelian Barang
+29	1	2021-11-17 00:46:00	29250.00	0.00	29250.00	Pembelian Barang
 \.
 
 
@@ -390,9 +405,10 @@ COPY public.orders (id, customer_id, order_date, total, payment, remain_payment,
 --
 
 COPY public.products (id, name, spec, price, stock, first_stock, unit, update_notif) FROM stdin;
-7	Abachel	250cc	10000.00	-2.00	15.00	btl	f
-15	Pakan Bandeng	Pelet KW1	250000.00	57.00	50.00	zak	f
-1	EM 4 Perikanan	1 ltr	30000.00	-261.00	15.00	pcs	f
+15	Pakan Bandeng	Pelet KW1	250000.00	98.00	110.00	zak	t
+16	eqweqwe	eqweqwe	1500.00	5.00	20.00	pcs	t
+7	Abachel	250cc	10000.00	86.00	90.00	btl	t
+1	EM 4 Perikanan	1 ltr	30000.00	87.00	100.00	pcs	f
 \.
 
 
@@ -401,13 +417,15 @@ COPY public.products (id, name, spec, price, stock, first_stock, unit, update_no
 --
 
 COPY public.units (product_id, id, name, content, price, buy_price, margin) FROM stdin;
-7	2	pak	10.00	130000.00	100000.00	0.3000
-7	1	btl	1.00	15000.00	10000.00	0.5000
 1	17	pcs	1.00	39000.00	30000.00	0.3000
 1	19	ls	12.00	468000.00	360000.00	0.3000
 1	20	pak	3.00	99999.00	90000.00	0.1111
 15	21	zak	1.00	325000.00	250000.00	0.3000
-15	22	pak3	3.00	950000.00	750000.00	0.2667
+15	22	pak3	3.00	950025.00	750000.00	0.2667
+7	2	pak	10.00	130000.00	100000.00	0.3000
+7	1	btl	1.00	15000.00	10000.00	0.5000
+16	23	pcs	1.00	1950.00	1500.00	0.3000
+16	24	pak	3.00	5850.00	4500.00	0.3000
 \.
 
 
@@ -422,28 +440,28 @@ SELECT pg_catalog.setval('public.customer_seq', 2, true);
 -- Name: order_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_detail_seq', 71, true);
+SELECT pg_catalog.setval('public.order_detail_seq', 84, true);
 
 
 --
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 26, true);
+SELECT pg_catalog.setval('public.order_seq', 29, true);
 
 
 --
 -- Name: product_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.product_seq', 15, true);
+SELECT pg_catalog.setval('public.product_seq', 16, true);
 
 
 --
 -- Name: unit_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.unit_seq', 22, true);
+SELECT pg_catalog.setval('public.unit_seq', 24, true);
 
 
 --
@@ -571,10 +589,17 @@ CREATE TRIGGER order_insert_trig BEFORE INSERT OR UPDATE ON public.orders FOR EA
 
 
 --
+-- Name: products product_stock_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER product_stock_update_trig BEFORE UPDATE OF first_stock ON public.products FOR EACH ROW EXECUTE FUNCTION public.product_stock_update_func();
+
+
+--
 -- Name: products product_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE TRIGGER product_update_trig BEFORE INSERT OR UPDATE ON public.products FOR EACH ROW EXECUTE FUNCTION public.product_update_func();
+CREATE TRIGGER product_update_trig AFTER UPDATE OF price ON public.products FOR EACH ROW EXECUTE FUNCTION public.product_update_func();
 
 
 --

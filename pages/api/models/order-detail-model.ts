@@ -21,7 +21,7 @@ const apiOrderDetail: apiFunction = {
     FROM order_details AS c
     INNER JOIN products as p ON p.id = c.product_id
     WHERE c.order_id = ${orderId}
-    ORDER BY c.id DESC`;
+    ORDER BY c.id`;
 
     return await db
       .query(query)

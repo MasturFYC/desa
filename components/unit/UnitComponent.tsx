@@ -7,10 +7,12 @@ import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
 import { Divider } from "@react-spectrum/divider";
 import { ActionButton } from "@react-spectrum/button";
+import { Text } from "@react-spectrum/text";
 import { NextPage } from "next";
 import UnitForm from "./form";
 import { FormatNumber } from "@lib/format";
 import WaitMe from "@components/ui/wait-me";
+import PinAdd from "@spectrum-icons/workflow/Add";
 
 const initUnit: iUnit = {
   productId: 0,
@@ -33,13 +35,13 @@ type UnitComponentProps = {
 const UnitComponent: NextPage<UnitComponentProps> = ({ productId, price, unit }) => {
   let [selectedId, setSelectedId] = React.useState<number>(-1);
   let [message, setMessage] = React.useState<string>("");
-  let columnWidth = {base:"auto", M: "25%"} 
+  let columnWidth = { base: "auto", M: "25%" }
 
   let units = useAsyncList<iUnit>({
     async load({ signal }) {
       let res = await fetch(`/api/unit/list/${productId}`, { signal });
       let json = await res.json();
-      return { items: [{...initUnit, productId: productId, price: price + (price * 30.0/100.0), margin: 30.0/100.0, buy_price: price, name: unit}, ...json] };
+      return { items: json };
     },
     getKey: (item: iUnit) => item.id,
   })
@@ -106,7 +108,8 @@ const UnitComponent: NextPage<UnitComponentProps> = ({ productId, price, unit })
   return (
     <Fragment>
       {units.isLoading && <WaitMe />}
-      {units && units.items.map((x, i) => (
+      {units
+        && [...units.items, { ...initUnit, productId: productId, price: price + (price * 30.0 / 100.0), margin: 30.0 / 100.0, buy_price: price, name: unit }].map((x, i) => (
         <View key={x.id}>
           <Divider size="S" />
           <View
@@ -115,18 +118,21 @@ const UnitComponent: NextPage<UnitComponentProps> = ({ productId, price, unit })
             borderStartWidth={"thickest"}
           >
             <Flex
-              direction={"row" }
+              direction={"row"}
               columnGap="size-200"
             >
-              <View flex width={"auto"}>
+              <View flex width={"auto"} marginY={"size-75"}>
                 <ActionButton
-                  width={columnWidth}
+                  width={"auto"}
+                  height={"auto"}
+                  flex
                   isQuiet
                   onPress={() => {
                     setSelectedId(selectedId === x.id ? -1 : x.id);
                   }}
-                >
-                  <span style={{ fontWeight: 700 }}>{x.id === 0 ? 'Unit Baru' : x.name}</span>
+                >{x.id === 0 ? 
+                      <><PinAdd size="S" height={"auto"} alignSelf={"center"} /><Text>Baru</Text></> :
+                    <span style={{ fontWeight: 700, textAlign: "left" }}>{x.name}</span>}
                 </ActionButton>
               </View>
               {x.id > 0 && (

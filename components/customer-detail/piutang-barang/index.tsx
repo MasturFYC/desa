@@ -12,9 +12,10 @@ import {
   Text,
   ToggleButton,
 } from "@adobe/react-spectrum";
-import { dateParam, iOrder, iOrderDetail } from "@components/interfaces";
+import { dateParam, iOrder, iOrderDetail, iProduct } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
 import Pin from "@spectrum-icons/workflow/PinOff";
+import product from "@components/product";
 
 const OrderDetail = dynamic(() => import("@components/customer-detail/piutang-barang/order-detail"), {
   loading: () => <WaitMe />,
@@ -45,6 +46,15 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
   let [selectedOrderId, setSelectedOrderId] = useState<number>(-1);
   let [detailId, setDetailId] = useState<number>(0);
   let [isNew, setIsNew] = useState<boolean>(false);
+
+  let products = useAsyncList<iProduct>({
+    async load({ signal }) {
+      let res = await fetch(`/api/product/list`, { signal });
+      let json = await res.json();
+      return { items: json };
+    },
+    getKey: (item: iProduct) => item.id,
+  });
 
   let orders = useAsyncList<iOrder>({
     async load({ signal }) {
@@ -112,6 +122,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
         direction={{ base: "column", M: "row" }}
         columnGap="size-100"
       >
+        <View width={"5%"}>ID#</View>
         <View flex>Keterangan</View>
         <View width={"20%"}>Tanggal</View>
         <View width="10%">
@@ -125,7 +136,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
         </View>
       </Flex>
       <Divider size={"S"} />
-      {orders.isLoading && <WaitMe />}
+      {products.isLoading || orders.isLoading && <WaitMe />}
       {orders &&
         [{ ...initOrder, customerId: customerId }, ...orders.items].map(
           (x, i) => (
@@ -166,6 +177,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
           columnGap="size-100"
           wrap={"wrap"}
         >
+          <View width={"5%"}>{x.id}</View>
           <View flex={{ base: "50%", M: 1 }}>
             <ActionButton
               flex
@@ -188,6 +200,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
         </Flex>
         {detailId === x.id && showDetail && 
           <OrderDetail
+            products={products}
             order={x}
             updateTotal={updateTotal}
             orderId={x.id}

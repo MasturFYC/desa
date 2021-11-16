@@ -1,5 +1,5 @@
 import Head from "next/head";
-import Link from "next/link";
+import dynamic from "next/dynamic";
 import router from "next/router";
 import React, { FormEvent, Fragment, useState } from "react";
 import { useAsyncList } from "@react-stately/data";
@@ -11,10 +11,13 @@ import { Flex } from "@react-spectrum/layout";
 import { Divider } from "@react-spectrum/divider";
 import { ActionButton } from "@react-spectrum/button";
 import { NextPage } from "next";
-import CustomerForm from "./form";
-import customer from ".";
 import { SearchField } from "@react-spectrum/searchfield";
 import InfoIcon from '@spectrum-icons/workflow/Info'
+
+const CustomerForm = dynamic(() => import("./form"), {
+  loading: () => <WaitMe />,
+  ssr: false,
+});
 
 const siteTitle = "Pelanggan";
 
@@ -143,7 +146,7 @@ const CustomerComponent: NextPage = () => {
           alignSelf="center"
           justifySelf="center"
           aria-label="Search product"
-          placeholder="e.g. turbo"
+          placeholder="e.g. kosim"
           width="auto"
           maxWidth="size-3600"
           value={txtSearch}

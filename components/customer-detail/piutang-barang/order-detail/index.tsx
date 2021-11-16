@@ -1,14 +1,15 @@
 import dynamic from "next/dynamic";
 import React, { Fragment, useState } from "react";
-import { useAsyncList } from "@react-stately/data";
+import { useAsyncList, AsyncListData } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
 import { ActionButton, Divider, Flex } from "@adobe/react-spectrum";
 import PinAdd from "@spectrum-icons/workflow/Add";
 
-import { dateParam, iOrderDetail, iOrder } from "@components/interfaces";
+import { dateParam, iOrderDetail, iOrder, iProduct } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
+import product from "@components/product";
 
 const OrderDetailForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -30,12 +31,14 @@ const initOrderDetail: iOrderDetail = {
 };
 
 type OrderDetailProps = {
+  products: AsyncListData<iProduct>;
   orderId: number;
   order: iOrder;
   updateTotal: (orderId: number, subtotal: number) => void;
 };
 
 const OrderDetail: NextPage<OrderDetailProps> = ({
+  products,
   orderId,
   order,
   updateTotal,
@@ -85,55 +88,57 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
 
   return (
     <Fragment>
-      <View backgroundColor={"gray-100"} marginBottom={"size-400"} padding={{base: "size-50", M:"size-200"}}>
-      <View paddingY={"size-50"}>
-        <Flex
-        isHidden={{ base: true, M: false }}
-        marginBottom={"size-100"}
-        direction={{ base: "column", M: "row" }}
-        columnGap="size-100"
-      >
-        <View flex>Nama Barang</View>
-        <View width={"20%"}>Qty / Unit</View>
-        <View width="10%">
-          <span style={{ textAlign: "right", display: "block" }}>Harga</span>
-        </View>
-        <View width="10%">
-          <span style={{ textAlign: "right", display: "block" }}>Subtotal</span>
-        </View>
-      </Flex>
-      <Divider size={"S"} />
-      </View>
-      {orderDetails.isLoading && <WaitMe />}
-      {orderDetails &&
-        [...orderDetails.items,{ ...initOrderDetail, orderId: orderId }].map(
-          (x, i) => (
-            <View
-              paddingStart={selectedDetailId === x.id ? 7 : 0}
-              key={x.id}
-              borderStartColor={
-                selectedDetailId === x.id ? "orange-500" : "transparent"
-              }
-              //paddingStart={selectedOrderId === x.id ? "size-100" : 0}
-              borderStartWidth={selectedDetailId === x.id ? "thickest" : "thin"}
-              //marginY={"size-125"}
-            >
-                {renderPiutang(x, isNew)}
-                {selectedDetailId === x.id && (
-                <OrderDetailForm
-                  data={x}
-                  updateDetail={updateOrderDetail}
-                  closeForm={closeForm}
-                />)}
-
+      <View backgroundColor={"gray-100"} marginBottom={"size-400"} padding={{ base: "size-50", M: "size-200" }}>
+        <View paddingY={"size-50"}>
+          <Flex
+            isHidden={{ base: true, M: false }}
+            marginBottom={"size-100"}
+            direction={{ base: "column", M: "row" }}
+            columnGap="size-100"
+          >
+            <View width="5%">ID#</View>
+            <View flex>Nama Barang</View>
+            <View width={"20%"}>Qty / Unit</View>
+            <View width="10%">
+              <span style={{ textAlign: "right", display: "block" }}>Harga</span>
             </View>
-          )
-        )}
+            <View width="10%">
+              <span style={{ textAlign: "right", display: "block" }}>Subtotal</span>
+            </View>
+          </Flex>
+          <Divider size={"S"} />
+        </View>
+        {orderDetails.isLoading && <WaitMe />}
+        {orderDetails &&
+          [...orderDetails.items, { ...initOrderDetail, orderId: orderId }].map(
+            (x, i) => (
+              <View
+                paddingStart={selectedDetailId === x.id ? 7 : 0}
+                key={x.id}
+                borderStartColor={
+                  selectedDetailId === x.id ? "orange-500" : "transparent"
+                }
+                //paddingStart={selectedOrderId === x.id ? "size-100" : 0}
+                borderStartWidth={selectedDetailId === x.id ? "thickest" : "thin"}
+              //marginY={"size-125"}
+              >
+                {renderDetails(x, isNew)}
+                {selectedDetailId === x.id && (
+                  <OrderDetailForm
+                    products={products}
+                    data={x}
+                    updateDetail={updateOrderDetail}
+                    closeForm={closeForm}
+                  />)}
+
+              </View>
+            )
+          )}
       </View>
     </Fragment>
   );
 
-  function renderPiutang(x: iOrderDetail, isNew: boolean) {
+  function renderDetails(x: iOrderDetail, isNew: boolean) {
     return (
       <Fragment>
         <Flex
@@ -143,6 +148,7 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
           columnGap="size-100"
           wrap={"wrap"}
         >
+          {x.id > 0 && <View width={"5%"}>{x.id}</View>}
           <View flex={{ base: "50%", M: 1 }}>
             <ActionButton
               flex
