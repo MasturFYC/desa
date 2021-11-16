@@ -7,6 +7,7 @@ type apiReturn = Promise<any[] | (readonly iProduct[] | undefined)[]>;
 
 interface apiFunction {
   list: () => apiReturn;
+  listWithUnit: () => apiReturn;
   find: (name: string | string[]) => apiReturn;
   getProduct: (id: number) => apiReturn;
   delete: (id: number) => apiReturn;
@@ -58,6 +59,26 @@ const apiProduct: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
+  listWithUnit: async () => {
+
+    const queryUnit = sql`select
+      u.product_id as "productId", u.id, u.name, u.content, u.price, u.buy_price as "buyPrice"
+      from units as u
+      where u.product_id = c.id
+      order by u.content`
+//,
+    const query = sql`SELECT c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit,
+    ${nestQuery(queryUnit)} as "units"
+    FROM products AS c
+    order by c.name`;
+
+    //      console.log(query.sql, query.values)
+
+    return await db
+      .query(query)
+      .then((data) => [data.rows, undefined])
+      .catch((error) => [undefined, error]);
+  },
   
   find: async (name: string | string[]) => {
 
@@ -102,7 +123,8 @@ const apiProduct: apiFunction = {
       price = ${p.price},
       spec = ${isNullOrEmpty(p.spec)},
       first_stock = ${p.firstStock},
-      unit = ${p.unit}
+      unit = ${p.unit},
+      update_notif = ${true}
       WHERE id = ${p.id}
       RETURNING *
     `;

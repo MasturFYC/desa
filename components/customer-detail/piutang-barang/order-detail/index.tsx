@@ -4,13 +4,9 @@ import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
-import {
-  ActionButton,
-  Button,
-  Divider,
-  Flex,
-  Text
-} from "@adobe/react-spectrum";
+import { ActionButton, Divider, Flex } from "@adobe/react-spectrum";
+import PinAdd from "@spectrum-icons/workflow/Add";
+
 import { dateParam, iOrderDetail, iOrder } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
 
@@ -24,22 +20,26 @@ const initOrderDetail: iOrderDetail = {
   id: 0,
   unitId: 0,
   productId: 0,
-  qty: 0,
+  qty: 1,
   content: 0,
-  unitName: '',
+  unitName: "",
   realQty: 0,
   price: 0,
   buyPrice: 0,
-  subtotal: 0
+  subtotal: 0,
 };
 
 type OrderDetailProps = {
   orderId: number;
   order: iOrder;
-  updateOrder: (method: string, p: iOrder) => void
+  updateTotal: (orderId: number, subtotal: number) => void;
 };
 
-const OrderDetail: NextPage<OrderDetailProps> = ({ orderId, order, updateOrder }) => {
+const OrderDetail: NextPage<OrderDetailProps> = ({
+  orderId,
+  order,
+  updateTotal,
+}) => {
   let [selectedDetailId, setSelectedDetailId] = useState<number>(-1);
   let [detail, setDetail] = useState<iOrderDetail>(initOrderDetail);
   let [isNew, setIsNew] = useState<boolean>(false);
@@ -55,8 +55,8 @@ const OrderDetail: NextPage<OrderDetailProps> = ({ orderId, order, updateOrder }
 
   const closeForm = () => {
     setSelectedDetailId(-1);
-    if(isNew) {
-      setIsNew(false)
+    if (isNew) {
+      setIsNew(false);
     }
   };
 
@@ -64,26 +64,20 @@ const OrderDetail: NextPage<OrderDetailProps> = ({ orderId, order, updateOrder }
     switch (method) {
       case "POST":
         {
-          orderDetails.insert(0, p);
-          updateOrder('PUT', {...order,
-            total: order.total + p.subtotal
-          })
+          orderDetails.append(p);
+          updateTotal(p.orderId, p.qty * p.price);
         }
         break;
       case "PUT":
         {
-          orderDetails.update(selectedDetailId, p);
-          updateOrder('PUT', {...order,
-            total: order.total + (p.subtotal - detail.subtotal)
-          })
+          orderDetails.update(p.id, p);
+          updateTotal(p.orderId, p.qty * p.price - detail.subtotal);
         }
         break;
       case "DELETE":
         {
-          orderDetails.remove(selectedDetailId);
-          updateOrder('PUT', {...order,
-            total: order.total - detail.subtotal
-          })
+          orderDetails.remove(p.id);
+          updateTotal(p.orderId, -detail.subtotal);
         }
         break;
     }
@@ -91,24 +85,31 @@ const OrderDetail: NextPage<OrderDetailProps> = ({ orderId, order, updateOrder }
 
   return (
     <Fragment>
-      <Divider size="S" />
-      <Flex
-        isHidden={{base: true, M: false}}
+      <View backgroundColor={"gray-100"} marginBottom={"size-400"} padding={{base: "size-50", M:"size-200"}}>
+      <View paddingY={"size-50"}>
+        <Flex
+        isHidden={{ base: true, M: false }}
         marginBottom={"size-100"}
         direction={{ base: "column", M: "row" }}
         columnGap="size-100"
       >
         <View flex>Nama Barang</View>
-        <View width={"20%"}>Qty</View>
-        <View width="10%"><span style={{textAlign: "right", display: "block"}}>Harga</span></View>
-        <View width="10%"><span style={{textAlign: "right", display: "block"}}>Subtotal</span></View>
+        <View width={"20%"}>Qty / Unit</View>
+        <View width="10%">
+          <span style={{ textAlign: "right", display: "block" }}>Harga</span>
+        </View>
+        <View width="10%">
+          <span style={{ textAlign: "right", display: "block" }}>Subtotal</span>
+        </View>
       </Flex>
       <Divider size={"S"} />
+      </View>
       {orderDetails.isLoading && <WaitMe />}
       {orderDetails &&
-        [{ ...initOrderDetail, orderId: orderId }, ...orderDetails.items].map(
+        [...orderDetails.items,{ ...initOrderDetail, orderId: orderId }].map(
           (x, i) => (
             <View
+              paddingStart={selectedDetailId === x.id ? 7 : 0}
               key={x.id}
               borderStartColor={
                 selectedDetailId === x.id ? "orange-500" : "transparent"
@@ -117,19 +118,18 @@ const OrderDetail: NextPage<OrderDetailProps> = ({ orderId, order, updateOrder }
               borderStartWidth={selectedDetailId === x.id ? "thickest" : "thin"}
               //marginY={"size-125"}
             >
-              {selectedDetailId === x.id ? (
+                {renderPiutang(x, isNew)}
+                {selectedDetailId === x.id && (
                 <OrderDetailForm
                   data={x}
                   updateDetail={updateOrderDetail}
                   closeForm={closeForm}
-                />
-              ) : (
-                renderPiutang(x, isNew)
-              )}
+                />)}
+
             </View>
           )
         )}
-      <div style={{ marginBottom: "24px" }} />
+      </View>
     </Fragment>
   );
 
@@ -143,18 +143,26 @@ const OrderDetail: NextPage<OrderDetailProps> = ({ orderId, order, updateOrder }
           columnGap="size-100"
           wrap={"wrap"}
         >
-          <View flex={{base: "50%", M: 1}}>
+          <View flex={{ base: "50%", M: 1 }}>
             <ActionButton
               flex
               height={"auto"}
               isQuiet
               onPress={() => {
                 setSelectedDetailId(selectedDetailId === x.id ? -1 : x.id);
+                setDetail(x);
               }}
             >
-              <span style={{ fontWeight: 700 }}>
-                {x.id === 0 ? "Tambah item" : `${x.productName} - ${x.spec}` }
-              </span>
+              {x.id === 0 ? (
+                <>
+                  <PinAdd />
+                  Add Item
+                </>
+              ) : (
+                <span style={{ fontWeight: 700 }}>
+                  {x.productName} - {x.spec}
+                </span>
+              )}
             </ActionButton>
           </View>
           {x.id > 0 && renderDetail(x)}
@@ -167,9 +175,21 @@ const OrderDetail: NextPage<OrderDetailProps> = ({ orderId, order, updateOrder }
   function renderDetail(x: iOrderDetail): React.ReactNode {
     return (
       <>
-        <View width={{base:"50%",M:"20%"}}>{FormatNumber(x.qty)}</View>
-        <View width={"10%"} isHidden={{base: true, M: false}}><span style={{textAlign: "right", display: "block"}}>{FormatNumber(x.price)}</span></View>
-        <View width={{base:"47%",M:"10%"}}><span style={{textAlign: "right", display: "block", fontWeight: 700}}>{FormatNumber(x.subtotal)}</span></View>
+        <View width={{ base: "50%", M: "20%" }}>
+          {FormatNumber(x.qty)} {x.unitName}
+        </View>
+        <View width={"10%"} isHidden={{ base: true, M: false }}>
+          <span style={{ textAlign: "right", display: "block" }}>
+            {FormatNumber(x.price)}
+          </span>
+        </View>
+        <View width={{ base: "47%", M: "10%" }}>
+          <span
+            style={{ textAlign: "right", display: "block", fontWeight: 700 }}
+          >
+            {FormatNumber(x.subtotal)}
+          </span>
+        </View>
       </>
     );
   }

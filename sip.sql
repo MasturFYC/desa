@@ -29,6 +29,27 @@ CREATE TYPE public.cust_type AS ENUM (
 ALTER TYPE public.cust_type OWNER TO postgres;
 
 --
+-- Name: od_before_insert_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.od_before_insert_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+	--raise notice 'value: %', NEW.subtotal;
+	NEW.real_qty = NEW.qty * NEW.content;
+	NEW.subtotal = NEW.qty * NEW.price;
+
+	RETURN NEW;
+
+end; $$;
+
+
+ALTER FUNCTION public.od_before_insert_func() OWNER TO postgres;
+
+--
 -- Name: od_delete_func(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -38,15 +59,16 @@ CREATE FUNCTION public.od_delete_func() RETURNS trigger
 
 begin
 
-update products 
-set stock = stock - (OLD.real_qty)
-WHERE product_id = OLD.product_id;
+	update products 
+	set stock = stock - (OLD.real_qty), update_notif = false
+	WHERE id = OLD.product_id;
 
-update orders 
-set total = total - OLD.subtotal
-where id = OLD.order_id;
+	update orders set
+	total = total - OLD.subtotal
+	--, remain_payment = remain_payment - OLD.subtotal
+	where id = OLD.order_id;
 
-RETURN OLD;
+	RETURN OLD;
 
 end; $$;
 
@@ -63,10 +85,15 @@ CREATE FUNCTION public.od_insert_func() RETURNS trigger
 
 begin
 
-NEW.real_qty = NEW.content - NEW.qty;
-NEW.subtotal = NEW.qty * NEW.price;
+	--raise notice 'value: %', NEW.subtotal;
 
-RETURN NEW;
+	update products
+	set stock = stock - NEW.real_qty, update_notif = false
+	where id = NEW.product_id;
+
+	update orders set total = total + NEW.subtotal where id = NEW.order_id;
+
+	RETURN NEW;
 
 end; $$;
 
@@ -82,32 +109,26 @@ CREATE FUNCTION public.od_update_func() RETURNS trigger
     AS $$
 
 
-declare m_qty decimal(8,2);
-declare m_subtotal decimal(12,2);
-declare m_old_qty decimal(8,2);
-declare m_old_subtotal decimal(12,2);
-
 begin
 
-m_qty := NEW.content - NEW.qty;
-m_subtotal := NEW.qty * NEW.price;
-m_old_qty := OLD.real_qty;
-m_old_subtotal := OLD.subtotal;
+	update products
+	set stock = stock - NEW.real_qty, update_notif = false
+	where id = NEW.product_id;
 
-update products
-set stock = stock + m_qty
-where product_id = NEW.product_id;
+	update products 
+	set stock = stock + OLD.real_qty, update_notif = false
+	where id = OLD.product_id;
 
-update products
-set stock = stock - m_old_qty
-WHERE product_id = OLD.product_id;
+	update orders
+	set total = total + NEW.subtotal - OLD.subtotal
+	-- remain_payment = remain_payment + NEW.subtotal - OLD.subtotal
+	where id = NEW.order_id;
 
-update orders
-set total = total + (m_subtotal - m_old_subtotal)
-where id = NEW.order_id;
+	return NEW;
 
+end;
 
-end; $$;
+$$;
 
 
 ALTER FUNCTION public.od_update_func() OWNER TO postgres;
@@ -122,12 +143,14 @@ CREATE FUNCTION public.order_update_func() RETURNS trigger
 
 begin
 
-
 	NEW.remain_payment = NEW.total - NEW.payment;
+
+	--raise notice 'Value: %', NEW.remain_payment;
 
 	RETURN NEW;
 
-end; $$;
+end;
+$$;
 
 
 ALTER FUNCTION public.order_update_func() OWNER TO postgres;
@@ -143,14 +166,18 @@ CREATE FUNCTION public.product_update_func() RETURNS trigger
 declare buyPrice decimal(12,2);
 begin
 
-	buyPrice := NEW.price;
+    buyPrice := NEW.price;
 
-	update units set 
+
+    IF (NEW.update_notif = true) THEN
+ 	-- raise notice 'notif %', NEW.update_notif;
+        update units set 
 	buy_price = buyPrice * content, 
 	price = (buyPrice * content) + ((buyPrice * content) * margin) 
 	where product_id = NEW.id;
+    END IF;
 
-	RETURN NEW;
+    RETURN NEW;
 
 end; $$;
 
@@ -286,7 +313,8 @@ CREATE TABLE public.products (
     price numeric(12,2) DEFAULT 0 NOT NULL,
     stock numeric(12,2) DEFAULT 0 NOT NULL,
     first_stock numeric(12,2) DEFAULT 0 NOT NULL,
-    unit character varying(6) NOT NULL
+    unit character varying(6) NOT NULL,
+    update_notif boolean DEFAULT false NOT NULL
 );
 
 
@@ -339,6 +367,11 @@ COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
 --
 
 COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_qty, price, subtotal, buy_price, product_id) FROM stdin;
+25	69	22	1.00	3.00	pak3	3.00	950000.00	950000.00	750000.00	15
+25	70	1	1.00	1.00	btl	1.00	15000.00	15000.00	10000.00	7
+26	67	22	2.00	3.00	pak3	6.00	950000.00	1900000.00	750000.00	15
+26	71	17	10.00	1.00	pcs	10.00	39000.00	390000.00	30000.00	1
+25	65	19	1.00	12.00	ls	12.00	468000.00	468000.00	360000.00	1
 \.
 
 
@@ -347,8 +380,8 @@ COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_
 --
 
 COPY public.orders (id, customer_id, order_date, total, payment, remain_payment, descriptions) FROM stdin;
-6	2	2021-11-15 02:27:00	0.00	25000.00	-25000.00	Pembelian Barang
-5	2	2021-11-14 00:00:00	0.00	35000.00	-35000.00	Pembelian Obat
+25	2	2021-11-16 14:23:00	1433000.00	0.00	1433000.00	Piutang Pakan
+26	2	2021-11-16 15:32:00	2290000.00	0.00	2290000.00	Pembelian Pakan
 \.
 
 
@@ -356,10 +389,10 @@ COPY public.orders (id, customer_id, order_date, total, payment, remain_payment,
 -- Data for Name: products; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.products (id, name, spec, price, stock, first_stock, unit) FROM stdin;
-7	Abachel	250cc	10000.00	15.00	15.00	btl
-1	EM 4 Perikanan	1 ltr	30000.00	15.00	15.00	pcs
-15	Pakan Bandeng	Pelet KW1	250000.00	50.00	50.00	zak
+COPY public.products (id, name, spec, price, stock, first_stock, unit, update_notif) FROM stdin;
+7	Abachel	250cc	10000.00	-2.00	15.00	btl	f
+15	Pakan Bandeng	Pelet KW1	250000.00	57.00	50.00	zak	f
+1	EM 4 Perikanan	1 ltr	30000.00	-261.00	15.00	pcs	f
 \.
 
 
@@ -372,8 +405,8 @@ COPY public.units (product_id, id, name, content, price, buy_price, margin) FROM
 7	1	btl	1.00	15000.00	10000.00	0.5000
 1	17	pcs	1.00	39000.00	30000.00	0.3000
 1	19	ls	12.00	468000.00	360000.00	0.3000
-1	20	pak	3.00	100000.00	90000.00	0.1111
-15	21	zak	1.00	325000.00	0.00	0.3000
+1	20	pak	3.00	99999.00	90000.00	0.1111
+15	21	zak	1.00	325000.00	250000.00	0.3000
 15	22	pak3	3.00	950000.00	750000.00	0.2667
 \.
 
@@ -389,14 +422,14 @@ SELECT pg_catalog.setval('public.customer_seq', 2, true);
 -- Name: order_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_detail_seq', 1, false);
+SELECT pg_catalog.setval('public.order_detail_seq', 71, true);
 
 
 --
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 8, true);
+SELECT pg_catalog.setval('public.order_seq', 26, true);
 
 
 --
@@ -503,6 +536,13 @@ CREATE UNIQUE INDEX uq_unit_name ON public.units USING btree (product_id, name);
 
 
 --
+-- Name: order_details od_before_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER od_before_insert_trig BEFORE INSERT OR UPDATE ON public.order_details FOR EACH ROW EXECUTE FUNCTION public.od_before_insert_func();
+
+
+--
 -- Name: order_details od_delete_trig; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -513,21 +553,21 @@ CREATE TRIGGER od_delete_trig AFTER DELETE ON public.order_details FOR EACH ROW 
 -- Name: order_details od_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE TRIGGER od_insert_trig BEFORE INSERT ON public.order_details FOR EACH ROW EXECUTE FUNCTION public.od_insert_func();
+CREATE TRIGGER od_insert_trig AFTER INSERT ON public.order_details FOR EACH ROW EXECUTE FUNCTION public.od_insert_func();
 
 
 --
 -- Name: order_details od_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE TRIGGER od_update_trig AFTER INSERT OR UPDATE ON public.order_details FOR EACH ROW EXECUTE FUNCTION public.od_update_func();
+CREATE TRIGGER od_update_trig AFTER UPDATE ON public.order_details FOR EACH ROW EXECUTE FUNCTION public.od_update_func();
 
 
 --
--- Name: orders order_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: orders order_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE TRIGGER order_update_trig BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.order_update_func();
+CREATE TRIGGER order_insert_trig BEFORE INSERT OR UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.order_update_func();
 
 
 --

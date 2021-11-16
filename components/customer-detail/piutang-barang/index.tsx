@@ -63,6 +63,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
   };
 
   const updateOrder = (method: string, p: iOrder) => {
+
     switch (method) {
       case "POST":
         {
@@ -82,9 +83,19 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
     }
   };
 
+  const updateTotal = (orderId: number, subtotal: number) => {
+    let o = orders.getItem(orderId);
+    let total = o.total + subtotal;
+    let remain = total - o.payment;
+
+    orders.update(orderId, {...o, 
+      total: total,
+      remainPayment: remain 
+    });
+  }
+
   return (
     <Fragment>
-      {orders.isLoading && <WaitMe />}
       <Button
         variant={"cta"}
         onPress={() => {
@@ -114,6 +125,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
         </View>
       </Flex>
       <Divider size={"S"} />
+      {orders.isLoading && <WaitMe />}
       {orders &&
         [{ ...initOrder, customerId: customerId }, ...orders.items].map(
           (x, i) => (
@@ -177,8 +189,8 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
         {detailId === x.id && showDetail && 
           <OrderDetail
             order={x}
-            updateOrder={updateOrder}
-            orderId={selectedOrderId}
+            updateTotal={updateTotal}
+            orderId={x.id}
           />
         }
         {x.id > 0 && <Divider size={"S"} />}

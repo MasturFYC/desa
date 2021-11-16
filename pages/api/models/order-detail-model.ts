@@ -42,15 +42,15 @@ const apiOrderDetail: apiFunction = {
 
   update: async (id: number, p: iOrderDetail) => {
     const query = sql`
-      UPDATE orders SET
+      UPDATE order_details SET
         order_id = ${p.orderId},
         unit_id = ${p.unitId},
         product_id = ${p.productId},
         qty = ${p.qty},
         content = ${p.content},
         unit_name = ${p.unitName},
-        price= ${p.price},
-        buy_price= ${p.buyPrice}
+        price = ${p.price},
+        buy_price = ${p.buyPrice}
       WHERE id = ${p.id}
       RETURNING *
     `;
@@ -64,7 +64,7 @@ const apiOrderDetail: apiFunction = {
   insert: async (p: iOrderDetail) => {
 
     const query = sql`
-      INSERT INTO orders (
+      INSERT INTO order_details (
         order_id, unit_id, product_id, qty, content, unit_name, price, buy_price
       ) VALUES (
         ${p.orderId},
@@ -78,6 +78,8 @@ const apiOrderDetail: apiFunction = {
       )
       RETURNING *
     `;
+
+    //console.log(query.sql, query.values)
 
     return await db
       .query(query)

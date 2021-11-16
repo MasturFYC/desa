@@ -74,7 +74,7 @@ const CustomerDetailComponent: NextPage = () => {
 
     };
 
-    if (!isLoaded) {
+    if (!isLoaded && queryParams.id) {
       loadCustomer(queryParams.id);
     }
 
