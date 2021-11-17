@@ -61,7 +61,7 @@ const ProductForm: NextPage<ProductFormProps> = ({
   return (
     <Form onSubmit={handleSubmit} marginTop={"size-100"}>
       <View backgroundColor={"gray-100"} borderRadius={"medium"}>
-        <Flex direction={{ base: "column", M: "row" }} gap={"size-200"} margin={"size-100"}>
+        <Flex direction={{ base: "column", M: "row" }} gap={"size-100"} margin={"size-100"}>
           <TextField
             placeholder={"e.g. EM4"}
             autoFocus
@@ -81,7 +81,7 @@ const ProductForm: NextPage<ProductFormProps> = ({
             onChange={(e) => setProduct((o) => ({ ...o, spec: e }))}
           />
         </Flex>
-        <Flex direction={{ base: "column", M: "row" }} gap={"size-200"} margin={"size-100"}>
+        <Flex direction={{ base: "column", M: "row" }} gap={"size-100"} margin={"size-100"}>
           <NumberField
             hideStepper={true}
             isRequired
@@ -90,7 +90,7 @@ const ProductForm: NextPage<ProductFormProps> = ({
             value={product.price}
             onChange={(e) => setProduct((o) => ({ ...o, price: e }))}
           />
-          <Flex direction={"row"} gap={"size-200"}>
+          <Flex flex direction={"row"} gap={"size-200"}>
             <NumberField
               hideStepper={true}
               flex

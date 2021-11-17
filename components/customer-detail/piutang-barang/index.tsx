@@ -12,15 +12,23 @@ import {
   Text,
   ToggleButton,
 } from "@adobe/react-spectrum";
-import { dateParam, iOrder, iOrderDetail, iProduct } from "@components/interfaces";
+import {
+  dateParam,
+  iOrder,
+  iOrderDetail,
+  iProduct,
+} from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
 import Pin from "@spectrum-icons/workflow/PinOff";
 import product from "@components/product";
 
-const OrderDetail = dynamic(() => import("@components/customer-detail/piutang-barang/order-detail"), {
-  loading: () => <WaitMe />,
-  ssr: false,
-});
+const OrderDetail = dynamic(
+  () => import("@components/customer-detail/piutang-barang/order-detail"),
+  {
+    loading: () => <WaitMe />,
+    ssr: false,
+  }
+);
 
 const OrderForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -73,7 +81,6 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
   };
 
   const updateOrder = (method: string, p: iOrder) => {
-
     switch (method) {
       case "POST":
         {
@@ -98,11 +105,8 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
     let total = o.total + subtotal;
     let remain = total - o.payment;
 
-    orders.update(orderId, {...o, 
-      total: total,
-      remainPayment: remain 
-    });
-  }
+    orders.update(orderId, { ...o, total: total, remainPayment: remain });
+  };
 
   return (
     <Fragment>
@@ -136,7 +140,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
         </View>
       </Flex>
       <Divider size={"S"} />
-      {products.isLoading || orders.isLoading && <WaitMe />}
+      {products.isLoading || (orders.isLoading && <WaitMe />)}
       {orders &&
         [{ ...initOrder, customerId: customerId }, ...orders.items].map(
           (x, i) => (
@@ -161,12 +165,23 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
             </View>
           )
         )}
+      <Flex direction={"row"}>
+        <View flex>Grand Total</View>
+        <View>
+          <Text>
+            <strong>
+              {FormatNumber(
+                orders.items.reduce((a, b) => a + b.remainPayment, 0)
+              )}
+            </strong>
+          </Text>
+        </View>
+      </Flex>
       <div style={{ marginBottom: "24px" }} />
     </Fragment>
   );
 
-  function renderPiutang({ x, isNew }: { x: iOrder; isNew: boolean; }) {
-
+  function renderPiutang({ x, isNew }: { x: iOrder; isNew: boolean }) {
     return (
       <Fragment>
         <Flex
@@ -191,21 +206,26 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
                 {x.id === 0 ? "Piutang Baru" : x.descriptions}
               </span>
             </ActionButton>
-            {x.id > 0 && <ToggleDetail isSelected={(detailId === x.id && showDetail)} showOrderDetail={(e) => {
-              setDetailId(x.id)
-              setShowDetail(e)
-              }} />}
+            {x.id > 0 && (
+              <ToggleDetail
+                isSelected={detailId === x.id && showDetail}
+                showOrderDetail={(e) => {
+                  setDetailId(x.id);
+                  setShowDetail(e);
+                }}
+              />
+            )}
           </View>
           {x.id > 0 && renderDetail(x)}
         </Flex>
-        {detailId === x.id && showDetail && 
+        {detailId === x.id && showDetail && (
           <OrderDetail
             products={products}
             order={x}
             updateTotal={updateTotal}
             orderId={x.id}
           />
-        }
+        )}
         {x.id > 0 && <Divider size={"S"} />}
       </Fragment>
     );
@@ -240,12 +260,12 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
 export default PiutangBarang;
 
 type ToggleDetailProps = {
-  isSelected: boolean,
+  isSelected: boolean;
   showOrderDetail: (isShow: boolean) => void;
 };
 
 function ToggleDetail({ isSelected, showOrderDetail }: ToggleDetailProps) {
- // let [isShow, setIsShow] = useState<boolean>(isSelected);
+  // let [isShow, setIsShow] = useState<boolean>(isSelected);
 
   return (
     <ToggleButton
@@ -255,7 +275,7 @@ function ToggleDetail({ isSelected, showOrderDetail }: ToggleDetailProps) {
       isEmphasized
       isSelected={isSelected}
       onChange={(e) => {
-//        setIsShow(e);
+        //        setIsShow(e);
         showOrderDetail(e);
       }}
       isQuiet

@@ -1,13 +1,17 @@
 import { NONAME } from "dns";
 import moment from "moment";
 
-const stringDateFormat = 'YYYY-MM-DD HH:mm';
+export const stringDateFormat = 'YYYY-MM-DD HH:mm';
 export const hour24Format = 'YYYY-MM-DD HH24:MI';
 const dateOnlyString = 'YYYY-MM-DD';
 export const dateParam = (value?: string | undefined | null) => (value) ? moment(value, stringDateFormat).format(stringDateFormat) : moment(new Date(), stringDateFormat).format(stringDateFormat);
 export const dateOnly = (value?: string | undefined | null, format: string = dateOnlyString) => (value) ? moment(value, dateOnlyString).format(format) : moment(new Date(), dateOnlyString).format(format);
 export const setRefId = (id: number, code: string) => {
   return code + '-' + id.toString().padStart(9, '0');
+}
+
+export function add(accumulator: number, a: number) {
+  return accumulator + a;
 }
 
 export interface iUser {
@@ -35,6 +39,14 @@ export interface iUserLogin {
   avatarUrl?: string;
 }
 
+type piutang = {
+  total: number
+}
+
+export interface iPiutang {
+  piutang?: piutang,
+  kasbon?: piutang
+}
 export interface iCustomer {
   id: number,
   name: string,
@@ -94,4 +106,14 @@ export interface iOrderDetail {
   subtotal: number;
   unit?: iUnit
   product?: iProduct;
+}
+
+export interface iKasbon {
+  id: number;
+  descriptions: string;
+  customerId: number;
+  kasbonDate: string;
+  jatuhTempo: string;
+  total: number;
+  customer?: iCustomer;
 }

@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
--- Dumped by pg_dump version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
+-- Dumped from database version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
+-- Dumped by pg_dump version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -235,6 +235,37 @@ CREATE TABLE public.customers (
 ALTER TABLE public.customers OWNER TO postgres;
 
 --
+-- Name: order_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.order_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.order_seq OWNER TO postgres;
+
+--
+-- Name: kasbons; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.kasbons (
+    id integer DEFAULT nextval('public.order_seq'::regclass) NOT NULL,
+    customer_id integer NOT NULL,
+    descriptions character varying(128) NOT NULL,
+    kasbon_date timestamp without time zone NOT NULL,
+    jatuh_tempo timestamp without time zone NOT NULL,
+    total numeric(12,2) DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.kasbons OWNER TO postgres;
+
+--
 -- Name: order_detail_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -269,21 +300,6 @@ CREATE TABLE public.order_details (
 
 
 ALTER TABLE public.order_details OWNER TO postgres;
-
---
--- Name: order_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.order_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.order_seq OWNER TO postgres;
 
 --
 -- Name: orders; Type: TABLE; Schema: public; Owner: postgres
@@ -378,14 +394,26 @@ COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
 
 
 --
+-- Data for Name: kasbons; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, total) FROM stdin;
+30	2	Kasbon	2021-11-17 11:06:00	2021-11-24 11:06:00	2500000.00
+31	2	Kasbon Beli Terpal	2021-12-17 00:00:00	2021-12-24 00:00:00	1500000.00
+\.
+
+
+--
 -- Data for Name: order_details; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_qty, price, subtotal, buy_price, product_id) FROM stdin;
 28	74	21	2.00	1.00	zak	2.00	325000.00	650000.00	250000.00	15
 27	77	1	2.00	1.00	btl	2.00	15000.00	30000.00	10000.00	7
-27	78	17	3.00	1.00	pcs	3.00	39000.00	117000.00	30000.00	1
 29	84	24	5.00	3.00	pak	15.00	5850.00	29250.00	4500.00	16
+28	86	2	2.00	10.00	pak	20.00	130000.00	260000.00	100000.00	7
+32	87	17	1.00	1.00	pcs	1.00	39000.00	39000.00	30000.00	1
+32	88	21	1.00	1.00	zak	1.00	325000.00	325000.00	250000.00	15
 \.
 
 
@@ -394,9 +422,10 @@ COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_
 --
 
 COPY public.orders (id, customer_id, order_date, total, payment, remain_payment, descriptions) FROM stdin;
-28	2	2021-11-16 23:15:00	650000.00	600000.00	50000.00	Pembelian Barang
-27	2	2021-11-16 21:25:00	147000.00	72000.00	75000.00	Pembelian Barang
 29	1	2021-11-17 00:46:00	29250.00	0.00	29250.00	Pembelian Barang
+27	2	2021-11-16 21:25:00	30000.00	30000.00	0.00	Pembelian Barang
+28	2	2021-11-16 23:15:00	910000.00	625000.00	285000.00	Pembelian Barang
+32	2	2021-11-17 15:38:00	364000.00	300000.00	64000.00	Pembelian Barang
 \.
 
 
@@ -405,10 +434,10 @@ COPY public.orders (id, customer_id, order_date, total, payment, remain_payment,
 --
 
 COPY public.products (id, name, spec, price, stock, first_stock, unit, update_notif) FROM stdin;
-15	Pakan Bandeng	Pelet KW1	250000.00	98.00	110.00	zak	t
 16	eqweqwe	eqweqwe	1500.00	5.00	20.00	pcs	t
-7	Abachel	250cc	10000.00	86.00	90.00	btl	t
-1	EM 4 Perikanan	1 ltr	30000.00	87.00	100.00	pcs	f
+7	Abachel	250cc	10000.00	66.00	90.00	btl	t
+1	EM 4 Perikanan	1 ltr	30000.00	89.00	100.00	pcs	f
+15	Pakan Bandeng	Pelet KW1	250000.00	97.00	110.00	zak	t
 \.
 
 
@@ -440,14 +469,14 @@ SELECT pg_catalog.setval('public.customer_seq', 2, true);
 -- Name: order_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_detail_seq', 84, true);
+SELECT pg_catalog.setval('public.order_detail_seq', 88, true);
 
 
 --
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 29, true);
+SELECT pg_catalog.setval('public.order_seq', 32, true);
 
 
 --
@@ -470,6 +499,14 @@ SELECT pg_catalog.setval('public.unit_seq', 24, true);
 
 ALTER TABLE ONLY public.customers
     ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: kasbons kasbon_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kasbons
+    ADD CONSTRAINT kasbon_pkey PRIMARY KEY (id);
 
 
 --
@@ -509,6 +546,13 @@ ALTER TABLE ONLY public.units
 --
 
 CREATE INDEX ix_detail_product ON public.order_details USING btree (product_id);
+
+
+--
+-- Name: ix_kasbon_customer; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_kasbon_customer ON public.kasbons USING btree (customer_id);
 
 
 --
@@ -600,6 +644,14 @@ CREATE TRIGGER product_stock_update_trig BEFORE UPDATE OF first_stock ON public.
 --
 
 CREATE TRIGGER product_update_trig AFTER UPDATE OF price ON public.products FOR EACH ROW EXECUTE FUNCTION public.product_update_func();
+
+
+--
+-- Name: kasbons fk_customer_kasbon; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kasbons
+    ADD CONSTRAINT fk_customer_kasbon FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --

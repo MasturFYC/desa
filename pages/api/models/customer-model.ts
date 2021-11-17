@@ -1,6 +1,6 @@
 import moment from 'moment';
 import { iCustomer, isNullOrEmpty } from '@components/interfaces'
-import db, { sql } from "../config";
+import db, { nestQuerySingle, sql } from "../config";
 
 
 type apiReturn = Promise<any[] | (readonly iCustomer[] | undefined)[]>;
@@ -9,15 +9,42 @@ interface apiFunction {
   list: () => apiReturn;
   find: (name: string | string[]) => apiReturn;
   getCustomer: (id: number) => apiReturn;
+  getPiutang: (id: number) => apiReturn;
   delete: (id: number) => apiReturn;
   update: (id: number, data: iCustomer) => apiReturn;
   insert: (data: iCustomer) => apiReturn;
 }
 
 const apiCustomer: apiFunction = {
-  getCustomer: async (id: number) => {
 
-    const query = sql`SELECT c.id, c.name, c.street, c.city, c.phone, c.customer_type
+  getPiutang: async (id: number) => {
+
+    const qry_piutang = sql`select
+      sum(o.remain_payment) as "total"
+      from orders as o
+      where o.customer_id = c.id`;
+    
+    const qry_kasbon = sql`select
+    sum(k.total) as "total"
+    from kasbons as k
+    where k.customer_id = c.id`;
+
+    const query = sql`SELECT 
+    ${nestQuerySingle(qry_piutang)} as "piutang",
+    ${nestQuerySingle(qry_kasbon)} as "kasbon"
+    FROM customers AS c
+    WHERE c.id = ${id}`;
+
+    return await db
+      .query(query)
+      .then((data) => [data.rows[0], undefined])
+      .catch((error) => [undefined, error]);
+
+  },
+
+  getCustomer: async (id: number) => {
+    const query = sql`SELECT
+      c.id, c.name, c.street, c.city, c.phone, c.customer_type
     FROM customers AS c
     WHERE c.id = ${id}`;
 
