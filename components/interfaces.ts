@@ -44,8 +44,11 @@ type piutang = {
 }
 
 export interface iPiutang {
-  piutang?: piutang,
-  kasbon?: piutang
+  id: number,
+  descriptions: string,
+  cred: number,
+  debt: number,
+  saldo: number
 }
 export interface iCustomer {
   id: number,
@@ -114,6 +117,17 @@ export interface iKasbon {
   customerId: number;
   kasbonDate: string;
   jatuhTempo: string;
+  total: number;
+  customer?: iCustomer;
+}
+
+
+export interface iPayment {
+  id: number;
+  descriptions: string;
+  customerId: number;
+  paymentDate: string;
+  refId: number;
   total: number;
   customer?: iCustomer;
 }

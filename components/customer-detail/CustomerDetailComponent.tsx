@@ -26,6 +26,11 @@ const Kasbon = dynamic(() => import("./kasbon"), {
   ssr: false,
 });
 
+const Payment = dynamic(() => import("./payment"), {
+  loading: () => <WaitMe />,
+  ssr: false,
+});
+
 type tabContent = {
   id: number;
   name: string;
@@ -126,14 +131,15 @@ const CustomerDetailComponent: NextPage = () => {
               {customer.street} - {customer.city}
             </span>
             <br />
-            <span>Telp.{customer.phone}</span>
+            <span>Telp. {customer.phone}</span>
           </View>
 
-          <CustomerPiutang customerId={customerId} />
+          {customerId > 0 && <CustomerPiutang customerId={customerId} />}
         </View>
       )}
       {tabId === 1 && <PiutangBarang customerId={customerId} />}
       {tabId === 2 && <Kasbon customerId={customerId} />}
+      {tabId === 4 && <Payment customerId={customerId} />}
     </Layout>
   );
 };

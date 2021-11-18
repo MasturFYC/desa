@@ -155,6 +155,56 @@ $$;
 ALTER FUNCTION public.order_update_func() OWNER TO postgres;
 
 --
+-- Name: piutang_balance_func(integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.piutang_balance_func(cust_id integer) RETURNS TABLE(id integer, descriptions character varying, cred numeric, debt numeric, saldo numeric)
+    LANGUAGE plpgsql
+    AS $$
+
+
+
+begin
+
+drop table IF EXISTS temp_table;
+
+        create temporary table temp_table(
+id integer,
+                descriptions varchar(128),
+                cred decimal(12,2),
+                debt decimal(12,2)
+        );
+
+        insert into temp_table (id, descriptions, cred, debt)
+        select 1, 'Piutang Barang', sum(c.total), sum(c.payment)
+        from orders c
+where c.customer_id = cust_id;
+
+        insert into temp_table (id, descriptions, cred, debt)
+        select 2, 'Kasbon', sum(c.total), 0
+        from kasbons c
+where c.customer_id = cust_id;
+
+        insert into temp_table (id, descriptions, cred, debt)
+        select 3, 'Cicilan', 0, sum(c.total)
+        from payments c
+where c.customer_id = cust_id;
+
+        RETURN QUERY SELECT 
+c.id, c.descriptions, c.cred, c.debt, sum(c.cred - c.debt)
+over (order by c.id
+rows between unbounded preceding and current row) as saldo
+from temp_table as c;
+
+
+end;
+
+$$;
+
+
+ALTER FUNCTION public.piutang_balance_func(cust_id integer) OWNER TO postgres;
+
+--
 -- Name: product_stock_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -319,6 +369,22 @@ CREATE TABLE public.orders (
 ALTER TABLE public.orders OWNER TO postgres;
 
 --
+-- Name: payments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.payments (
+    id integer DEFAULT nextval('public.order_seq'::regclass) NOT NULL,
+    customer_id integer NOT NULL,
+    descriptions character varying(50) NOT NULL,
+    ref_id integer DEFAULT 0 NOT NULL,
+    payment_date timestamp without time zone NOT NULL,
+    total numeric(12,2) DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.payments OWNER TO postgres;
+
+--
 -- Name: product_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -430,6 +496,16 @@ COPY public.orders (id, customer_id, order_date, total, payment, remain_payment,
 
 
 --
+-- Data for Name: payments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total) FROM stdin;
+33	2	Cicilan Bayar Obat	0	2021-11-18 11:55:00	25000.00
+34	2	Cicilan utang	0	2021-11-18 14:23:00	2500000.00
+\.
+
+
+--
 -- Data for Name: products; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -476,7 +552,7 @@ SELECT pg_catalog.setval('public.order_detail_seq', 88, true);
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 32, true);
+SELECT pg_catalog.setval('public.order_seq', 34, true);
 
 
 --
@@ -526,6 +602,14 @@ ALTER TABLE ONLY public.orders
 
 
 --
+-- Name: payments payment_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT payment_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: products products_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -560,6 +644,13 @@ CREATE INDEX ix_kasbon_customer ON public.kasbons USING btree (customer_id);
 --
 
 CREATE INDEX ix_order_customer ON public.orders USING btree (customer_id);
+
+
+--
+-- Name: ix_payment_customer; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_payment_customer ON public.payments USING btree (customer_id);
 
 
 --
@@ -660,6 +751,14 @@ ALTER TABLE ONLY public.kasbons
 
 ALTER TABLE ONLY public.orders
     ADD CONSTRAINT fk_customer_orders FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: payments fk_customer_payment; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT fk_customer_payment FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
