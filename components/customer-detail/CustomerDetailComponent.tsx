@@ -8,6 +8,7 @@ import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { Item, TabList, Tabs } from "@adobe/react-spectrum";
+import Grass from "./grass";
 
 const siteTitle = "Pelanggan";
 
@@ -37,22 +38,10 @@ type tabContent = {
 };
 
 const tabs: tabContent[] = [
-  {
-    id: 0,
-    name: "Informasi",
-  },
-  {
-    id: 1,
-    name: "Piutang Barang",
-  },
-  {
-    id: 2,
-    name: "Piutang Kasbon",
-  },
-  {
-    id: 3,
-    name: "Pembelian",
-  },
+  { id: 0, name: "Informasi" },
+  { id: 1, name: "Piutang Barang" },
+  { id: 2, name: "Piutang Kasbon" },
+  { id: 3, name: "Pembelian" },
   { id: 4, name: "Angsuran" },
 ];
 
@@ -139,6 +128,7 @@ const CustomerDetailComponent: NextPage = () => {
       )}
       {tabId === 1 && <PiutangBarang customerId={customerId} />}
       {tabId === 2 && <Kasbon customerId={customerId} />}
+      {tabId === 3 && <Grass customerId={customerId} />}
       {tabId === 4 && <Payment customerId={customerId} />}
     </Layout>
   );

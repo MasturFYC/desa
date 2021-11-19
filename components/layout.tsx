@@ -1,12 +1,11 @@
 import { NextPage } from "next";
-import Head from "next/head";
 import { useRouter } from "next/router";
 import React from "react";
 import { iUserLogin } from "@components/interfaces";
 import { Grid } from "@react-spectrum/layout";
 import { View } from "@react-spectrum/view";
-import { Divider } from "@react-spectrum/divider";
 import MainMenu from "./main-menu";
+import { Footer } from "@adobe/react-spectrum";
 
 export const siteTitle = "SPBU";
 
@@ -36,12 +35,13 @@ const Layout: NextPage<LayoutProps> = ({
         base: ["header header", "content content", "footer footer"],
         M: ["header  header", "sidebar content", "footer  footer"],
       }}
-      columns={["1fr", "3fr"]}
+      columns={["1fr", "2fr"]}
       rows={["size-1000", "auto", "size-1000"]}
-      minHeight={"100vh"}
-      
+      minHeight={"100vh"}      
     >
-      <View gridArea="header" backgroundColor="gray-50" />
+      <View gridArea="header" backgroundColor="gray-50"
+        paddingTop={"size-100"} paddingX={{ base: "size-75", M: "size-400" }}>Sumber Ikan Putri</View>
+      
       <View
         isHidden={{ base: true, M: false, L: false }}
         gridArea="sidebar"
@@ -50,14 +50,19 @@ const Layout: NextPage<LayoutProps> = ({
       >
         <MainMenu activeMenu={home ? "Home" : activeMenu} />
       </View>
+      
       <View gridArea="content" backgroundColor="gray-50" height={"100%"}>
-        <View paddingX={{ base: "size-50", M: "size-200", L: "size-400" }}>
+        <View paddingX={{ base: "size-75", M: "size-200", L: "size-400" }}>
           {children}
         </View>
       </View>
-      <View gridArea="footer">
+
+      <Footer gridArea="footer" flex>
+        <View flex paddingTop={"size-100"} paddingX={{base:"size-75", M:"size-400"}}>&copy; All rights reserved.</View>
+      </Footer>
+      {/* <View gridArea="footer">
         <Divider size="S" />
-      </View>
+      </View> */}
     </Grid>
   );
 };

@@ -131,3 +131,20 @@ export interface iPayment {
   total: number;
   customer?: iCustomer;
 }
+
+export interface iGrass {
+  customerId: number;
+  id: number;
+  descriptions: string;
+  orderDate: string;
+  price: number;
+  qty: number;
+  total: number;
+  customer?: iCustomer;
+}
+
+export interface iGrassDetail {
+  grassId: number;
+  id: number;
+  qty: number
+}

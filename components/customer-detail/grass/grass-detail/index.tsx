@@ -3,57 +3,44 @@ import React, { Fragment, useState } from "react";
 import { useAsyncList, AsyncListData } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
+import { Text } from "@react-spectrum/text";
 import { NextPage } from "next";
 import { ActionButton, Divider, Flex } from "@adobe/react-spectrum";
 import PinAdd from "@spectrum-icons/workflow/Add";
 
-import { dateParam, iOrderDetail, iOrder, iProduct } from "@components/interfaces";
-import { FormatDate, FormatNumber } from "@lib/format";
-import product from "@components/product";
+import { iGrassDetail, iGrass } from "@components/interfaces";
 
-const OrderDetailForm = dynamic(() => import("./form"), {
+const GrassDetailForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
   ssr: false,
 });
 
-const initOrderDetail: iOrderDetail = {
-  orderId: 0,
+const initGrassDetail: iGrassDetail = {
+  grassId: 0,
   id: 0,
-  unitId: 0,
-  productId: 0,
-  qty: 1,
-  content: 0,
-  unitName: "",
-  realQty: 0,
-  price: 0,
-  buyPrice: 0,
-  subtotal: 0,
+  qty: 0
 };
 
-type OrderDetailProps = {
-  products: AsyncListData<iProduct>;
-  orderId: number;
-  order: iOrder;
-  updateTotal: (orderId: number, subtotal: number) => void;
+type GrassDetailProps = {
+  grassId: number;
+  updateTotal: (grassId: number, qty: number) => void;
 };
 
-const OrderDetail: NextPage<OrderDetailProps> = ({
-  products,
-  orderId,
-  order,
+const GrassDetail: NextPage<GrassDetailProps> = ({
+  grassId,
   updateTotal,
 }) => {
   let [selectedDetailId, setSelectedDetailId] = useState<number>(-1);
-  let [detail, setDetail] = useState<iOrderDetail>(initOrderDetail);
+  let [detail, setDetail] = useState<iGrassDetail>(initGrassDetail);
   let [isNew, setIsNew] = useState<boolean>(false);
 
-  let orderDetails = useAsyncList<iOrderDetail>({
+  let grassDetails = useAsyncList<iGrassDetail>({
     async load({ signal }) {
-      let res = await fetch(`/api/order-detail/${orderId}`, { signal });
+      let res = await fetch(`/api/grass-detail/${grassId}`, { signal });
       let json = await res.json();
       return { items: json };
     },
-    getKey: (item: iOrderDetail) => item.id,
+    getKey: (item: iGrassDetail) => item.id,
   });
 
   const closeForm = () => {
@@ -63,24 +50,24 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
     }
   };
 
-  const updateOrderDetail = (method: string, p: iOrderDetail) => {
+  const updateGrassDetail = (method: string, p: iGrassDetail) => {
     switch (method) {
       case "POST":
         {
-          orderDetails.append(p);
-          updateTotal(p.orderId, p.qty * p.price);
+          grassDetails.append(p);
+          updateTotal(grassId, p.qty);
         }
         break;
       case "PUT":
         {
-          orderDetails.update(p.id, p);
-          updateTotal(p.orderId, p.qty * p.price - detail.subtotal);
+          grassDetails.update(p.id, p);
+          updateTotal(grassId, p.qty - detail.qty);
         }
         break;
       case "DELETE":
         {
-          orderDetails.remove(p.id);
-          updateTotal(p.orderId, -detail.subtotal);
+          grassDetails.remove(p.id);
+          updateTotal(grassId, -detail.qty);
         }
         break;
     }
@@ -97,20 +84,14 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
             columnGap="size-100"
           >
             <View width="5%">ID#</View>
-            <View flex>Nama Barang</View>
-            <View width={"20%"}>Qty / Unit</View>
-            <View width="10%">
-              <span style={{ textAlign: "right", display: "block" }}>Harga</span>
-            </View>
-            <View width="10%">
-              <span style={{ textAlign: "right", display: "block" }}>Subtotal</span>
-            </View>
+            <View flex>Keterangan</View>
+            <View width={"20%"}><span style={{ textAlign: "right", fontWeight: 700, display: "block" }}>Qty (kg)</span></View>
           </Flex>
           <Divider size={"S"} />
         </View>
-        {orderDetails.isLoading && <WaitMe />}
-        {orderDetails &&
-          [...orderDetails.items, { ...initOrderDetail, orderId: orderId }].map(
+        {grassDetails.isLoading && <WaitMe />}
+        {grassDetails &&
+          [...grassDetails.items, { ...initGrassDetail, grassId: grassId }].map(
             (x, i) => (
               <View
                 paddingStart={selectedDetailId === x.id ? 7 : 0}
@@ -122,12 +103,11 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
                 borderStartWidth={selectedDetailId === x.id ? "thickest" : "thin"}
               //marginY={"size-125"}
               >
-                {renderDetails(x, isNew)}
+                {renderDetails(i, x, isNew)}
                 {selectedDetailId === x.id && (
-                  <OrderDetailForm
-                    products={products}
+                  <GrassDetailForm
                     data={x}
-                    updateDetail={updateOrderDetail}
+                    updateDetail={updateGrassDetail}
                     closeForm={closeForm}
                   />)}
 
@@ -138,7 +118,7 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
     </Fragment>
   );
 
-  function renderDetails(x: iOrderDetail, isNew: boolean) {
+  function renderDetails(index: number, x: iGrassDetail, isNew: boolean) {
     return (
       <Fragment>
         <Flex
@@ -149,7 +129,7 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
           wrap={"wrap"}
         >
           {x.id > 0 && <View width={"5%"}>{x.id}</View>}
-          <View flex={{ base: "50%", M: 1 }}>
+          <View flex>
             <ActionButton
               flex
               height={"auto"}
@@ -160,45 +140,27 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
               }}
             >
               {x.id === 0 ? (
-                <>
+                <View flex>
                   <PinAdd size="S" />
-                  Add Item
-                </>
+                  <Text>Add Item</Text>
+                </View>
               ) : (
-                <span style={{ fontWeight: 700 }}>
-                  {x.productName} - {x.spec}
-                </span>
+                <View flex>
+                  Timbangan ke {index+1}
+                </View>
               )}
             </ActionButton>
+            
           </View>
-          {x.id > 0 && renderDetail(x)}
+          {x.id > 0 &&
+          <View width={"20%"}>
+            <span style={{textAlign: "right", fontWeight: 700, display:"block"}}>{x.qty}</span>
+            </View>}
         </Flex>
         {x.id > 0 && <Divider size={"S"} />}
       </Fragment>
     );
   }
+}
 
-  function renderDetail(x: iOrderDetail): React.ReactNode {
-    return (
-      <>
-        <View width={{ base: "50%", M: "20%" }}>
-          {FormatNumber(x.qty)} {x.unitName}
-        </View>
-        <View width={"10%"} isHidden={{ base: true, M: false }}>
-          <span style={{ textAlign: "right", display: "block" }}>
-            {FormatNumber(x.price)}
-          </span>
-        </View>
-        <View width={{ base: "47%", M: "10%" }}>
-          <span
-            style={{ textAlign: "right", display: "block", fontWeight: 700 }}
-          >
-            {FormatNumber(x.subtotal)}
-          </span>
-        </View>
-      </>
-    );
-  }
-};
-
-export default OrderDetail;
+export default GrassDetail;

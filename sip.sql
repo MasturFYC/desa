@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
--- Dumped by pg_dump version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
+-- Dumped from database version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
+-- Dumped by pg_dump version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -27,6 +27,91 @@ CREATE TYPE public.cust_type AS ENUM (
 
 
 ALTER TYPE public.cust_type OWNER TO postgres;
+
+--
+-- Name: grass_before_insert_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.grass_before_insert_update_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+NEW.total = NEW.qty * NEW.price;
+
+RETURN NEW;
+
+end; $$;
+
+
+ALTER FUNCTION public.grass_before_insert_update_func() OWNER TO postgres;
+
+--
+-- Name: grass_detail_after_delete_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.grass_detail_after_delete_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+--raise notice 'value: %', NEW.subtotal;
+update grass set
+qty = qty - OLD.qty
+where id = OLD.grass_id;
+
+RETURN OLD;
+
+end; $$;
+
+
+ALTER FUNCTION public.grass_detail_after_delete_func() OWNER TO postgres;
+
+--
+-- Name: grass_detail_after_insert_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.grass_detail_after_insert_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+--raise notice 'value: %', NEW.subtotal;
+update grass set
+qty = qty + NEW.qty
+where id = NEW.grass_id;
+
+RETURN NEW;
+
+end; $$;
+
+
+ALTER FUNCTION public.grass_detail_after_insert_func() OWNER TO postgres;
+
+--
+-- Name: grass_detail_after_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.grass_detail_after_update_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+--raise notice 'value: %', NEW.subtotal;
+update grass set
+qty = qty + NEW.qty - OLD.qty
+where id = NEW.grass_id;
+
+RETURN NEW;
+
+end; $$;
+
+
+ALTER FUNCTION public.grass_detail_after_update_func() OWNER TO postgres;
 
 --
 -- Name: od_before_insert_func(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -162,44 +247,46 @@ CREATE FUNCTION public.piutang_balance_func(cust_id integer) RETURNS TABLE(id in
     LANGUAGE plpgsql
     AS $$
 
-
-
 begin
 
-drop table IF EXISTS temp_table;
+     drop table IF EXISTS temp_table;
 
-        create temporary table temp_table(
-id integer,
-                descriptions varchar(128),
-                cred decimal(12,2),
-                debt decimal(12,2)
-        );
+     create temporary table temp_table(
+         id integer,
+         descriptions varchar(128),
+         cred decimal(12,2),
+         debt decimal(12,2)
+     );
 
-        insert into temp_table (id, descriptions, cred, debt)
-        select 1, 'Piutang Barang', sum(c.total), sum(c.payment)
-        from orders c
-where c.customer_id = cust_id;
+     insert into temp_table (id, descriptions, cred, debt)
+     select 1, 'Piutang Barang', coalesce(sum(c.total),0), coalesce(sum(c.payment),0)
+     from orders c
+     where c.customer_id = cust_id;
 
-        insert into temp_table (id, descriptions, cred, debt)
-        select 2, 'Kasbon', sum(c.total), 0
-        from kasbons c
-where c.customer_id = cust_id;
+     insert into temp_table (id, descriptions, cred, debt)
+     select 2, 'Kasbon', coalesce(sum(c.total),0), 0
+     from kasbons c
+     where c.customer_id = cust_id;
 
-        insert into temp_table (id, descriptions, cred, debt)
-        select 3, 'Cicilan', 0, sum(c.total)
-        from payments c
-where c.customer_id = cust_id;
+     insert into temp_table (id, descriptions, cred, debt)
+     select 3, 'Pembelian', 0, coalesce(sum(c.total),0)
+     from grass c
+     where c.customer_id = cust_id;
 
-        RETURN QUERY SELECT 
-c.id, c.descriptions, c.cred, c.debt, sum(c.cred - c.debt)
-over (order by c.id
-rows between unbounded preceding and current row) as saldo
-from temp_table as c;
+     insert into temp_table (id, descriptions, cred, debt)
+     select 4, 'Cicilan', 0, coalesce(sum(c.total),0)
+     from payments c
+     where c.customer_id = cust_id;
 
+     return query select
+         c.id, c.descriptions, c.cred, c.debt, sum(c.cred - c.debt)
+         over (order by c.id
+         rows between unbounded preceding and current row) as saldo
+         from temp_table as c;
 
-end;
+ end;
 
-$$;
+ $$;
 
 
 ALTER FUNCTION public.piutang_balance_func(cust_id integer) OWNER TO postgres;
@@ -298,6 +385,51 @@ CREATE SEQUENCE public.order_seq
 
 
 ALTER TABLE public.order_seq OWNER TO postgres;
+
+--
+-- Name: grass; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.grass (
+    customer_id integer NOT NULL,
+    id integer DEFAULT nextval('public.order_seq'::regclass) NOT NULL,
+    descriptions character varying(128) NOT NULL,
+    order_date timestamp without time zone NOT NULL,
+    price numeric(12,2) DEFAULT 0 NOT NULL,
+    total numeric(12,2) DEFAULT 0 NOT NULL,
+    qty numeric(10,2) DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.grass OWNER TO postgres;
+
+--
+-- Name: grass_detail_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.grass_detail_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.grass_detail_seq OWNER TO postgres;
+
+--
+-- Name: grass_details; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.grass_details (
+    grass_id integer NOT NULL,
+    id integer DEFAULT nextval('public.grass_detail_seq'::regclass) NOT NULL,
+    qty numeric(10,2) DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.grass_details OWNER TO postgres;
 
 --
 -- Name: kasbons; Type: TABLE; Schema: public; Owner: postgres
@@ -460,6 +592,25 @@ COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
 
 
 --
+-- Data for Name: grass; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.grass (customer_id, id, descriptions, order_date, price, total, qty) FROM stdin;
+2	35	Pembelian Rumput Laut	2021-11-19 00:15:00	25000.00	3125000.00	125.00
+\.
+
+
+--
+-- Data for Name: grass_details; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.grass_details (grass_id, id, qty) FROM stdin;
+35	8	65.00
+35	7	60.00
+\.
+
+
+--
 -- Data for Name: kasbons; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -542,6 +693,13 @@ SELECT pg_catalog.setval('public.customer_seq', 2, true);
 
 
 --
+-- Name: grass_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.grass_detail_seq', 8, true);
+
+
+--
 -- Name: order_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -552,7 +710,7 @@ SELECT pg_catalog.setval('public.order_detail_seq', 88, true);
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 34, true);
+SELECT pg_catalog.setval('public.order_seq', 35, true);
 
 
 --
@@ -575,6 +733,22 @@ SELECT pg_catalog.setval('public.unit_seq', 24, true);
 
 ALTER TABLE ONLY public.customers
     ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: grass_details grass_details_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.grass_details
+    ADD CONSTRAINT grass_details_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: grass grass_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.grass
+    ADD CONSTRAINT grass_pkey PRIMARY KEY (id);
 
 
 --
@@ -630,6 +804,20 @@ ALTER TABLE ONLY public.units
 --
 
 CREATE INDEX ix_detail_product ON public.order_details USING btree (product_id);
+
+
+--
+-- Name: ix_grass_customer; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_grass_customer ON public.grass USING btree (customer_id);
+
+
+--
+-- Name: ix_grass_detail; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_grass_detail ON public.grass_details USING btree (grass_id);
 
 
 --
@@ -689,6 +877,34 @@ CREATE UNIQUE INDEX uq_unit_name ON public.units USING btree (product_id, name);
 
 
 --
+-- Name: grass grass_before_insert_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER grass_before_insert_update_trig BEFORE INSERT OR UPDATE ON public.grass FOR EACH ROW EXECUTE FUNCTION public.grass_before_insert_update_func();
+
+
+--
+-- Name: grass_details grass_detail_after_delete_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER grass_detail_after_delete_trig AFTER DELETE ON public.grass_details FOR EACH ROW EXECUTE FUNCTION public.grass_detail_after_delete_func();
+
+
+--
+-- Name: grass_details grass_detail_after_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER grass_detail_after_insert_trig AFTER INSERT ON public.grass_details FOR EACH ROW EXECUTE FUNCTION public.grass_detail_after_insert_func();
+
+
+--
+-- Name: grass_details grass_detail_after_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER grass_detail_after_update_trig AFTER UPDATE ON public.grass_details FOR EACH ROW EXECUTE FUNCTION public.grass_detail_after_update_func();
+
+
+--
 -- Name: order_details od_before_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -735,6 +951,14 @@ CREATE TRIGGER product_stock_update_trig BEFORE UPDATE OF first_stock ON public.
 --
 
 CREATE TRIGGER product_update_trig AFTER UPDATE OF price ON public.products FOR EACH ROW EXECUTE FUNCTION public.product_update_func();
+
+
+--
+-- Name: grass fk_customer_grass; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.grass
+    ADD CONSTRAINT fk_customer_grass FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
