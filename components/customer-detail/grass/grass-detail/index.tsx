@@ -129,7 +129,7 @@ const GrassDetail: NextPage<GrassDetailProps> = ({
           wrap={"wrap"}
         >
           {x.id > 0 && <View width={"5%"}>{x.id}</View>}
-          <View flex>
+          <View flex={{ base: "50%", M: 1 }}>
             <ActionButton
               flex
               height={"auto"}
@@ -140,14 +140,14 @@ const GrassDetail: NextPage<GrassDetailProps> = ({
               }}
             >
               {x.id === 0 ? (
-                <View flex>
+                <>
                   <PinAdd size="S" />
-                  <Text>Add Item</Text>
-                </View>
+                  Add Item
+                </>
               ) : (
-                <View flex>
+                <Text>
                   Timbangan ke {index+1}
-                </View>
+                </Text>
               )}
             </ActionButton>
             

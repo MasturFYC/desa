@@ -12,25 +12,15 @@ import {
   Text,
 } from "@adobe/react-spectrum";
 import {
-  add,
   dateParam,
-  iPayment,
-  stringDateFormat,
+  iPayment
 } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
-import Pin from "@spectrum-icons/workflow/PinOff";
-import moment from "moment";
 
 const PaymentForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
   ssr: false,
 });
-
-const getJatuhTempo = () => {
-  let currentDate = new Date();
-  currentDate.setDate(currentDate.getDate() + 7);
-  return moment(currentDate, stringDateFormat).format(stringDateFormat);
-};
 
 const initPayment: iPayment = {
   id: 0,

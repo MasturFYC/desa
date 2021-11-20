@@ -156,7 +156,12 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
           )
         )}
       <Flex direction={"row"}>
-        <View flex>Grand Total</View>
+        <View flex>Grand Total (
+          <strong>
+              {FormatNumber(
+                grasses.items.reduce((a, b) => a + b.qty, 0)
+              )}
+            </strong> kg)</View>
         <View>
           <Text>
             <strong>
