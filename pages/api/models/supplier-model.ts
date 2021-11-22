@@ -75,7 +75,7 @@ const apiSupplier: apiFunction = {
   },
 
   update: async (id: number, p: iSupplier) => {
-    console.log(p)
+
     const query = sql`
       UPDATE suppliers SET
       name = ${p.name},

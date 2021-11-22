@@ -22,6 +22,7 @@ export default function MyApp(props: AppProps) {
         <Provider theme={defaultTheme}
           colorScheme="light">
           {/*  locale={locale}> */}
+          <I18nProvider locale="id-ID">
           <SWRConfig
             value={{
               fetcher: fetchJson,
@@ -30,10 +31,9 @@ export default function MyApp(props: AppProps) {
               },
             }}
           >
-            <I18nProvider locale="id-ID">
             <Component {...pageProps} />
-            </I18nProvider>
           </SWRConfig>
+          </I18nProvider>
         </Provider>
       </SSRProvider>
     </React.Fragment>

@@ -162,8 +162,7 @@ const ProductComponent: NextPage = () => {
       </Flex>
       {products.isLoading && <WaitMe />}
       <Divider size="S" />
-      {products &&
-        products.items.map((x, i) => (
+      {products && products.items.map((x, i) => (
           <View key={x.id}>
             <View
               borderColor={selectedId === x.id ? "indigo-500" : "transparent"}

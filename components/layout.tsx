@@ -36,17 +36,18 @@ const Layout: NextPage<LayoutProps> = ({
         M: ["header  header", "sidebar content", "footer  footer"],
         L: ["header  header", "sidebar content", "footer  footer"],
       }}
-      columns={["1fr", "2fr"]}
+      columns={["1fr", "3fr"]}
       rows={["size-1000", "auto", "size-1000"]}
       minHeight={"100vh"}      
     >
       <View gridArea="header" backgroundColor="gray-50"
-        paddingTop={"size-100"} paddingX={{ base: "size-75", M: "size-400" }}>Sumber Ikan Putri</View>
-      
+        paddingTop={"size-100"} paddingX={{ base: "size-75", M: "size-400" }}>Sumber Ikan Putri</View>      
       <View
+        //borderWidth={"thin"}
         gridArea="sidebar"
         isHidden={{ base: true, M: false, L: false }}        
         backgroundColor={"gray-100"}
+        //width={"size-3000"}
         padding={"size-100"}
       >
         <MainMenu activeMenu={home ? "Home" : activeMenu} />

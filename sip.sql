@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
--- Dumped by pg_dump version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
+-- Dumped from database version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
+-- Dumped by pg_dump version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -301,7 +301,7 @@ CREATE FUNCTION public.product_stock_update_func() RETURNS trigger
 
 begin
 
-    raise notice 'test %', NEW.first_stock;
+  --  raise notice 'test %', NEW.first_stock;
     NEW.stock = NEW.stock + NEW.first_stock - OLD.first_stock;
 
     RETURN NEW;
@@ -335,6 +335,132 @@ end; $$;
 
 
 ALTER FUNCTION public.product_update_func() OWNER TO postgres;
+
+--
+-- Name: sd_before_insert_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.sd_before_insert_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+	--raise notice 'value: %', NEW.subtotal;
+	NEW.real_qty = NEW.qty * NEW.content;
+	NEW.subtotal = NEW.qty * NEW.price;
+
+	RETURN NEW;
+
+end; $$;
+
+
+ALTER FUNCTION public.sd_before_insert_func() OWNER TO postgres;
+
+--
+-- Name: sd_delete_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.sd_delete_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+	update products
+	set stock = stock - OLD.real_qty
+	WHERE id = OLD.product_id;
+
+	update stocks set
+	total = total - OLD.subtotal
+	where id = OLD.stock_id;
+
+	RETURN OLD;
+
+end; $$;
+
+
+ALTER FUNCTION public.sd_delete_func() OWNER TO postgres;
+
+--
+-- Name: sd_insert_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.sd_insert_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+	--raise notice 'value: %', NEW.subtotal;
+
+	update products
+	set stock = stock + NEW.real_qty
+	where id = NEW.product_id;
+
+	update stocks set total = total + NEW.subtotal where id = NEW.stock_id;
+
+	RETURN NEW;
+
+end; $$;
+
+
+ALTER FUNCTION public.sd_insert_func() OWNER TO postgres;
+
+--
+-- Name: sd_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.sd_update_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+
+begin
+
+	update products
+	set stock = stock + NEW.real_qty
+	where id = NEW.product_id;
+
+	update products 
+	set stock = stock - OLD.real_qty
+	where id = OLD.product_id;
+
+	update stocks
+	set total = total + NEW.subtotal - OLD.subtotal
+	-- remain_payment = remain_payment + NEW.subtotal - OLD.subtotal
+	where id = NEW.stock_id;
+
+	return NEW;
+
+end;
+
+$$;
+
+
+ALTER FUNCTION public.sd_update_func() OWNER TO postgres;
+
+--
+-- Name: stc_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.stc_update_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+NEW.remain_payment = NEW.total - (NEW.cash + NEW.payments);
+
+--raise notice 'Value: %', NEW.remain_payment;
+
+RETURN NEW;
+
+end;
+$$;
+
+
+ALTER FUNCTION public.stc_update_func() OWNER TO postgres;
 
 --
 -- Name: customer_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -550,6 +676,21 @@ CREATE TABLE public.products (
 ALTER TABLE public.products OWNER TO postgres;
 
 --
+-- Name: seq_stock; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.seq_stock
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.seq_stock OWNER TO postgres;
+
+--
 -- Name: seq_supplier; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -563,6 +704,45 @@ CREATE SEQUENCE public.seq_supplier
 
 
 ALTER TABLE public.seq_supplier OWNER TO postgres;
+
+--
+-- Name: stock_details; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.stock_details (
+    stock_id integer NOT NULL,
+    id integer DEFAULT nextval('public.order_detail_seq'::regclass) NOT NULL,
+    product_id integer NOT NULL,
+    unit_id integer NOT NULL,
+    qty numeric(10,2) DEFAULT 0 NOT NULL,
+    content numeric(8,2) DEFAULT 0 NOT NULL,
+    unit_name character varying(6) NOT NULL,
+    real_qty numeric(10,2) DEFAULT 0 NOT NULL,
+    price numeric(12,2) DEFAULT 0 NOT NULL,
+    subtotal numeric(12,2) DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.stock_details OWNER TO postgres;
+
+--
+-- Name: stocks; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.stocks (
+    id integer DEFAULT nextval('public.seq_stock'::regclass) NOT NULL,
+    supplier_id integer NOT NULL,
+    stock_num character varying(50) NOT NULL,
+    stock_date timestamp without time zone NOT NULL,
+    total numeric(12,2) DEFAULT 0 NOT NULL,
+    cash numeric(12,2) DEFAULT 0 NOT NULL,
+    payments numeric(12,2) DEFAULT 0 NOT NULL,
+    remain_payment numeric(12,2) DEFAULT 0 NOT NULL,
+    descriptions character varying(128)
+);
+
+
+ALTER TABLE public.stocks OWNER TO postgres;
 
 --
 -- Name: suppliers; Type: TABLE; Schema: public; Owner: postgres
@@ -702,16 +882,33 @@ COPY public.products (id, name, spec, price, stock, first_stock, unit, update_no
 
 
 --
+-- Data for Name: stock_details; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.stock_details (stock_id, id, product_id, unit_id, qty, content, unit_name, real_qty, price, subtotal) FROM stdin;
+\.
+
+
+--
+-- Data for Name: stocks; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.stocks (id, supplier_id, stock_num, stock_date, total, cash, payments, remain_payment, descriptions) FROM stdin;
+3	1	x1	2021-11-22 00:00:00	10000.00	2500.00	2500.00	5000.00	test
+\.
+
+
+--
 -- Data for Name: suppliers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.suppliers (id, name, sales_name, street, city, phone, cell, email) FROM stdin;
-3	aaaa qwewqe	Suwarjo, sh	Jl. Jend. Sudirman No. 11/A-4	Jatibarang	+62234572275	\N	mastur.st12@gmail.com
-5	qwewqef qwerwqe	qweqwe qwewqe	\N	qweqwe	\N	\N	\N
 1	CV. Karya Baru	Mu'in	\N	Indramayu	qweqweqwe	\N	\N
 2	CV. Marga Mekar	Mastur	Jl. Jend. Sudirman No. 155	Indramayu qwewqe	0856232154	5646565	mastur.st12@gmail.com
-6	qwewqe	qweqwe	eqwe	\N	\N	\N	\N
-4	werwer qwewe	qweqweqwe	qweqwewe	Jakartra	\N	\N	\N
+5	CV. Sejahtera	Sumarno, Sp.d	\N	qweqwe	\N	\N	\N
+4	Gudang Garam, PT	Dhoni	qweqwewe	Jakartra	\N	\N	\N
+6	Inti Persada, PT	qweqwe	eqweeeee	Indramayu	\N	\N	\N
+3	aaaa	Suwarjo, SH	Jl. Jend. Sudirman No. 11/A-4	Jatibarang	+62234572275	\N	mastur.st12@gmail.com
 \.
 
 
@@ -766,6 +963,13 @@ SELECT pg_catalog.setval('public.order_seq', 35, true);
 --
 
 SELECT pg_catalog.setval('public.product_seq', 16, true);
+
+
+--
+-- Name: seq_stock; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.seq_stock', 3, true);
 
 
 --
@@ -847,6 +1051,30 @@ ALTER TABLE ONLY public.products
 
 
 --
+-- Name: stock_details stock_detail_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.stock_details
+    ADD CONSTRAINT stock_detail_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: stocks stock_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.stocks
+    ADD CONSTRAINT stock_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: suppliers supplier_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.suppliers
+    ADD CONSTRAINT supplier_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: units units_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -894,6 +1122,34 @@ CREATE INDEX ix_order_customer ON public.orders USING btree (customer_id);
 --
 
 CREATE INDEX ix_payment_customer ON public.payments USING btree (customer_id);
+
+
+--
+-- Name: ix_sd_product; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_sd_product ON public.stock_details USING btree (product_id);
+
+
+--
+-- Name: ix_sd_stock; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_sd_stock ON public.stock_details USING btree (stock_id);
+
+
+--
+-- Name: ix_sd_unit; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_sd_unit ON public.stock_details USING btree (unit_id);
+
+
+--
+-- Name: ix_stock_supplier; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_stock_supplier ON public.stocks USING btree (supplier_id);
 
 
 --
@@ -1016,6 +1272,41 @@ CREATE TRIGGER product_update_trig AFTER UPDATE OF price ON public.products FOR 
 
 
 --
+-- Name: stock_details sd_before_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER sd_before_insert_trig BEFORE INSERT OR UPDATE OF qty, content, price ON public.stock_details FOR EACH ROW EXECUTE FUNCTION public.sd_before_insert_func();
+
+
+--
+-- Name: stock_details sd_delete_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER sd_delete_trig AFTER DELETE ON public.stock_details FOR EACH ROW EXECUTE FUNCTION public.sd_delete_func();
+
+
+--
+-- Name: stock_details sd_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER sd_insert_trig AFTER INSERT ON public.stock_details FOR EACH ROW EXECUTE FUNCTION public.sd_insert_func();
+
+
+--
+-- Name: stock_details sd_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER sd_update_trig AFTER UPDATE ON public.stock_details FOR EACH ROW EXECUTE FUNCTION public.sd_update_func();
+
+
+--
+-- Name: stocks stc_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER stc_update_trig BEFORE INSERT OR UPDATE OF cash, total, payments ON public.stocks FOR EACH ROW EXECUTE FUNCTION public.stc_update_func();
+
+
+--
 -- Name: grass fk_customer_grass; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1077,6 +1368,38 @@ ALTER TABLE ONLY public.order_details
 
 ALTER TABLE ONLY public.units
     ADD CONSTRAINT fk_product_unit FOREIGN KEY (product_id) REFERENCES public.products(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: stock_details fk_sd_product; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.stock_details
+    ADD CONSTRAINT fk_sd_product FOREIGN KEY (product_id) REFERENCES public.products(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: stock_details fk_sd_unit; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.stock_details
+    ADD CONSTRAINT fk_sd_unit FOREIGN KEY (unit_id) REFERENCES public.units(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: stock_details fk_stock_detail; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.stock_details
+    ADD CONSTRAINT fk_stock_detail FOREIGN KEY (stock_id) REFERENCES public.stocks(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: stocks fk_supplier_stocks; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.stocks
+    ADD CONSTRAINT fk_supplier_stocks FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --

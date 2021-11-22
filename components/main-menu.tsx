@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import React from "react";
 import { iUserLogin } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
-import { Flex } from "@react-spectrum/layout";
 
 export const siteTitle = "SPBU";
 
@@ -38,7 +37,7 @@ const menus: MenuType[] = [
   },  {
     id: 3,
     name: "Pembelian (Stock)",
-    link: "/buy",
+    link: "/stock",
   },
   {
     id: 4,

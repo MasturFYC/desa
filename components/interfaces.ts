@@ -159,3 +159,33 @@ export interface iSupplier {
   cell?: string;
   email?:string;
 }
+
+export interface iStock {
+  id: number;
+  supplierId: number;
+  stockNum: string;
+  stockDate: string;
+  total: number;
+  cash: number;
+  payments: number;
+  remainPayment: number;
+  descriptions?: string;
+  supplier?: iSupplier;
+}
+
+export interface iStockDetail {
+  stockId: number;
+  id: number;
+  productId: number;
+  unitId: number;
+  productName?: string;
+  spec?: string;
+  qty: number;
+  content: number;
+  unitName: string;
+  realQty: number;
+  price: number;
+  subtotal: number;
+  unit?: iUnit
+  product?: iProduct;
+}
