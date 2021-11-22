@@ -148,3 +148,14 @@ export interface iGrassDetail {
   id: number;
   qty: number
 }
+
+export interface iSupplier {
+  id: number;
+  name: string;
+  salesName?: string;
+  street?:string;
+  city?:string;
+  phone?: string;
+  cell?: string;
+  email?:string;
+}

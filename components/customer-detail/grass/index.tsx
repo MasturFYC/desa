@@ -14,13 +14,10 @@ import {
 } from "@adobe/react-spectrum";
 import {
   dateParam,
-  iGrass,
-  iGrassDetail,
-  iProduct,
+  iGrass
 } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
 import Pin from "@spectrum-icons/workflow/PinOff";
-import product from "@components/product";
 
 const GrassDetail = dynamic(
   () => import("@components/customer-detail/grass/grass-detail"),

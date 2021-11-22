@@ -550,6 +550,39 @@ CREATE TABLE public.products (
 ALTER TABLE public.products OWNER TO postgres;
 
 --
+-- Name: seq_supplier; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.seq_supplier
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.seq_supplier OWNER TO postgres;
+
+--
+-- Name: suppliers; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.suppliers (
+    id integer DEFAULT nextval('public.seq_supplier'::regclass) NOT NULL,
+    name character varying(50) NOT NULL,
+    sales_name character varying(50),
+    street character varying(128),
+    city character varying(50),
+    phone character varying(25),
+    cell character varying(25),
+    email character varying(50)
+);
+
+
+ALTER TABLE public.suppliers OWNER TO postgres;
+
+--
 -- Name: unit_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -669,6 +702,20 @@ COPY public.products (id, name, spec, price, stock, first_stock, unit, update_no
 
 
 --
+-- Data for Name: suppliers; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.suppliers (id, name, sales_name, street, city, phone, cell, email) FROM stdin;
+3	aaaa qwewqe	Suwarjo, sh	Jl. Jend. Sudirman No. 11/A-4	Jatibarang	+62234572275	\N	mastur.st12@gmail.com
+5	qwewqef qwerwqe	qweqwe qwewqe	\N	qweqwe	\N	\N	\N
+1	CV. Karya Baru	Mu'in	\N	Indramayu	qweqweqwe	\N	\N
+2	CV. Marga Mekar	Mastur	Jl. Jend. Sudirman No. 155	Indramayu qwewqe	0856232154	5646565	mastur.st12@gmail.com
+6	qwewqe	qweqwe	eqwe	\N	\N	\N	\N
+4	werwer qwewe	qweqweqwe	qweqwewe	Jakartra	\N	\N	\N
+\.
+
+
+--
 -- Data for Name: units; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -682,6 +729,7 @@ COPY public.units (product_id, id, name, content, price, buy_price, margin) FROM
 7	1	btl	1.00	15000.00	10000.00	0.5000
 16	23	pcs	1.00	1950.00	1500.00	0.3000
 16	24	pak	3.00	5850.00	4500.00	0.3000
+7	25	ls	12.00	150000.00	120000.00	0.2500
 \.
 
 
@@ -721,10 +769,17 @@ SELECT pg_catalog.setval('public.product_seq', 16, true);
 
 
 --
+-- Name: seq_supplier; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.seq_supplier', 38, true);
+
+
+--
 -- Name: unit_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.unit_seq', 24, true);
+SELECT pg_catalog.setval('public.unit_seq', 25, true);
 
 
 --
@@ -874,6 +929,13 @@ CREATE UNIQUE INDEX uq_product_name ON public.products USING btree (name);
 --
 
 CREATE UNIQUE INDEX uq_unit_name ON public.units USING btree (product_id, name);
+
+
+--
+-- Name: ux_supplier_name; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX ux_supplier_name ON public.suppliers USING btree (name);
 
 
 --

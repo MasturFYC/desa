@@ -29,10 +29,15 @@ const menus: MenuType[] = [
     id: 2,
     name: "Produk",
     link: "/product",
-  },
+  }
+  ,
   {
+    id: 5,
+    name: "Supplier",
+    link: "/supplier",
+  },  {
     id: 3,
-    name: "Pembelian",
+    name: "Pembelian (Stock)",
     link: "/buy",
   },
   {

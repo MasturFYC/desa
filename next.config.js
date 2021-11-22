@@ -29,7 +29,6 @@ const withTM = require('next-transpile-modules')([
   '@react-spectrum/statuslight',
   '@react-spectrum/switch',
   '@react-spectrum/tabs',
-  '@react-spectrum/table',
   '@react-spectrum/text',
   '@react-spectrum/textfield',
   '@react-spectrum/theme-dark',
@@ -39,7 +38,8 @@ const withTM = require('next-transpile-modules')([
   '@react-spectrum/view',
   '@react-spectrum/well',
   '@spectrum-icons/ui',
-  '@spectrum-icons/workflow'
+  '@spectrum-icons/workflow',
+  '@react-spectrum/table',
 ]);
 
 module.exports = withTM({

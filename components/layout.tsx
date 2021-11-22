@@ -34,6 +34,7 @@ const Layout: NextPage<LayoutProps> = ({
       areas={{
         base: ["header header", "content content", "footer footer"],
         M: ["header  header", "sidebar content", "footer  footer"],
+        L: ["header  header", "sidebar content", "footer  footer"],
       }}
       columns={["1fr", "2fr"]}
       rows={["size-1000", "auto", "size-1000"]}
@@ -43,10 +44,10 @@ const Layout: NextPage<LayoutProps> = ({
         paddingTop={"size-100"} paddingX={{ base: "size-75", M: "size-400" }}>Sumber Ikan Putri</View>
       
       <View
-        isHidden={{ base: true, M: false, L: false }}
         gridArea="sidebar"
+        isHidden={{ base: true, M: false, L: false }}        
         backgroundColor={"gray-100"}
-        padding={"size-125"}
+        padding={"size-100"}
       >
         <MainMenu activeMenu={home ? "Home" : activeMenu} />
       </View>
@@ -60,9 +61,6 @@ const Layout: NextPage<LayoutProps> = ({
       <Footer gridArea="footer" flex>
         <View flex paddingTop={"size-100"} paddingX={{base:"size-75", M:"size-400"}}>&copy; All rights reserved.</View>
       </Footer>
-      {/* <View gridArea="footer">
-        <Divider size="S" />
-      </View> */}
     </Grid>
   );
 };
