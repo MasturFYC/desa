@@ -8,8 +8,8 @@ type apiReturn = Promise<any[] | (readonly iCustomer[] | undefined)[]>;
 interface apiFunction {
   list: () => apiReturn;
   find: (name: string | string[]) => apiReturn;
-  getCustomer: (id: number) => apiReturn;
-  getPiutang: (id: number) => apiReturn;
+  getCustomer: (customerId: number) => apiReturn;
+  getPiutang: (customerId: number) => apiReturn;
   delete: (id: number) => apiReturn;
   update: (id: number, data: iCustomer) => apiReturn;
   insert: (data: iCustomer) => apiReturn;

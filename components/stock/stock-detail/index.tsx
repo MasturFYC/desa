@@ -31,7 +31,7 @@ const initStockDetail: iStockDetail = {
 type StockDetailProps = {
   products: AsyncListData<iProduct>;
   stockId: number;
-//  stock: iStock;
+  //  stock: iStock;
   updateTotal: (stockId: number, subtotal: number) => void;
 };
 
@@ -46,9 +46,14 @@ const StockDetail: NextPage<StockDetailProps> = ({
 
   let stockDetails = useAsyncList<iStockDetail>({
     async load({ signal }) {
-      let res = await fetch(`/api/stock-detail/${stockId}`, { signal });
+      let res = await fetch(`/api/stock-detail/${stockId}`, {
+        signal,
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      });
       let json = await res.json();
-      return { items: json };
+      return { items: res.status === 200 ? json : [] };
     },
     getKey: (item: iStockDetail) => item.id,
   });
@@ -84,23 +89,21 @@ const StockDetail: NextPage<StockDetailProps> = ({
   };
 
   return (
-    <Fragment>
-      <View backgroundColor={"gray-100"} marginBottom={"size-400"} padding={{ base: "size-50", M: "size-200" }}>
-        <View paddingY={"size-50"}>
+    <View>
+      <View paddingY={"size-50"} backgroundColor={"gray-200"}>
           <Flex
             isHidden={{ base: true, M: false }}
-            marginBottom={"size-100"}
             direction={{ base: "column", M: "row" }}
             columnGap="size-100"
           >
-            <View width="5%">ID#</View>
-            <View flex>Nama Barang</View>
-            <View width={"20%"}>Qty / Unit</View>
+            <View width="5%" paddingStart={"size-100"}>ID#</View>
+            <View flex>NAMA BARANG</View>
+            <View width={"20%"}>QTY / UNIT</View>
             <View width="10%">
-              <span style={{ textAlign: "right", display: "block" }}>Harga</span>
+              <span style={{ textAlign: "right", display: "block" }}>HARGA</span>
             </View>
-            <View width="10%">
-              <span style={{ textAlign: "right", display: "block" }}>Subtotal</span>
+            <View width="10%" paddingEnd={"size-100"}>
+              <span style={{ textAlign: "right", display: "block" }}>SUBTOTAL</span>
             </View>
           </Flex>
           <Divider size={"S"} />
@@ -131,8 +134,7 @@ const StockDetail: NextPage<StockDetailProps> = ({
               </View>
             )
           )}
-      </View>
-    </Fragment>
+   </View>
   );
 
   function renderDetails(x: iStockDetail, isNew: boolean) {
@@ -145,7 +147,7 @@ const StockDetail: NextPage<StockDetailProps> = ({
           columnGap="size-100"
           wrap={"wrap"}
         >
-          {x.id > 0 && <View width={"5%"}>{x.id}</View>}
+          {x.id > 0 && <View width={"5%"} paddingStart={"size-100"}>{x.id}</View>}
           <View flex={{ base: "50%", M: 1 }}>
             <ActionButton
               flex
@@ -186,7 +188,7 @@ const StockDetail: NextPage<StockDetailProps> = ({
             {FormatNumber(x.price)}
           </span>
         </View>
-        <View width={{ base: "47%", M: "10%" }}>
+        <View width={{ base: "47%", M: "10%" }} paddingEnd={"size-100"}>
           <span
             style={{ textAlign: "right", display: "block", fontWeight: 700 }}
           >

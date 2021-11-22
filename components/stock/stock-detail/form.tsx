@@ -23,6 +23,8 @@ export type StockDetailFormProps = {
   closeForm: () => void;
 };
 
+
+
 const StockDetailForm: NextPage<StockDetailFormProps> = ({
   products,
   data,
@@ -74,8 +76,8 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
     }
   }
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = () => {
+    //e.preventDefault();
     postData(detail.id === 0 ? "POST" : "PUT");
   };
 
@@ -108,7 +110,6 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
       paddingY={"size-100"}
       paddingX={{ base: "size-100", M: "size-1000" }}
     >
-      <Form onSubmit={handleSubmit}>
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <ComboBox
             autoFocus
@@ -126,9 +127,9 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
                 setDetail((o) => ({
                   ...o,
                   unitId: u.id,
-                  price: u.price,
+                  price: u.buyPrice,
                   content: u.content,
-                  subtotal: u.price * o.qty,
+                  subtotal: u.buyPrice * o.qty,
                   unitName: u.name,
                   productName: p.name,
                   spec: p.spec,
@@ -140,7 +141,6 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
             {(item) => <Item>{item.name}</Item>}
           </ComboBox>
           <NumberField
-            isReadOnly
             hideStepper={true}
             width={"auto"}
             label={"Harga"}
@@ -179,9 +179,9 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
                     setDetail((o) => ({
                       ...o,
                       unitId: u.id,
-                      price: u.price,
+                      price: u.buyPrice,
                       content: u.content,
-                      subtotal: u.price * o.qty,
+                      subtotal: u.buyPrice * o.qty,
                       unitName: u.name,
                     }));
                   }
@@ -210,7 +210,7 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
           marginTop={"size-200"}
         >
           <View flex>
-            <Button type={"submit"} variant="cta">
+            <Button type={"button"} variant="cta" onPress={()=>handleSubmit()}>
               Save
             </Button>
             <Button
@@ -234,7 +234,6 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
             </View>
           )}
         </Flex>
-      </Form>
     </View>
   );
 };

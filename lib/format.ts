@@ -6,7 +6,7 @@ const numberFormat = new Intl.NumberFormat("id-ID", {
 
 const dateFormat = new Intl.DateTimeFormat("id-ID", {
   year: "numeric",
-  month: "long",
+  month: "short",
   day: "2-digit"
 });
 

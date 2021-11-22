@@ -1,26 +1,47 @@
 import { NextPage } from "next";
 import React, { FormEvent, useState } from "react";
-import { dateOnly, iSupplier, iStock } from "@components/interfaces";
+import { dateOnly, iSupplier, iStock, iProduct } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { TextArea, TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
-import { useDialogContainer } from "@adobe/react-spectrum";
+import { AsyncListData } from "@react-stately/data";
+import { ComboBox, Item } from "@react-spectrum/combobox";
+import supplier from "@components/supplier";
+import dynamic from "next/dynamic";
+import WaitMe from "@components/ui/wait-me";
+import product from "@components/product";
+import { text } from "pdfkit";
+
+const StockDetail = dynamic(
+  () => import("./stock-detail"),
+  {
+    loading: () => <WaitMe />,
+    ssr: false,
+  }
+);
 
 type StockFormProps = {
   data: iStock;
+  products: AsyncListData<iProduct>;
+  suppliers: AsyncListData<iSupplier>;
   updateData: (method: string, data: iStock) => void;
+  updateTotal: (stockId: number, subtotal: number) => void;
+  closeForm: () => void;
 };
 
 const StockForm: NextPage<StockFormProps> = ({
   data,
+  products,
+  suppliers,
   updateData: updateStock,
+  updateTotal: updateTotal,
+  closeForm
 }) => {
   let [stock, setStock] = React.useState<iStock>({} as iStock);
   let [message, setMessage] = useState<string>("");
-  const dialog = useDialogContainer();
 
   React.useEffect(() => {
     let isLoaded = false;
@@ -48,18 +69,29 @@ const StockForm: NextPage<StockFormProps> = ({
     const json = await res.json();
 
     if (res.status === 200) {
-      updateStock(stock.id === 0 ? "POST" : "PUT", json);
-      dialog.dismiss();
+      updateStock(stock.id === 0 ? "POST" : "PUT", {
+        ...json,
+        supplierName: stock.supplierName
+      });
+      closeForm();
     } else {
       console.log(json.message);
       setMessage("Data stock tidak bisa dipost, lihat log.");
     }
   }
 
-  const handleSubmit = (e: FormEvent) => {
+  const submitForm = (e: FormEvent) => {
     e.preventDefault();
+    handleSubmit();
+  }
+
+  const handleSubmit = () => {
     postStock(stock.id === 0 ? "POST" : "PUT");
   };
+
+  const reUpdateStock = (stockId: number, subtotal: number) => {
+    updateTotal(stock.id, subtotal);
+  }
 
   const deleteStock = async () => {
     const url = `/api/stock/${stock.id}`;
@@ -75,7 +107,7 @@ const StockForm: NextPage<StockFormProps> = ({
 
     if (res.status === 200) {
       updateStock("DELETE", stock);
-      dialog.dismiss();
+      closeForm();
     } else {
       console.log(data);
       setMessage(
@@ -85,7 +117,7 @@ const StockForm: NextPage<StockFormProps> = ({
   };
 
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form onSubmit={submitForm} isEmphasized marginY={"size-100"}>
       <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
         <TextField
           autoFocus
@@ -98,9 +130,24 @@ const StockForm: NextPage<StockFormProps> = ({
           value={stock.stockNum}
           onChange={(e) => setStock((o) => ({ ...o, stockNum: e }))}
         />
+        <ComboBox
+          width={{ base: "auto", M: "30%" }}
+          label={"Supplier"}
+          isRequired
+          placeholder={"e.g. pilih supplier"}
+          defaultItems={suppliers.items}
+          selectedKey={stock.supplierId}
+          onSelectionChange={(e) => setStock((o) => ({
+            ...o,
+            supplierId: +e,
+            supplierName: suppliers.getItem(+e).name
+          }))}
+        >
+          {(item) => <Item>{item.name}</Item>}
+        </ComboBox>
         <TextField
           type={"date"}
-          width={{ base: "auto", M: "35%" }}
+          width={{ base: "auto", M: "25%" }}
           placeholder={"e.g. dd/mm/yyyy"}
           isRequired
           label={"Tanggal stock"}
@@ -108,6 +155,12 @@ const StockForm: NextPage<StockFormProps> = ({
           onChange={(e) => setStock((o) => ({ ...o, stockDate: e }))}
         />
       </Flex>
+
+      <View backgroundColor={"gray-50"}>
+        {stock.id > 0 &&
+          <StockDetail products={products} stockId={stock.id} updateTotal={reUpdateStock} />
+        }
+      </View>
 
       <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
         <NumberField
@@ -126,7 +179,8 @@ const StockForm: NextPage<StockFormProps> = ({
           hideStepper={true}
           width={"auto"}
           label={"Bayar"}
-          onChange={(e) => setStock((o) => ({ ...o, 
+          onChange={(e) => setStock((o) => ({
+            ...o,
             cash: e,
             remainPayment: o.total - o.payments - e
           }))}
@@ -164,9 +218,9 @@ const StockForm: NextPage<StockFormProps> = ({
       <TextArea
         width={"auto"}
         flex
-        placeholder={"e.g. Pembelian Dari Supplier"}
+        placeholder={"e.g. Stock ini jatuh tempo pada tanggal ..."}
         label={"Keterangan"}
-        value={stock.descriptions}
+        value={stock.descriptions || ''}
         onChange={(e) => setStock((o) => ({ ...o, descriptions: e }))}
       />
 
@@ -177,16 +231,21 @@ const StockForm: NextPage<StockFormProps> = ({
         marginTop={"size-200"}
       >
         <View flex>
-          <Button type={"submit"} variant="cta">
+          <Button variant={"cta"} type={"button"} onPress={() => handleSubmit()}>
             Save
           </Button>
           <Button
             type={"button"}
             variant="secondary"
             marginStart={"size-100"}
-            onPress={() => dialog.dismiss()}
+            onPress={() => {
+              if (stock.id === 0) {
+                updateStock("DELETE", stock);
+              }
+              closeForm()
+            }}
           >
-            Cancel
+            Close
           </Button>
         </View>
         {stock.id > 0 && (

@@ -37,7 +37,7 @@ export default async function stockDetailApi(
   if (data) {
     res.status(200).json(data);
   } else {
-    console.log("ORDER DETAIL Transaction: ", req.method, error);
+    console.log("STOCK DETAIL Transaction: ", req.method, error);
     res.status(404).json({ message: 'ORDER DETAIL tidak ditemukan.' });
   }
 

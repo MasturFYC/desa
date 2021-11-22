@@ -50,8 +50,10 @@ const apiStock: apiFunction = {
   list: async () => {
 
     const query = sql`SELECT
-      c.id, c.supplier_id, c.stock_num, c.stock_date, c.total, c.cash, c.payments, c.remain_payment, c.descriptions
+      c.id, c.supplier_id, c.stock_num, c.stock_date, c.total, c.cash, c.payments, c.remain_payment, c.descriptions,
+      s.name as "supplierName"
     FROM stocks AS c
+    inner join suppliers s on s.id = c.supplier_id
     ORDER BY c.id DESC`;
 
     return await db

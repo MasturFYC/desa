@@ -8,7 +8,8 @@ type apiReturn = Promise<any[] | (readonly iSupplier[] | undefined)[]>;
 interface apiFunction {
   list: () => apiReturn;
   find: (name: string | string[]) => apiReturn;
-  getSupplier: (id: number) => apiReturn;
+  getPiutang: (supplierId: number) => apiReturn;
+  getSupplier: (supplierId: number) => apiReturn;
   delete: (id: number) => apiReturn;
   update: (id: number, data: iSupplier) => apiReturn;
   insert: (data: iSupplier) => apiReturn;
@@ -16,11 +17,22 @@ interface apiFunction {
 
 const apiSupplier: apiFunction = {
 
-  getSupplier: async (id: number) => {
+  getPiutang: async (supplierId: number) => {
+
+    const query = sql`select * from supplier_balance_func(${supplierId})`;
+
+    return await db
+      .query(query)
+      .then((data) => [data.rows, undefined])
+      .catch((error) => [undefined, error]);
+
+  },
+
+  getSupplier: async (supplierId: number) => {
     const query = sql`SELECT
       c.id, c.name, c.sales_name, c.street, c.city, c.phone, c.cell, c.email
     FROM suppliers AS c
-    WHERE c.id = ${id}`;
+    WHERE c.id = ${supplierId}`;
 
     //      console.log(query.sql, query.values)
 

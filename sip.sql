@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
--- Dumped by pg_dump version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
+-- Dumped from database version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
+-- Dumped by pg_dump version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -463,6 +463,125 @@ $$;
 ALTER FUNCTION public.stc_update_func() OWNER TO postgres;
 
 --
+-- Name: sup_payment_delete_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.sup_payment_delete_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    update stocks set
+    payments = payments - OLD.nominal
+    where id = OLD.stock_id;
+
+    RETURN OLD;
+
+end;
+$$;
+
+
+ALTER FUNCTION public.sup_payment_delete_func() OWNER TO postgres;
+
+--
+-- Name: sup_payment_insert_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.sup_payment_insert_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    update stocks set
+    payments = payments + NEW.nominal
+    where id = NEW.stock_id;
+
+    RETURN NEW;
+
+end;
+$$;
+
+
+ALTER FUNCTION public.sup_payment_insert_func() OWNER TO postgres;
+
+--
+-- Name: sup_payment_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.sup_payment_update_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    update stocks set
+    payments = payments + NEW.nominal - OLD.nominal
+    where id = NEW.stock_id;
+
+    RETURN NEW;
+
+end;
+$$;
+
+
+ALTER FUNCTION public.sup_payment_update_func() OWNER TO postgres;
+
+--
+-- Name: supplier_balance_func(integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.supplier_balance_func(sup_id integer) RETURNS TABLE(id integer, descriptions character varying, cred numeric, debt numeric, saldo numeric)
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+     drop table IF EXISTS temp_table;
+
+     create temporary table temp_table(
+         id integer,
+         descriptions varchar(128),
+         cred decimal(12,2),
+         debt decimal(12,2)
+     );
+
+     insert into temp_table (id, descriptions, cred, debt)
+     select 1, 'Piutang Barang', coalesce(sum(c.total),0), coalesce(sum(c.cash),0)
+     from stocks c
+     where c.supplier_id = sup_id;
+
+     insert into temp_table (id, descriptions, cred, debt)
+     select 2, 'Angsuran', 0, coalesce(sum(c.nominal),0)
+     from stock_payments c
+     inner join stocks s on s.id = c.stock_id
+     where s.supplier_id = sup_id;
+
+--    insert into temp_table (id, descriptions, cred, debt)
+--     select 3, 'Pembelian', 0, coalesce(sum(c.total),0)
+--    from grass c
+--     where c.customer_id = cust_id;
+
+--     insert into temp_table (id, descriptions, cred, debt)
+--     select 4, 'Cicilan', 0, coalesce(sum(c.total),0)
+--     from payments c
+--     where c.customer_id = cust_id;
+
+     return query select
+         c.id, c.descriptions, c.cred, c.debt, sum(c.cred - c.debt)
+         over (order by c.id
+         rows between unbounded preceding and current row) as saldo
+         from temp_table as c;
+
+ end;
+
+ $$;
+
+
+ALTER FUNCTION public.supplier_balance_func(sup_id integer) OWNER TO postgres;
+
+--
 -- Name: customer_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -726,6 +845,22 @@ CREATE TABLE public.stock_details (
 ALTER TABLE public.stock_details OWNER TO postgres;
 
 --
+-- Name: stock_payments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.stock_payments (
+    id integer DEFAULT nextval('public.seq_stock'::regclass) NOT NULL,
+    stock_id integer NOT NULL,
+    pay_num character varying(50) NOT NULL,
+    pay_date timestamp without time zone NOT NULL,
+    nominal numeric(12,2) DEFAULT 0 NOT NULL,
+    descriptions character varying(128)
+);
+
+
+ALTER TABLE public.stock_payments OWNER TO postgres;
+
+--
 -- Name: stocks; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -865,7 +1000,6 @@ COPY public.orders (id, customer_id, order_date, total, payment, remain_payment,
 
 COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total) FROM stdin;
 33	2	Cicilan Bayar Obat	0	2021-11-18 11:55:00	25000.00
-34	2	Cicilan utang	0	2021-11-18 14:23:00	2500000.00
 \.
 
 
@@ -875,9 +1009,9 @@ COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total
 
 COPY public.products (id, name, spec, price, stock, first_stock, unit, update_notif) FROM stdin;
 16	eqweqwe	eqweqwe	1500.00	5.00	20.00	pcs	t
-7	Abachel	250cc	10000.00	66.00	90.00	btl	t
-1	EM 4 Perikanan	1 ltr	30000.00	89.00	100.00	pcs	f
-15	Pakan Bandeng	Pelet KW1	250000.00	97.00	110.00	zak	t
+15	Pakan Bandeng	Pelet KW1	250000.00	100.00	110.00	zak	t
+1	EM 4 Perikanan	1 ltr	30000.00	121.00	100.00	pcs	f
+7	Abachel	250cc	10000.00	82.00	90.00	btl	t
 \.
 
 
@@ -886,6 +1020,27 @@ COPY public.products (id, name, spec, price, stock, first_stock, unit, update_no
 --
 
 COPY public.stock_details (stock_id, id, product_id, unit_id, qty, content, unit_name, real_qty, price, subtotal) FROM stdin;
+12	89	7	1	1.00	1.00	btl	1.00	10000.00	10000.00
+12	91	7	2	1.00	10.00	pak	10.00	100000.00	100000.00
+4	94	15	21	3.00	1.00	zak	3.00	250000.00	750000.00
+12	90	1	20	10.00	3.00	pak	30.00	90000.00	900000.00
+11	92	7	1	4.00	1.00	btl	4.00	10000.00	40000.00
+11	95	1	17	2.00	1.00	pcs	2.00	30000.00	60000.00
+29	96	7	1	1.00	1.00	btl	1.00	10000.00	10000.00
+\.
+
+
+--
+-- Data for Name: stock_payments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.stock_payments (id, stock_id, pay_num, pay_date, nominal, descriptions) FROM stdin;
+24	11	x-0001	2021-11-23 03:16:00	35000.00	Bayar Stock Pembelian #BG-562987
+23	11	x-0001	2021-11-23 03:08:00	50000.00	Bayar Stock Pembelian #BG-562987
+25	12	x-65000	2021-11-23 03:25:00	510000.00	Bayar Stock Pembelian #CV/3-985441
+26	4	cp-004	2021-11-23 03:27:00	50000.00	Bayar Stock Pembelian #x-10256559
+27	11	x63332	2021-11-23 03:32:00	10000.00	Bayar Stock Pembelian #BG-562987
+30	29	x9898	2021-11-23 03:39:00	10000.00	Bayar Stock Pembelian #ssssss
 \.
 
 
@@ -894,7 +1049,10 @@ COPY public.stock_details (stock_id, id, product_id, unit_id, qty, content, unit
 --
 
 COPY public.stocks (id, supplier_id, stock_num, stock_date, total, cash, payments, remain_payment, descriptions) FROM stdin;
-3	1	x1	2021-11-22 00:00:00	10000.00	2500.00	2500.00	5000.00	test
+12	5	CV/3-985441	2021-11-22 21:14:00	1010000.00	300000.00	510000.00	200000.00	\N
+4	2	x-10256559	2021-11-22 20:49:00	750000.00	700000.00	50000.00	0.00	\N
+11	4	BG-562987	2021-11-22 21:04:00	100000.00	5000.00	95000.00	0.00	\N
+29	6	ssssss	2021-11-23 03:38:00	10000.00	0.00	10000.00	0.00	\N
 \.
 
 
@@ -948,7 +1106,7 @@ SELECT pg_catalog.setval('public.grass_detail_seq', 8, true);
 -- Name: order_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_detail_seq', 88, true);
+SELECT pg_catalog.setval('public.order_detail_seq', 96, true);
 
 
 --
@@ -969,7 +1127,7 @@ SELECT pg_catalog.setval('public.product_seq', 16, true);
 -- Name: seq_stock; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.seq_stock', 3, true);
+SELECT pg_catalog.setval('public.seq_stock', 30, true);
 
 
 --
@@ -1059,6 +1217,14 @@ ALTER TABLE ONLY public.stock_details
 
 
 --
+-- Name: stock_payments stock_payments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.stock_payments
+    ADD CONSTRAINT stock_payments_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: stocks stock_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1143,6 +1309,13 @@ CREATE INDEX ix_sd_stock ON public.stock_details USING btree (stock_id);
 --
 
 CREATE INDEX ix_sd_unit ON public.stock_details USING btree (unit_id);
+
+
+--
+-- Name: ix_stock_payments; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_stock_payments ON public.stock_payments USING btree (stock_id);
 
 
 --
@@ -1300,6 +1473,27 @@ CREATE TRIGGER sd_update_trig AFTER UPDATE ON public.stock_details FOR EACH ROW 
 
 
 --
+-- Name: stock_payments stc_payment_delete_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER stc_payment_delete_trig AFTER DELETE ON public.stock_payments FOR EACH ROW EXECUTE FUNCTION public.sup_payment_delete_func();
+
+
+--
+-- Name: stock_payments stc_payment_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER stc_payment_insert_trig AFTER INSERT ON public.stock_payments FOR EACH ROW EXECUTE FUNCTION public.sup_payment_insert_func();
+
+
+--
+-- Name: stock_payments stc_payment_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER stc_payment_update_trig AFTER UPDATE OF nominal ON public.stock_payments FOR EACH ROW EXECUTE FUNCTION public.sup_payment_update_func();
+
+
+--
 -- Name: stocks stc_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1392,6 +1586,14 @@ ALTER TABLE ONLY public.stock_details
 
 ALTER TABLE ONLY public.stock_details
     ADD CONSTRAINT fk_stock_detail FOREIGN KEY (stock_id) REFERENCES public.stocks(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: stock_payments fk_stock_payments; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.stock_payments
+    ADD CONSTRAINT fk_stock_payments FOREIGN KEY (stock_id) REFERENCES public.stocks(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --

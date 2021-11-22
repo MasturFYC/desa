@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import api from '@model/payment-model';
 
-export default async function PaymentApi(
+export default async function productApi(
   req: NextApiRequest,
   res: NextApiResponse
 ) {

@@ -17,15 +17,10 @@ import {
 import {
   dateParam,
   iStock,
-  iProduct,
-  iSupplier
+  iProduct
 } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
-import Pin from "@spectrum-icons/workflow/PinOff";
-import Layout from "@components/layout";
-import Head from "next/head";
-import InfoIcon from "@spectrum-icons/workflow/Info";
-import product from "@components/product";
+import supplier from "@components/supplier";
 
 const siteTitle = "Stock"
 
@@ -45,13 +40,13 @@ const initStock: iStock = {
   remainPayment: 0
 };
 
-const StockPage = () => {
+const StockPage: NextPage<{ supplierId: number }> = ({ supplierId}) => {
   let [stockId, setStockId] = useState<number>(-1);
   let [txtSearch, setTxtSearch] = useState<string>("");
 
   let stocks = useAsyncList<iStock>({
     async load({ signal }) {
-      let res = await fetch('/api/stock', {
+      let res = await fetch(`/api/supplier/stock/${supplierId}`, {
         signal,
         headers: {
           'Content-type': 'application/json; charset=UTF-8'
@@ -61,20 +56,6 @@ const StockPage = () => {
       return { items: json };
     },
     getKey: (item: iStock) => item.id,
-  });
-
-  let suppliers = useAsyncList<iSupplier>({
-    async load({ signal }) {
-      let res = await fetch('/api/supplier', {
-        signal,
-        headers: {
-          'Content-type': 'application/json; charset=UTF-8'
-        }
-      });
-      let json = await res.json();
-      return { items: json };
-    },
-    getKey: (item: iSupplier) => item.id,
   });
 
   let products = useAsyncList<iProduct>({
@@ -143,23 +124,15 @@ const StockPage = () => {
     }
   };
 
-  const updateTotal = (stockId: number, subtotal: number) => {
+  const updateTotal = (stockId: number, subtotal: number, payments: number) => {
     let o = stocks.getItem(stockId);
     let total = o.total + subtotal;
-    let remain = total - o.cash - o.payments;
-    stocks.update(stockId, { ...o, total: total, remainPayment: remain });
+    let remain = total - o.cash - payments;
+    stocks.update(stockId, { ...o, payments: payments, total: total, remainPayment: remain });
   };
 
   return (
-    <Layout activeMenu={"Pembelian (Stock)"}>
-      <Head>
-        <title>{siteTitle}</title>
-      </Head>
-      <View marginBottom={"size-400"}>
-        <span style={{ fontWeight: 700, fontSize: "24px" }}>
-          Data {siteTitle}
-        </span>
-      </View>
+    <Fragment>
       <Flex marginY={"size-250"} columnGap={"size-125"}>
         <View flex>
           <Button
@@ -187,15 +160,14 @@ const StockPage = () => {
         />
       </Flex>
       <View backgroundColor="gray-100" paddingY={"size-50"}>
-        <Flex direction={"row"} columnGap={"size-50"}>
+        <Flex direction={"row"} columnGap={"size-50"} marginX={"size-100"}>
           <View width={{ base: "5%", M: "5%" }}>#ID</View>
           <View flex>FAKTUR</View>
           <View width={{ base: "50%", M: "15%" }}>TANGGAL</View>
-          <View width={{ base: "50%", M: "15%" }}>SUPPLIER</View>
-          <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>TOTAL</span></View>
-          <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>BAYAR</span></View>
-          <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>ANGSURAN</span></View>
-          <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>UTANG</span></View>
+          <View width={{ base: "50%", M: "13%" }}><span style={{ textAlign: "right", display: "block" }}>TOTAL</span></View>
+          <View width={{ base: "50%", M: "13%" }}><span style={{ textAlign: "right", display: "block" }}>BAYAR</span></View>
+          <View width={{ base: "50%", M: "13%" }}><span style={{ textAlign: "right", display: "block" }}>ANGSURAN</span></View>
+          <View width={{ base: "50%", M: "13%" }}><span style={{ textAlign: "right", display: "block" }}>UTANG</span></View>
         </Flex>
       </View>
       <Divider size="S" />
@@ -204,17 +176,16 @@ const StockPage = () => {
         stocks.items.map((item, i) => (
           stockId === item.id ?
             <View key={item.id} backgroundColor={"gray-100"} paddingX={"size-200"} borderWidth={"thin"} borderColor={"gray-300"}
-            borderStartColor={"indigo-400"} borderStartWidth={"thickest"}>
-              <StockForm 
-              updateData={updateData} 
+              borderStartColor={"indigo-400"} borderStartWidth={"thickest"}>
+              <StockForm
+                updateData={updateData}
                 updateTotal={updateTotal}
-              data={item}
-              closeForm={closeForm} 
-              suppliers={suppliers} 
-              products={products} />
+                data={item.id === 0 ? {...initStock, supplierId: supplierId}: item}
+                closeForm={closeForm}
+                products={products} />
             </View> :
             <RenderStock key={item.id} index={i} item={item}>
-              <ActionButton                
+              <ActionButton
                 isQuiet
                 width={"auto"}
                 height={"auto"}
@@ -224,7 +195,7 @@ const StockPage = () => {
         ))
       }
       <br />
-    </Layout>
+    </Fragment>
   );
 
   function closeForm() {
@@ -237,18 +208,17 @@ type RenderStockProps = {
   item: iStock,
   children: JSX.Element
 }
-function RenderStock({index, item, children }: RenderStockProps) {
+function RenderStock({ index, item, children }: RenderStockProps) {
   return (
     <View backgroundColor={index % 2 === 0 ? "gray-50" : "gray-75"} paddingY={"size-50"}>
-      <Flex direction={"row"} columnGap={"size-50"}>
+      <Flex direction={"row"} columnGap={"size-50"} marginX={"size-100"}>
         <View width={{ base: "5%", M: "5%" }}>{item.id}</View>
         <View flex>{children}</View>
         <View width={{ base: "50%", M: "15%" }}>{FormatDate(item.stockDate)}</View>
-        <View width={{ base: "50%", M: "15%" }}>{item.supplierName}</View>
-        <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.total)}</span></View>
-        <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.cash)}</span></View>
-        <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.payments)}</span></View>
-        <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.remainPayment)}</span></View>
+        <View width={{ base: "50%", M: "13%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.total)}</span></View>
+        <View width={{ base: "50%", M: "13%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.cash)}</span></View>
+        <View width={{ base: "50%", M: "13%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.payments)}</span></View>
+        <View width={{ base: "50%", M: "13%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.remainPayment)}</span></View>
       </Flex>
     </View>
   )

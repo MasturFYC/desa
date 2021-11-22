@@ -171,6 +171,7 @@ export interface iStock {
   remainPayment: number;
   descriptions?: string;
   supplier?: iSupplier;
+  supplierName?: string;
 }
 
 export interface iStockDetail {
@@ -188,4 +189,14 @@ export interface iStockDetail {
   subtotal: number;
   unit?: iUnit
   product?: iProduct;
+}
+
+export interface iStockPayment {
+  id: number;
+  stockId: number;
+  payNum: string;
+  descriptions: string;
+  payDate: string;
+  nominal: number;
+  stock?: iStock;
 }
