@@ -21,6 +21,7 @@ import {
 } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
 import supplier from "@components/supplier";
+import SpanLink from "@components/ui/span-link";
 
 const siteTitle = "Stock"
 
@@ -107,8 +108,11 @@ const StockPage: NextPage<{ supplierId: number }> = ({ supplierId}) => {
     switch (method) {
       case "POST":
         {
-          stocks.insert(0, p);
-          stocks.remove(0);
+          stocks.update(0, p);
+          if(stockId === 0) {
+          setStockId(p.id);
+          }
+         // stocks.remove(0);
         }
         break;
       case "PUT":
@@ -185,12 +189,15 @@ const StockPage: NextPage<{ supplierId: number }> = ({ supplierId}) => {
                 products={products} />
             </View> :
             <RenderStock key={item.id} index={i} item={item}>
-              <ActionButton
+              <SpanLink
+              onClick={() => setStockId(item.id)}
+              >{item.stockNum}</SpanLink>
+              {/* <ActionButton
                 isQuiet
                 width={"auto"}
                 height={"auto"}
                 onPress={() => setStockId(item.id)}
-              ><span>{item.id === 0 ? '---' : item.stockNum}</span></ActionButton>
+              ><span>{item.id === 0 ? '---' : item.stockNum}</span></ActionButton> */}
             </RenderStock>
         ))
       }

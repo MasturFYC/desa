@@ -5,8 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:server": "NODE_ENV=production next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "go": "NODE_ENV=production node server.js"
   },
   "dependencies": {
     "@adobe/react-spectrum": "^3.14.1",

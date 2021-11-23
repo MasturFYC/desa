@@ -13,6 +13,7 @@ import { ActionButton } from "@react-spectrum/button";
 import { NextPage } from "next";
 import { SearchField } from "@react-spectrum/searchfield";
 import InfoIcon from '@spectrum-icons/workflow/Info'
+import SpanLink from "@components/ui/span-link";
 
 const CustomerForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -172,15 +173,13 @@ const CustomerComponent: NextPage = () => {
                 columnGap="size-400"
               >
                 <View width={{ base: "auto", M: "35%" }}>
-                  <ActionButton
-                    flex
-                    isQuiet
-                    onPress={() => {
+                  <SpanLink
+                    onClick={() => {
                       setSelectedId(selectedId === x.id ? -1 : x.id);
                     }}
                   >
-                    <span style={{ fontWeight: 700 }}>{x.id === 0 ? 'Pelanggan Baru' : x.name}</span>
-                  </ActionButton>
+                    {x.id === 0 ? 'Pelanggan Baru' : x.name}
+                  </SpanLink>
                 </View>
                 {x.id > 0 && (
                   <View flex>

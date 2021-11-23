@@ -17,6 +17,7 @@ import UnitComponent from "@components/unit/UnitComponent";
 import { ToggleButton } from "@react-spectrum/button";
 import { Text } from "@react-spectrum/text";
 import { initProduct } from "./form";
+import SpanLink from "@components/ui/span-link";
 
 const ProductForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -176,16 +177,13 @@ const ProductComponent: NextPage = () => {
                 columnGap="size-400"
               >
                 <View width={{ base: "auto", M: "35%" }}>
-                  <ActionButton
-                    flex
-                    height={"auto"}
-                    isQuiet
-                    onPress={() => {
+                  <SpanLink
+                    onClick={() => {
                       setSelectedId(selectedId === x.id ? -1 : x.id);
                     }}
                   >
-                    <span style={{ fontWeight: 700 }}>{x.id === 0 ? 'Produk Baru' : `${x.name}${x.spec && ', '+ x.spec}`}</span>
-                  </ActionButton>                  
+                    {x.id === 0 ? 'Produk Baru' : `${x.name}${x.spec && ', '+ x.spec}`}
+                  </SpanLink>                  
                 </View>
                 {x.id > 0 && (
                   <View flex>

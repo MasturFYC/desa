@@ -83,7 +83,13 @@ const StockForm: NextPage<StockFormProps> = ({
         ...json,
         supplierName: stock.supplierName
       });
-      closeForm();
+      //console.log(stock)
+      if(stock.id > 0) {
+        closeForm();
+      }
+      //} else {
+      //  setStock(json);
+      //}
     } else {
       console.log(json.message);
       setMessage("Data stock tidak bisa dipost, lihat log.");

@@ -26,6 +26,7 @@ import Layout from "@components/layout";
 import Head from "next/head";
 import InfoIcon from "@spectrum-icons/workflow/Info";
 import product from "@components/product";
+import SpanLink from "@components/ui/span-link";
 
 const siteTitle = "Stock"
 
@@ -214,12 +215,9 @@ const StockPage = () => {
               products={products} />
             </View> :
             <RenderStock key={item.id} index={i} item={item}>
-              <ActionButton                
-                isQuiet
-                width={"auto"}
-                height={"auto"}
-                onPress={() => setStockId(item.id)}
-              ><span>{item.id === 0 ? '---' : item.stockNum}</span></ActionButton>
+              <SpanLink                
+                onClick={() => setStockId(item.id)}
+              ><span>{item.id === 0 ? '---' : item.stockNum}</span></SpanLink>
             </RenderStock>
         ))
       }

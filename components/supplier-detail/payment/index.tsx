@@ -16,6 +16,7 @@ import {
   iStockPayment
 } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
+import SpanLink from "@components/ui/span-link";
 
 const StockPaymentForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -168,17 +169,11 @@ const StockPaymentPage: NextPage<stockPaymentProps> = ({ supplierId }) => {
           <View width={columns[0].width}>{x.id}</View>
           <View width={columns[1].width}>{x.stockId}</View>
           <View width={{ base: "50%", M: columns[2].width }}>
-            <ActionButton
-              height={"auto"}
-              isQuiet
-              onPress={() => {
-                setSelectedPaymentId(selectedPaymentId === x.id ? -1 : x.id);
-              }}
+            <SpanLink
+              onClick={() => setSelectedPaymentId(selectedPaymentId === x.id ? -1 : x.id)}
             >
-              <span style={{ fontWeight: 700 }}>
                 {x.payNum}
-              </span>
-            </ActionButton>
+            </SpanLink>
           </View>
           <View width={{ base: "40%", M: columns[3].width }}>
             {FormatDate(x.payDate)}

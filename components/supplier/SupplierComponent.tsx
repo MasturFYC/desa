@@ -26,6 +26,7 @@ import { NextPage } from "next";
 import { SearchField } from "@react-spectrum/searchfield";
 import InfoIcon from "@spectrum-icons/workflow/Info";
 import { Heading } from "@react-spectrum/text";
+import SpanLink from "@components/ui/span-link";
 
 const SupplierForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -252,19 +253,14 @@ const SupplierComponent: NextPage = () => {
             <Row key={sup.id}>
               <Cell>{sup.id}</Cell>
               <Cell>
-                <ActionButton
-                  flex
-                  justifySelf={"flex-start"}
-                  isQuiet
-                  width={"auto"}
-                  height={"auto"}
-                  onPress={() => {
+                <SpanLink
+                  onClick={() => {
                     setSupplierId(sup.id);
                     setOpen(true);
                   }}
                 >
-                  <span style={{cursor: "pointer"}}>{sup.id === 0 ? "Supplier Baru" : sup.name}</span>
-                </ActionButton>
+                  {sup.id === 0 ? "Supplier Baru" : sup.name}
+                </SpanLink>
               </Cell>
               <Cell>{sup.salesName}</Cell>
               <Cell>
