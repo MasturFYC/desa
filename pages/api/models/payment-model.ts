@@ -8,6 +8,7 @@ type apiReturn = Promise<any[] | (readonly iPayment[] | undefined)[]>;
 interface apiFunction {
   list: () => apiReturn;
   getByCustomer: (customerId: number) => apiReturn;
+  getBalanceDetail: (customerId: number) => apiReturn;
   getPayment: (id: number) => apiReturn;
   delete: (id: number) => apiReturn;
   update: (id: number, data: iPayment) => apiReturn;
@@ -15,6 +16,13 @@ interface apiFunction {
 }
 
 const apiPayment: apiFunction = {
+
+  getBalanceDetail: async (customerId: number) => {
+    return await db
+      .query(sql`select * from sip_cust_balance_detail(${customerId})`)
+      .then((data) => [data.rows, undefined])
+      .catch((error) => [undefined, error]);
+  },
   getPayment: async (id: number) => {
 
     const query = sql`SELECT

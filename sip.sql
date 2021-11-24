@@ -243,43 +243,43 @@ ALTER FUNCTION public.order_update_func() OWNER TO postgres;
 -- Name: piutang_balance_func(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.piutang_balance_func(cust_id integer) RETURNS TABLE(id integer, descriptions character varying, cred numeric, debt numeric, saldo numeric)
+CREATE FUNCTION public.piutang_balance_func(cust_id integer) RETURNS TABLE(id integer, descriptions character varying, debt numeric, cred numeric, saldo numeric)
     LANGUAGE plpgsql
     AS $$
 
 begin
 
-     drop table IF EXISTS temp_table;
+    drop table IF EXISTS temp_table;
 
-     create temporary table temp_table(
-         id integer,
-         descriptions varchar(128),
-         cred decimal(12,2),
-         debt decimal(12,2)
-     );
+    create temporary table temp_table(
+        id integer,
+        descriptions varchar(128),
+        cred decimal(12,2),
+        debt decimal(12,2)
+    );
 
-     insert into temp_table (id, descriptions, cred, debt)
+     insert into temp_table (id, descriptions, debt, cred)
      select 1, 'Piutang Barang', coalesce(sum(c.total),0), coalesce(sum(c.payment),0)
      from orders c
      where c.customer_id = cust_id;
 
-     insert into temp_table (id, descriptions, cred, debt)
+     insert into temp_table (id, descriptions, debt, cred)
      select 2, 'Kasbon', coalesce(sum(c.total),0), 0
      from kasbons c
      where c.customer_id = cust_id;
 
-     insert into temp_table (id, descriptions, cred, debt)
+     insert into temp_table (id, descriptions, debt, cred)
      select 3, 'Pembelian', 0, coalesce(sum(c.total),0)
      from grass c
      where c.customer_id = cust_id;
 
-     insert into temp_table (id, descriptions, cred, debt)
+     insert into temp_table (id, descriptions, debt, cred)
      select 4, 'Cicilan', 0, coalesce(sum(c.total),0)
      from payments c
      where c.customer_id = cust_id;
 
      return query select
-         c.id, c.descriptions, c.cred, c.debt, sum(c.cred - c.debt)
+         c.id, c.descriptions, c.debt, c.cred, sum(c.cred - c.debt)
          over (order by c.id
          rows between unbounded preceding and current row) as saldo
          from temp_table as c;
@@ -439,6 +439,64 @@ $$;
 
 
 ALTER FUNCTION public.sd_update_func() OWNER TO postgres;
+
+--
+-- Name: sip_cust_balance_detail(integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.sip_cust_balance_detail(cust_id integer) RETURNS TABLE(id integer, customer_id integer, descriptions character varying, trx_date timestamp without time zone, debt numeric, cred numeric, saldo numeric)
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    return query with recursive trx as (
+
+        select o.id, o.customer_id, o.descriptions, o.order_date trx_date,
+        o.total debt,
+        o.payment cred
+        from orders o
+        where o.customer_id = cust_id
+
+        union all
+
+        select k.id, k.customer_id, k.descriptions, k.kasbon_date trx_date,
+        k.total debt,
+        0::numeric cred
+        from kasbons k
+        where k.customer_id = cust_id
+
+        union all
+
+        select g.id, g.customer_id, g.descriptions, g.order_date trx_date,
+        0::numeric debt,
+        g.total cred
+        from grass g
+        where g.customer_id = cust_id
+
+        union all
+
+        select p.id, p.customer_id, p.descriptions, p.payment_date trx_date,
+        0::numeric debt,
+        p.total cred
+        from payments p
+        where p.customer_id = cust_id
+    )
+
+    select t.id, t.customer_id, t.descriptions, t.trx_date,
+        t.debt,
+        t.cred,
+        sum(t.cred - t.debt)
+        over (order by t.id rows between unbounded preceding and current row) as saldo
+    from trx t
+    order by t.id;
+
+end;
+
+$$;
+
+
+ALTER FUNCTION public.sip_cust_balance_detail(cust_id integer) OWNER TO postgres;
 
 --
 -- Name: stc_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -963,7 +1021,6 @@ COPY public.grass_details (grass_id, id, qty) FROM stdin;
 --
 
 COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, total) FROM stdin;
-30	2	Kasbon	2021-11-17 11:06:00	2021-11-24 11:06:00	2500000.00
 31	2	Kasbon Beli Terpal	2021-12-17 00:00:00	2021-12-24 00:00:00	1500000.00
 \.
 
@@ -973,12 +1030,8 @@ COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, to
 --
 
 COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_qty, price, subtotal, buy_price, product_id) FROM stdin;
-28	74	21	2.00	1.00	zak	2.00	325000.00	650000.00	250000.00	15
-27	77	1	2.00	1.00	btl	2.00	15000.00	30000.00	10000.00	7
 29	84	24	5.00	3.00	pak	15.00	5850.00	29250.00	4500.00	16
-28	86	2	2.00	10.00	pak	20.00	130000.00	260000.00	100000.00	7
 32	87	17	1.00	1.00	pcs	1.00	39000.00	39000.00	30000.00	1
-32	88	21	1.00	1.00	zak	1.00	325000.00	325000.00	250000.00	15
 \.
 
 
@@ -988,9 +1041,7 @@ COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_
 
 COPY public.orders (id, customer_id, order_date, total, payment, remain_payment, descriptions) FROM stdin;
 29	1	2021-11-17 00:46:00	29250.00	0.00	29250.00	Pembelian Barang
-27	2	2021-11-16 21:25:00	30000.00	30000.00	0.00	Pembelian Barang
-28	2	2021-11-16 23:15:00	910000.00	625000.00	285000.00	Pembelian Barang
-32	2	2021-11-17 15:38:00	364000.00	300000.00	64000.00	Pembelian Barang
+32	2	2021-11-17 15:38:00	39000.00	30000.00	9000.00	Utang Obat
 \.
 
 
@@ -1009,9 +1060,9 @@ COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total
 
 COPY public.products (id, name, spec, price, stock, first_stock, unit, update_notif) FROM stdin;
 16	eqweqwe	eqweqwe	1500.00	5.00	20.00	pcs	t
-7	Abachel	250cc	10000.00	84.00	90.00	btl	t
-15	Pakan Bandeng	Pelet KW1	250000.00	100.00	110.00	zak	t
 1	EM 4 Perikanan	1 ltr	30000.00	173.00	100.00	pcs	f
+15	Pakan Bandeng	Pelet KW1	250000.00	103.00	110.00	zak	t
+7	Abachel	250cc	10000.00	106.00	90.00	btl	t
 \.
 
 
@@ -1059,17 +1110,6 @@ COPY public.stocks (id, supplier_id, stock_num, stock_date, total, cash, payment
 29	6	ssssss	2021-11-23 03:38:00	30000.00	5000.00	25000.00	0.00	\N
 4	2	x-10256559	2021-11-22 20:49:00	2250000.00	700000.00	1300000.00	250000.00	\N
 33	1	dddd	2021-11-23 14:41:00	30000.00	0.00	0.00	30000.00	\N
-34	1	eqweqe	2021-11-23 14:41:00	0.00	0.00	0.00	0.00	\N
-35	3	ewewe	2021-11-23 14:41:00	0.00	0.00	0.00	0.00	\N
-36	3	eweqwewe	2021-11-23 14:41:00	0.00	0.00	0.00	0.00	\N
-37	3	232323	2021-11-23 14:41:00	0.00	0.00	0.00	0.00	\N
-38	3	4343434	2021-11-23 14:41:00	0.00	0.00	0.00	0.00	\N
-39	3	qe12323	2021-11-23 14:41:00	0.00	0.00	0.00	0.00	\N
-40	3	22323	2021-11-23 14:41:00	0.00	0.00	0.00	0.00	\N
-41	3	ewewe	2021-11-23 14:52:00	0.00	0.00	0.00	0.00	\N
-42	3	ccccccccccccccccc	2021-11-23 14:52:00	0.00	0.00	0.00	0.00	\N
-43	3	ttttttttttttttttttt	2021-11-23 14:52:00	0.00	0.00	0.00	0.00	\N
-44	3	qewqewe	2021-11-23 14:53:00	0.00	0.00	0.00	0.00	\N
 45	3	weqweq weqwe	2021-11-23 14:53:00	30000.00	0.00	0.00	30000.00	qwewe
 \.
 
