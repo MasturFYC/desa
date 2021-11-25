@@ -1,6 +1,5 @@
-import moment from 'moment';
+import db, { sql } from "../config";
 import { iSupplier, isNullOrEmpty } from '@components/interfaces'
-import db, { nestQuerySingle, sql } from "../config";
 
 
 type apiReturn = Promise<any[] | (readonly iSupplier[] | undefined)[]>;
@@ -10,12 +9,21 @@ interface apiFunction {
   find: (name: string | string[]) => apiReturn;
   getPiutang: (supplierId: number) => apiReturn;
   getSupplier: (supplierId: number) => apiReturn;
+  getBalanceDetail: (supplierId: number) => apiReturn;
   delete: (id: number) => apiReturn;
   update: (id: number, data: iSupplier) => apiReturn;
   insert: (data: iSupplier) => apiReturn;
 }
 
 const apiSupplier: apiFunction = {
+
+  getBalanceDetail: async (supplierId: number) => {
+    return await db
+      .query(sql`select * from sip_sup_balance_detail(${supplierId})`)
+      .then((data) => [data.rows, undefined])
+      .catch((error) => [undefined, error]);
+  },
+
 
   getPiutang: async (supplierId: number) => {
 

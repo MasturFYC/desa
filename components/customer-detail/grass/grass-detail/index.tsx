@@ -9,6 +9,7 @@ import { ActionButton, Divider, Flex } from "@adobe/react-spectrum";
 import PinAdd from "@spectrum-icons/workflow/Add";
 
 import { iGrassDetail, iGrass } from "@components/interfaces";
+import Div from "@components/ui/Div";
 
 const GrassDetailForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -18,7 +19,7 @@ const GrassDetailForm = dynamic(() => import("./form"), {
 const initGrassDetail: iGrassDetail = {
   grassId: 0,
   id: 0,
-  qty: 0
+  qty: 0,
 };
 
 type GrassDetailProps = {
@@ -26,10 +27,7 @@ type GrassDetailProps = {
   updateTotal: (grassId: number, qty: number) => void;
 };
 
-const GrassDetail: NextPage<GrassDetailProps> = ({
-  grassId,
-  updateTotal,
-}) => {
+const GrassDetail: NextPage<GrassDetailProps> = ({ grassId, updateTotal }) => {
   let [selectedDetailId, setSelectedDetailId] = useState<number>(-1);
   let [detail, setDetail] = useState<iGrassDetail>(initGrassDetail);
   let [isNew, setIsNew] = useState<boolean>(false);
@@ -75,43 +73,46 @@ const GrassDetail: NextPage<GrassDetailProps> = ({
 
   return (
     <Fragment>
-      <View backgroundColor={"gray-100"} marginBottom={"size-400"} padding={{ base: "size-50", M: "size-200" }}>
-        <View paddingY={"size-50"}>
+      <View
+        backgroundColor={"gray-50"}
+        marginTop={"size-100"}
+        padding={{ base: "size-50", M: "size-200" }}
+      >
+        <Div isHidden isHeader>
           <Flex
-            isHidden={{ base: true, M: false }}
-            marginBottom={"size-100"}
+            marginX={"size-100"}
             direction={{ base: "column", M: "row" }}
             columnGap="size-100"
           >
             <View width="5%">ID#</View>
             <View flex>Keterangan</View>
-            <View width={"20%"}><span style={{ textAlign: "right", fontWeight: 700, display: "block" }}>Qty (kg)</span></View>
+            <View width={"20%"}>
+              <span
+                style={{
+                  textAlign: "right",
+                  fontWeight: 700,
+                  display: "block",
+                }}
+              >
+                Qty (kg)
+              </span>
+            </View>
           </Flex>
-          <Divider size={"S"} />
-        </View>
+        </Div>
         {grassDetails.isLoading && <WaitMe />}
         {grassDetails &&
           [...grassDetails.items, { ...initGrassDetail, grassId: grassId }].map(
             (x, i) => (
-              <View
-                paddingStart={selectedDetailId === x.id ? 7 : 0}
-                key={x.id}
-                borderStartColor={
-                  selectedDetailId === x.id ? "orange-500" : "transparent"
-                }
-                //paddingStart={selectedOrderId === x.id ? "size-100" : 0}
-                borderStartWidth={selectedDetailId === x.id ? "thickest" : "thin"}
-              //marginY={"size-125"}
-              >
+              <Div index={i} key={x.id} isSelected={selectedDetailId === x.id} selectedColor={"6px solid orange"}>
                 {renderDetails(i, x, isNew)}
                 {selectedDetailId === x.id && (
                   <GrassDetailForm
                     data={x}
                     updateDetail={updateGrassDetail}
                     closeForm={closeForm}
-                  />)}
-
-              </View>
+                  />
+                )}
+              </Div>
             )
           )}
       </View>
@@ -120,47 +121,45 @@ const GrassDetail: NextPage<GrassDetailProps> = ({
 
   function renderDetails(index: number, x: iGrassDetail, isNew: boolean) {
     return (
-      <Fragment>
-        <Flex
-          marginY={"size-75"}
-          direction={"row"}
-          //direction={{base:"column", M:"row"}}
-          columnGap="size-100"
-          wrap={"wrap"}
-        >
-          {x.id > 0 && <View width={"5%"}>{x.id}</View>}
-          <View flex={{ base: "50%", M: 1 }}>
-            <ActionButton
-              flex
-              height={"auto"}
-              isQuiet
-              onPress={() => {
-                setSelectedDetailId(selectedDetailId === x.id ? -1 : x.id);
-                setDetail(x);
-              }}
-            >
-              {x.id === 0 ? (
-                <>
-                  <PinAdd size="S" />
-                  Add Item
-                </>
-              ) : (
-                <Text>
-                  Timbangan ke {index+1}
-                </Text>
-              )}
-            </ActionButton>
-            
-          </View>
-          {x.id > 0 &&
+      <Flex
+        marginX={"size-100"}
+        direction={"row"}
+        columnGap="size-100"
+        wrap={"wrap"}
+      >
+        {x.id > 0 && <View width={"5%"}>{x.id}</View>}
+        <View flex={{ base: "50%", M: 1 }}>
+          <ActionButton
+            flex
+            height={"auto"}
+            isQuiet
+            onPress={() => {
+              setSelectedDetailId(selectedDetailId === x.id ? -1 : x.id);
+              setDetail(x);
+            }}
+          >
+            {x.id === 0 ? (
+              <>
+                <PinAdd size="S" />
+                Add Item
+              </>
+            ) : (
+              <Text><b>Timbangan ke {index + 1}</b></Text>
+            )}
+          </ActionButton>
+        </View>
+        {x.id > 0 && (
           <View width={"20%"}>
-            <span style={{textAlign: "right", fontWeight: 700, display:"block"}}>{x.qty}</span>
-            </View>}
-        </Flex>
-        {x.id > 0 && <Divider size={"S"} />}
-      </Fragment>
+            <span
+              style={{ textAlign: "right", fontWeight: 700, display: "block" }}
+            >
+              {x.qty}
+            </span>
+          </View>
+        )}
+      </Flex>
     );
   }
-}
+};
 
 export default GrassDetail;

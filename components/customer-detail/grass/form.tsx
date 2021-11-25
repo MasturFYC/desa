@@ -84,7 +84,7 @@ const GrassForm: NextPage<GrassFormProps> = ({
     }
   }
 
-  return (<View backgroundColor={"gray-100"} paddingY={"size-100"} paddingX={{base: "size-100", M:"size-1000"}}>
+  return (<View paddingY={"size-100"} paddingX={{base: "size-100", M:"size-1000"}}>
     <Form onSubmit={handleSubmit}>
       <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
         <TextField
@@ -112,8 +112,8 @@ const GrassForm: NextPage<GrassFormProps> = ({
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <NumberField
             flex
-            hideStepper={true}
             width={"auto"}
+            hideStepper={true}
             label={"Bayar"}
             value={grass.price}
             onChange={(e) =>
@@ -121,10 +121,8 @@ const GrassForm: NextPage<GrassFormProps> = ({
             } />
           <NumberField
             isReadOnly
-            isDisabled
-            flex
             hideStepper={true}
-            width={"auto"}
+            width={{base:"auto", M:"25%"}}
             label={"Qty"}
             onChange={(e) => setGrass((o) => ({ ...o, qty: e }))}
             value={grass.qty} />
@@ -132,9 +130,8 @@ const GrassForm: NextPage<GrassFormProps> = ({
           <NumberField
             flex
             isReadOnly
-            isDisabled
-            hideStepper={true}
             width={"auto"}
+            hideStepper={true}
             label={"Subtotal"}
             onChange={(e) => setGrass((o) => ({ ...o, total: e }))}
             value={grass.total} />

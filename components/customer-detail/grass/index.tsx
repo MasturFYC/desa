@@ -12,12 +12,10 @@ import {
   Text,
   ToggleButton,
 } from "@adobe/react-spectrum";
-import {
-  dateParam,
-  iGrass
-} from "@components/interfaces";
+import { dateParam, iGrass } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
 import Pin from "@spectrum-icons/workflow/PinOff";
+import Div from "@components/ui/Div";
 
 const GrassDetail = dynamic(
   () => import("@components/customer-detail/grass/grass-detail"),
@@ -39,7 +37,7 @@ const initGrass: iGrass = {
   descriptions: "Pembelian Rumput Laut",
   qty: 0,
   price: 0,
-  total: 0
+  total: 0,
 };
 
 type GrassProps = {
@@ -50,7 +48,6 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
   let [showDetail, setShowDetail] = useState<boolean>(false);
   let [selectedGrassId, setSelectedGrassId] = useState<number>(-1);
   let [detailId, setDetailId] = useState<number>(0);
-  let [isNew, setIsNew] = useState<boolean>(false);
 
   let grasses = useAsyncList<iGrass>({
     async load({ signal }) {
@@ -63,8 +60,8 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
 
   const closeForm = () => {
     setSelectedGrassId(-1);
-    if (isNew) {
-      setIsNew(false);
+    if (selectedGrassId === 0) {
+      grasses.remove(0);
     }
   };
 
@@ -101,86 +98,83 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
       <Button
         variant={"cta"}
         onPress={() => {
-          setSelectedGrassId(isNew ? -1 : 0);
-          setIsNew(!isNew);
+          grasses.insert(0, { ...initGrass, customerId: customerId });
+          setSelectedGrassId(0);
         }}
         marginBottom={"size-200"}
       >
         Pembelian Baru
       </Button>
-      <Flex
-        isHidden={{ base: true, M: false }}
-        marginBottom={"size-100"}
-        direction={{ base: "column", M: "row" }}
-        columnGap="size-100"
-      >
-        <View width={"5%"}>ID#</View>
-        <View flex>Keterangan</View>
-        <View width={"20%"}>Tanggal</View>
-        <View width="10%">
-          <span style={{ textAlign: "right", display: "block" }}>Qty (kg)</span>
-        </View>
-        <View width="13%">
-          <span style={{ textAlign: "right", display: "block" }}>Harga</span>
-        </View>
-        <View width="15%">
-          <span style={{ textAlign: "right", display: "block" }}>Subtotal</span>
-        </View>
-      </Flex>
-      <Divider size={"S"} />
+      <Div isHeader isHidden>
+        <Flex
+          marginX={"size-100"}
+          direction={{ base: "column", M: "row" }}
+          columnGap="size-100"
+        >
+          <View width={"5%"}>ID#</View>
+          <View flex>Keterangan</View>
+          <View width={"20%"}>Tanggal</View>
+          <View width="10%">
+            <span style={{ textAlign: "right", display: "block" }}>
+              Qty (kg)
+            </span>
+          </View>
+          <View width="13%">
+            <span style={{ textAlign: "right", display: "block" }}>Harga</span>
+          </View>
+          <View width="15%">
+            <span style={{ textAlign: "right", display: "block" }}>
+              Subtotal
+            </span>
+          </View>
+        </Flex>
+      </Div>
       {grasses &&
-        [{ ...initGrass, customerId: customerId }, ...grasses.items].map(
-          (x, i) => (
-            <View
-              key={x.id}
-              borderStartColor={
-                selectedGrassId === x.id ? "blue-500" : "transparent"
-              }
-              //paddingStart={selectedOrderId === x.id ? "size-100" : 0}
-              borderStartWidth={selectedGrassId === x.id ? "thickest" : "thin"}
-              //marginY={"size-125"}
-            >
-              {selectedGrassId === x.id ? (
-                <GrassForm
-                  data={x}
-                  updateGrass={updateData}
-                  closeForm={closeForm}
-                />
-              ) : (
-                renderPembelian({ x, isNew })
-              )}
-            </View>
-          )
-        )}
-      <Flex direction={"row"}>
-        <View flex>Grand Total (
-          <strong>
-              {FormatNumber(
-                grasses.items.reduce((a, b) => a + b.qty, 0)
-              )}
-            </strong> kg)</View>
-        <View>
-          <Text>
+        grasses.items.map((x, i) => (
+          <Div
+            key={x.id}
+            index={i}
+            isSelected={selectedGrassId === x.id || showDetail}
+            selectedColor={"6px solid darkgreen"}
+          >
+            {selectedGrassId === x.id ? (
+              <GrassForm
+                data={x}
+                updateGrass={updateData}
+                closeForm={closeForm}
+              />
+            ) : (
+              renderPembelian({ x })
+            )}
+          </Div>
+        ))}
+      <Div isFooter>
+        <Flex direction={"row"} marginX={"size-100"}>
+          <View flex>
+            Grand Total (
             <strong>
-              {FormatNumber(
-                grasses.items.reduce((a, b) => a + b.total, 0)
-              )}
-            </strong>
-          </Text>
-        </View>
-      </Flex>
-      <div style={{ marginBottom: "24px" }} />
+              {FormatNumber(grasses.items.reduce((a, b) => a + b.qty, 0))}
+            </strong>{" "}
+            kg)
+          </View>
+          <View>
+            <Text>
+              <strong>
+                {FormatNumber(grasses.items.reduce((a, b) => a + b.total, 0))}
+              </strong>
+            </Text>
+          </View>
+        </Flex>
+      </Div>
     </Fragment>
   );
 
-  function renderPembelian({ x, isNew }: { x: iGrass; isNew: boolean }) {
+  function renderPembelian({ x }: { x: iGrass }) {
     return (
       <Fragment>
         <Flex
-          isHidden={x.id === 0 && !isNew}
-          marginY={"size-75"}
+          marginX={"size-100"}
           direction={"row"}
-          //direction={{base:"column", M:"row"}}
           columnGap="size-100"
           wrap={"wrap"}
         >
@@ -211,12 +205,8 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
           {x.id > 0 && renderDetail(x)}
         </Flex>
         {detailId === x.id && showDetail && (
-          <GrassDetail
-            grassId={x.id}
-            updateTotal={updateTotal}
-          />
+          <GrassDetail grassId={x.id} updateTotal={updateTotal} />
         )}
-        {x.id > 0 && <Divider size={"S"} />}
       </Fragment>
     );
   }

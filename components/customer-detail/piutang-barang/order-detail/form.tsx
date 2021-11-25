@@ -105,7 +105,6 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
 
   return (
     <View
-      backgroundColor={"gray-75"}
       paddingY={"size-100"}
       paddingX={{ base: "size-100", M: "size-1000" }}
     >

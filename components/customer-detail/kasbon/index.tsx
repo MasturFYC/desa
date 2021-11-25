@@ -20,6 +20,7 @@ import {
 import { FormatDate, FormatNumber } from "@lib/format";
 import Pin from "@spectrum-icons/workflow/PinOff";
 import moment from "moment";
+import Div from "@components/ui/Div";
 
 const KasbonForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -47,7 +48,6 @@ type KasbonProps = {
 
 const KasbonPage: NextPage<KasbonProps> = ({ customerId }) => {
   let [selectedKasbonId, setSelectedKasbonId] = useState<number>(-1);
-  let [isNew, setIsNew] = useState<boolean>(false);
 
   let kasbons = useAsyncList<iKasbon>({
     async load({ signal }) {
@@ -60,8 +60,8 @@ const KasbonPage: NextPage<KasbonProps> = ({ customerId }) => {
 
   const closeForm = () => {
     setSelectedKasbonId(-1);
-    if (isNew) {
-      setIsNew(false);
+    if (selectedKasbonId === 0) {
+      kasbons.remove(0);
     }
   };
 
@@ -90,43 +90,36 @@ const KasbonPage: NextPage<KasbonProps> = ({ customerId }) => {
       <Button
         variant={"cta"}
         onPress={() => {
-          setSelectedKasbonId(isNew ? -1 : 0);
-          setIsNew(!isNew);
+          kasbons.insert(0, { ...initKasbon, customerId: customerId });
+          setSelectedKasbonId(0);
         }}
         marginBottom={"size-200"}
       >
         Kasbon Baru
       </Button>
-      <Flex
-        isHidden={{ base: true, M: false }}
-        marginBottom={"size-100"}
-        direction={{ base: "column", M: "row" }}
-        columnGap="size-50"
-      >
-        <View width={"5%"}>ID#</View>
-        <View flex width={{ base: "50%" }}>
-          Keterangan
-        </View>
-        <View width={"20%"}>Tanggal</View>
-        <View width={"20%"}>Jatuh Tempo</View>
-        <View width="15%">
-          <span style={{ textAlign: "right", display: "block" }}>Total</span>
-        </View>
-      </Flex>
-      <Divider size={"S"} />
+      <Div isHidden isHeader>
+        <Flex
+          isHidden={{ base: true, M: false }}
+          marginX={"size-100"}
+          direction={{ base: "column", M: "row" }}
+          columnGap="size-50"
+        >
+          <View width={"5%"}>ID#</View>
+          <View flex width={{ base: "50%" }}>
+            Keterangan
+          </View>
+          <View width={"20%"}>Tanggal</View>
+          <View width={"20%"}>Jatuh Tempo</View>
+          <View width="15%">
+            <span style={{ textAlign: "right", display: "block" }}>Total</span>
+          </View>
+        </Flex>
+      </Div>
       {kasbons.isLoading && <WaitMe />}
       {kasbons &&
-        [{ ...initKasbon, customerId: customerId }, ...kasbons.items].map(
+        kasbons.items.map(
           (x, i) => (
-            <View
-              key={x.id}
-              borderStartColor={
-                selectedKasbonId === x.id ? "blue-500" : "transparent"
-              }
-              //paddingStart={selectedOrderId === x.id ? "size-100" : 0}
-              borderStartWidth={selectedKasbonId === x.id ? "thickest" : "thin"}
-              //marginY={"size-125"}
-            >
+            <Div key={x.id}>
               {selectedKasbonId === x.id ? (
                 <KasbonForm
                   data={x}
@@ -134,12 +127,13 @@ const KasbonPage: NextPage<KasbonProps> = ({ customerId }) => {
                   closeForm={closeForm}
                 />
               ) : (
-                renderKasbon({ x, isNew })
+                renderKasbon({ x })
               )}
-            </View>
+            </Div>
           )
         )}
-      <Flex direction={"row"}>
+        <Div isFooter>
+      <Flex direction={"row"} marginX={"size-100"}>
         <View flex>Grand Total: </View>
         <View>
           <Text>
@@ -149,51 +143,46 @@ const KasbonPage: NextPage<KasbonProps> = ({ customerId }) => {
           </Text>
         </View>
       </Flex>
-      <div style={{ marginBottom: "24px" }} />
+      </Div>
     </Fragment>
   );
 
-  function renderKasbon({ x, isNew }: { x: iKasbon; isNew: boolean }) {
+  function renderKasbon({ x }: { x: iKasbon }) {
     return (
-      <Fragment>
-        <Flex
-          isHidden={x.id === 0 && !isNew}
-          marginY={"size-75"}
-          direction={"row"}
-          //direction={{base:"column", M:"row"}}
-          columnGap="size-50"
-          wrap={"wrap"}
-        >
-          <View width={"5%"}>{x.id}</View>
-          <View flex width={{ base: "50%", M: "auto" }}>
-            <ActionButton
-              height={"auto"}
-              isQuiet
-              onPress={() => {
-                setSelectedKasbonId(selectedKasbonId === x.id ? -1 : x.id);
-              }}
-            >
-              <span style={{ fontWeight: 700 }}>
-                {x.id === 0 ? "Piutang Baru" : x.descriptions}
-              </span>
-            </ActionButton>
-          </View>
-          <View width={{ base: "40%", M: "20%" }}>
-            {FormatDate(x.kasbonDate)}
-          </View>
-          <View width={{ base: "50%", M: "20%" }}>
-            {FormatDate(x.jatuhTempo)}
-          </View>
-          <View width={{ base: "48%", M: "15%" }}>
-            <span
-              style={{ textAlign: "right", display: "block", fontWeight: 700 }}
-            >
-              {FormatNumber(x.total)}
+      <Flex
+        marginX={"size-100"}
+        direction={"row"}
+        columnGap="size-50"
+        wrap={"wrap"}
+      >
+        <View width={"5%"}>{x.id}</View>
+        <View flex width={{ base: "50%", M: "auto" }}>
+          <ActionButton
+            height={"auto"}
+            isQuiet
+            onPress={() => {
+              setSelectedKasbonId(selectedKasbonId === x.id ? -1 : x.id);
+            }}
+          >
+            <span style={{ fontWeight: 700 }}>
+              {x.id === 0 ? "Piutang Baru" : x.descriptions}
             </span>
-          </View>
-        </Flex>
-        {x.id > 0 && <Divider size={"S"} />}
-      </Fragment>
+          </ActionButton>
+        </View>
+        <View width={{ base: "40%", M: "20%" }}>
+          {FormatDate(x.kasbonDate)}
+        </View>
+        <View width={{ base: "50%", M: "20%" }}>
+          {FormatDate(x.jatuhTempo)}
+        </View>
+        <View width={{ base: "48%", M: "15%" }}>
+          <span
+            style={{ textAlign: "right", display: "block", fontWeight: 700 }}
+          >
+            {FormatNumber(x.total)}
+          </span>
+        </View>
+      </Flex>
     );
   }
 };

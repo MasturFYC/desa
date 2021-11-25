@@ -1,10 +1,6 @@
 import { NextPage } from "next";
 import React, { useState } from "react";
-import {
-  iStock,
-  iStockDetail,
-  iProduct,
-} from "@components/interfaces";
+import { iStock, iStockDetail, iProduct } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
@@ -22,17 +18,13 @@ export type StockDetailFormProps = {
   closeForm: () => void;
 };
 
-
-
 const StockDetailForm: NextPage<StockDetailFormProps> = ({
   products,
   data,
   updateDetail,
   closeForm,
 }) => {
-  let [detail, setDetail] = React.useState<iStockDetail>(
-    {} as iStockDetail
-  );
+  let [detail, setDetail] = React.useState<iStockDetail>({} as iStockDetail);
   let [message, setMessage] = useState<string>("");
   //let [units, setUnits] = useState<iUnit[] | undefined>([]);
 
@@ -71,7 +63,9 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
       closeForm();
     } else {
       console.log(json.message);
-      setMessage("Stock detail tidak bisa dipost, lihat log.");
+      setMessage(
+        "Stock detail tidak bisa dipost, mungkin ada nama barang yang sama."
+      );
     }
   }
 
@@ -109,130 +103,132 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
       paddingY={"size-100"}
       paddingX={{ base: "size-100", M: "size-1000" }}
     >
-        <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
-          <ComboBox
-            autoFocus
-            flex
-            label={"Nama Barang"}
-            selectedKey={detail.productId}
-            defaultItems={products.items}
-//            autoFocus
-            onSelectionChange={(e) => {
-
-              let p = products.items.filter((o) => o.id === +e)[0];
-              if (p && p.units) {
-                //setUnits(p.units);
-                let u = p.units[0];
-                setDetail((o) => ({
-                  ...o,
-                  unitId: u.id,
-                  price: u.buyPrice,
-                  content: u.content,
-                  subtotal: u.buyPrice * o.qty,
-                  unitName: u.name,
-                  productName: p.name,
-                  spec: p.spec,
-                  productId: p.id,
-                }));
-              }
-            }}
-          >
-            {(item) => <Item>{item.name}</Item>}
-          </ComboBox>
-          <NumberField
-            hideStepper={true}
-            width={"auto"}
-            label={"Harga"}
-            onChange={(e) =>
-              setDetail((o) => ({ ...o, price: e, subtotal: e * o.qty }))
+      <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
+        <ComboBox
+          autoFocus
+          flex
+          label={"Nama Barang"}
+          selectedKey={detail.productId}
+          defaultItems={products.items}
+          //            autoFocus
+          onSelectionChange={(e) => {
+            let p = products.items.filter((o) => o.id === +e)[0];
+            if (p && p.units) {
+              //setUnits(p.units);
+              let u = p.units[0];
+              setDetail((o) => ({
+                ...o,
+                unitId: u.id,
+                price: u.buyPrice,
+                content: u.content,
+                subtotal: u.buyPrice * o.qty,
+                unitName: u.name,
+                productName: p.name,
+                spec: p.spec,
+                productId: p.id,
+              }));
             }
-            value={detail.price}
-          />
-        </Flex>
-        <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
-          <NumberField
-            flex
-            hideStepper={true}
-            width={"auto"}
-            label={"Qty"}
-            onChange={(e) =>
-              setDetail((o) => ({ ...o, qty: e, subtotal: e * o.price }))
-            }
-            value={detail.qty}
-          />
-          <ComboBox
-            label={"Unit"}
-            defaultItems={
-              products.getItem(detail.productId)
-                ? products.getItem(detail.productId).units
-                : []
-            }
-            selectedKey={detail.unitId}
-            onSelectionChange={(e) => {
-              let us = products.getItem(detail.productId).units;
-              if (us) {
-                let s = us.filter((o) => o.id === +e);
-                if (s) {
-                  let u = s[0];
-                  if (u) {
-                    setDetail((o) => ({
-                      ...o,
-                      unitId: u.id,
-                      price: u.buyPrice,
-                      content: u.content,
-                      subtotal: u.buyPrice * o.qty,
-                      unitName: u.name,
-                    }));
-                  }
+          }}
+        >
+          {(item) => <Item>{item.name}</Item>}
+        </ComboBox>
+        <NumberField
+          hideStepper={true}
+          width={"auto"}
+          label={"Harga"}
+          onChange={(e) =>
+            setDetail((o) => ({ ...o, price: e, subtotal: e * o.qty }))
+          }
+          value={detail.price}
+        />
+      </Flex>
+      <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
+        <NumberField
+          flex
+          hideStepper={true}
+          width={"auto"}
+          label={"Qty"}
+          onChange={(e) =>
+            setDetail((o) => ({ ...o, qty: e, subtotal: e * o.price }))
+          }
+          value={detail.qty}
+        />
+        <ComboBox
+          label={"Unit"}
+          defaultItems={
+            products.getItem(detail.productId)
+              ? products.getItem(detail.productId).units
+              : []
+          }
+          selectedKey={detail.unitId}
+          onSelectionChange={(e) => {
+            let us = products.getItem(detail.productId).units;
+            if (us) {
+              let s = us.filter((o) => o.id === +e);
+              if (s) {
+                let u = s[0];
+                if (u) {
+                  setDetail((o) => ({
+                    ...o,
+                    unitId: u.id,
+                    price: u.buyPrice,
+                    content: u.content,
+                    subtotal: u.buyPrice * o.qty,
+                    unitName: u.name,
+                  }));
                 }
               }
-            }}
-          >
-            {(item) => <Item>{item.name}</Item>}
-          </ComboBox>
-          <NumberField
-            flex
-            isReadOnly
-            hideStepper={true}
-            width={"auto"}
-            label={"Subtotal"}
-            value={detail.subtotal}
-            onChange={(e) =>
-              setDetail((o) => ({ ...o, payment: e, subtotal: e }))
             }
-          />
-        </Flex>
-        <Flex
-          direction="row"
-          gap="size-100"
-          marginBottom={"size-100"}
-          marginTop={"size-200"}
+          }}
         >
-          <View flex>
-            <Button type={"button"} variant="cta" onPress={()=>handleSubmit()}>
-              Save
-            </Button>
+          {(item) => <Item>{item.name}</Item>}
+        </ComboBox>
+        <NumberField
+          flex
+          isReadOnly
+          hideStepper={true}
+          width={"auto"}
+          label={"Subtotal"}
+          value={detail.subtotal}
+          onChange={(e) =>
+            setDetail((o) => ({ ...o, payment: e, subtotal: e }))
+          }
+        />
+      </Flex>
+      <Flex
+        direction="row"
+        gap="size-100"
+        marginBottom={"size-100"}
+        marginTop={"size-200"}
+      >
+        <View flex>
+          <Button type={"button"} variant="cta" onPress={() => handleSubmit()}>
+            Save
+          </Button>
+          <Button
+            type={"button"}
+            variant="secondary"
+            marginStart={"size-100"}
+            onPress={() => closeForm()}
+          >
+            Cancel
+          </Button>
+        </View>
+        {detail.id > 0 && (
+          <View>
             <Button
               type={"button"}
-              variant="secondary"
-              marginStart={"size-100"}
-              onPress={() => closeForm()}
+              variant="negative"
+              onPress={() => deleteData()}
             >
-              Cancel
+              Delete
             </Button>
           </View>
-          {detail.id > 0 && (
-            <View>
-              <Button
-                type={"button"}
-                variant="negative"
-                onPress={() => deleteData()}
-              >
-                Delete
-              </Button>
-            </View>
-          )}
-        </Flex>
+        )}
+      </Flex>
+      <View>
+        {message && <span style={{ color: "red" }}>{message}</span>}
+      </View>
     </View>
   );
 };

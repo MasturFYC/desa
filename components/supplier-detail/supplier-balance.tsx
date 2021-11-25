@@ -8,16 +8,18 @@ import { Property } from "csstype";
 import Span from "@components/ui/SpanValue";
 import Div from "@components/ui/Div";
 
-interface customerBalance {
+interface supplierBalance {
   id: number;
+  supplierId: string;
   descriptions: string;
+  trxRef: string;
   trxDate: string;
   debt: number;
   cred: number;
   saldo: number;
 }
-type CustomerBalanceDetailProps = {
-  customerId: number;
+type SupplierBalanceDetailProps = {
+  supplierId: number;
 };
 
 type columnType = {
@@ -28,39 +30,46 @@ type columnType = {
   align: Property.TextAlign | undefined;
 };
 
-export default function CustomerBalanceDetail({
-  customerId
-}: CustomerBalanceDetailProps) {
+export default function SupplierBalanceDetail({
+  supplierId
+}: SupplierBalanceDetailProps) {
   let columns: columnType[] = [
-    { id: 0, name: "ID#", baseWidth: "9%", width: "5%", align: "left" },
+    { id: 0, name: "ID#", baseWidth: "8.5%", width: "5%", align: "left" },
     {
       id: 1,
-      name: "KETERANGAN",
-      baseWidth: "53%",
-      width: "30%",
+      name: "REF",
+      baseWidth: "21.5%",
+      width: "12%",
       align: "left",
     },
     {
       id: 2,
-      name: "TGL TRANSAKSI",
-      baseWidth: "auto",
-      width: "20%",
+      name: "TGL TRX",
+      baseWidth: "26%",
+      width: "15%",
       align: "left",
     },
-    { id: 3, name: "DEBIT", baseWidth: "33%", width: "15%", align: "right" },
-    { id: 4, name: "CREDIT", baseWidth: "33%", width: "15%", align: "right" },
-    { id: 5, name: "SALDO", baseWidth: "33%", width: "15%", align: "right" },
+    {
+      id: 3,
+      name: "KETERANGAN",
+      baseWidth: "44%",
+      width: "23.5%",
+      align: "left",
+    },
+    { id: 4, name: "DEBIT", baseWidth: "33%", width: "15%", align: "right" },
+    { id: 5, name: "CREDIT", baseWidth: "33%", width: "15%", align: "right" },
+    { id: 6, name: "SALDO", baseWidth: "33%", width: "15%", align: "right" },
   ];
 
-  let payments = useAsyncList<customerBalance>({
+  let payments = useAsyncList<supplierBalance>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer/balance-detail/${customerId}`, {
+      let res = await fetch(`/api/supplier/balance/${supplierId}`, {
         signal,
       });
       let json = await res.json();
       return { items: json };
     },
-    getKey: (item: customerBalance) => item.id,
+    getKey: (item: supplierBalance) => item.id,
   });
 
   return (
@@ -108,7 +117,7 @@ export default function CustomerBalanceDetail({
                     M: columns[1].baseWidth,
                   }}
                 >
-                  {item.descriptions}
+                  {item.trxRef}
                 </View>
                 <View
                   width={{
@@ -118,15 +127,24 @@ export default function CustomerBalanceDetail({
                 >
                   {FormatDate(item.trxDate)}
                 </View>
+                <View
+                  flex
+                  width={{
+                    base: columns[3].baseWidth,
+                    M: columns[3].baseWidth,
+                  }}
+                >
+                  {item.descriptions || '-'}
+                </View>
               </Flex>
               <Flex
                 direction={"row"}
                 columnGap={"size-50"}
                 width={{ base: "auto", M: "45%" }}
               >
-                <Span width={columns[3].baseWidth} isNumber>{FormatNumber(item.debt)}</Span>
-                <Span width={columns[4].baseWidth} isNumber>{FormatNumber(item.cred)}</Span>
-                <Span width={columns[5].baseWidth} isTotal isNumber>{FormatNumber(item.saldo)}</Span>
+                <Span width={columns[4].baseWidth} isNumber>{FormatNumber(item.debt)}</Span>
+                <Span width={columns[5].baseWidth} isNumber>{FormatNumber(item.cred)}</Span>
+                <Span width={columns[6].baseWidth} isTotal isNumber>{FormatNumber(item.saldo)}</Span>
               </Flex>
             </Flex>
           </Div>
@@ -140,9 +158,9 @@ export default function CustomerBalanceDetail({
             columnGap={"size-50"}
             width={{ base: "auto", M: "45%" }}
           >
-            <Span width={columns[3].baseWidth} isNumber>{FormatNumber(payments.items.reduce((a, b) => a + b.debt, 0))}</Span>
-            <Span width={columns[4].baseWidth} isNumber>{FormatNumber(payments.items.reduce((a, b) => a + b.cred, 0))}</Span>
-            <Span width={columns[5].baseWidth} isNumber isTotal>{FormatNumber(payments.items.reduce((a, b) => a + b.debt - b.cred, 0))}</Span>
+            <Span width={columns[4].baseWidth} isNumber>{FormatNumber(payments.items.reduce((a, b) => a + b.debt, 0))}</Span>
+            <Span width={columns[5].baseWidth} isNumber>{FormatNumber(payments.items.reduce((a, b) => a + b.cred, 0))}</Span>
+            <Span width={columns[6].baseWidth} isNumber isTotal>{FormatNumber(payments.items.reduce((a, b) => a + b.debt - b.cred, 0))}</Span>
           </Flex>
         </Flex>
       </Div>

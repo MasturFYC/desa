@@ -15,6 +15,8 @@ interface apiFunction {
 }
 
 const apiStockPayment: apiFunction = {
+
+ 
   getPayment: async (id: number) => {
 
     const query = sql`SELECT

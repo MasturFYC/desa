@@ -84,7 +84,7 @@ const OrderForm: NextPage<OrderFormProps> = ({
     }
   }
 
-  return (<View backgroundColor={"gray-100"} paddingX={{base: "size-100", M:"size-1000"}}>
+  return (<View paddingX={{base: "size-100", M:"size-1000"}}>
     <Form onSubmit={handleSubmit}>
       <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
         <TextField
@@ -113,7 +113,6 @@ const OrderForm: NextPage<OrderFormProps> = ({
           <NumberField
             flex
             isReadOnly
-            isDisabled
             hideStepper={true}
             width={"auto"}
             label={"Total"}
@@ -131,7 +130,6 @@ const OrderForm: NextPage<OrderFormProps> = ({
           <NumberField
             flex
             isReadOnly
-            isDisabled
             hideStepper={true}
             width={"auto"}
             label={"Piutang"}

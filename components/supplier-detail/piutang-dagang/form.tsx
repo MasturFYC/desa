@@ -296,7 +296,7 @@ const StockForm: NextPage<StockFormProps> = ({
             </Button>
           </View>
           {stock.id > 0 && (
-            <View>
+            <View>              
               <Button
                 type={"button"}
                 variant="negative"
@@ -306,7 +306,7 @@ const StockForm: NextPage<StockFormProps> = ({
               </Button>
             </View>
           )}
-        </Flex>
+        </Flex>        
       </Form>
     </Fragment>
 

@@ -7,9 +7,9 @@ import { NextPage } from "next";
 import { ActionButton, Divider, Flex } from "@adobe/react-spectrum";
 import PinAdd from "@spectrum-icons/workflow/Add";
 
-import { dateParam, iOrderDetail, iOrder, iProduct } from "@components/interfaces";
-import { FormatDate, FormatNumber } from "@lib/format";
-import product from "@components/product";
+import {iOrderDetail, iOrder, iProduct } from "@components/interfaces";
+import { FormatNumber } from "@lib/format";
+import Div from "@components/ui/Div";
 
 const OrderDetailForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -88,11 +88,11 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
 
   return (
     <Fragment>
-      <View backgroundColor={"gray-100"} marginBottom={"size-400"} padding={{ base: "size-50", M: "size-200" }}>
-        <View paddingY={"size-50"}>
+      <View backgroundColor={"gray-50"} marginY={"size-100"} padding={{ base: "size-50", M: "size-200" }}>
+        <Div isHeader>
           <Flex
             isHidden={{ base: true, M: false }}
-            marginBottom={"size-100"}
+            marginX={"size-100"}
             direction={{ base: "column", M: "row" }}
             columnGap="size-100"
           >
@@ -107,20 +107,15 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
             </View>
           </Flex>
           <Divider size={"S"} />
-        </View>
+        </Div>
         {orderDetails.isLoading && <WaitMe />}
         {orderDetails &&
           [...orderDetails.items, { ...initOrderDetail, orderId: orderId }].map(
             (x, i) => (
-              <View
-                paddingStart={selectedDetailId === x.id ? 7 : 0}
+              <Div
+              isSelected={selectedDetailId === x.id}
+              selectedColor={'6px solid green'}
                 key={x.id}
-                borderStartColor={
-                  selectedDetailId === x.id ? "orange-500" : "transparent"
-                }
-                //paddingStart={selectedOrderId === x.id ? "size-100" : 0}
-                borderStartWidth={selectedDetailId === x.id ? "thickest" : "thin"}
-              //marginY={"size-125"}
               >
                 {renderDetails(x, isNew)}
                 {selectedDetailId === x.id && (
@@ -131,7 +126,7 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
                     closeForm={closeForm}
                   />)}
 
-              </View>
+              </Div>
             )
           )}
       </View>
@@ -140,9 +135,8 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
 
   function renderDetails(x: iOrderDetail, isNew: boolean) {
     return (
-      <Fragment>
         <Flex
-          marginY={"size-75"}
+          marginX={"size-100"}
           direction={"row"}
           //direction={{base:"column", M:"row"}}
           columnGap="size-100"
@@ -173,8 +167,6 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
           </View>
           {x.id > 0 && renderDetail(x)}
         </Flex>
-        {x.id > 0 && <Divider size={"S"} />}
-      </Fragment>
     );
   }
 

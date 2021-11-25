@@ -11,11 +11,9 @@ import {
   Flex,
   Text,
 } from "@adobe/react-spectrum";
-import {
-  dateParam,
-  iPayment
-} from "@components/interfaces";
+import { dateParam, iPayment } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
+import Div from "@components/ui/Div";
 
 const PaymentForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -37,7 +35,6 @@ type paymentProps = {
 
 const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
   let [selectedPaymentId, setSelectedPaymentId] = useState<number>(-1);
-  let [isNew, setIsNew] = useState<boolean>(false);
 
   let payments = useAsyncList<iPayment>({
     async load({ signal }) {
@@ -50,8 +47,8 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
 
   const closeForm = () => {
     setSelectedPaymentId(-1);
-    if (isNew) {
-      setIsNew(false);
+    if (selectedPaymentId === 0) {
+      payments.remove(0);
     }
   };
 
@@ -80,106 +77,97 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
       <Button
         variant={"cta"}
         onPress={() => {
-          setSelectedPaymentId(isNew ? -1 : 0);
-          setIsNew(!isNew);
+          payments.insert(0, { ...initPayment, customerId: customerId });
+          setSelectedPaymentId(0);
         }}
         marginBottom={"size-200"}
       >
         Cicilan Baru
       </Button>
-      <Flex
-        isHidden={{ base: true, M: false }}
-        marginBottom={"size-100"}
-        direction={{ base: "column", M: "row" }}
-        columnGap="size-50"
-      >
-        <View width={"5%"}>ID#</View>
-        <View flex width={{ base: "50%" }}>
-          Keterangan
-        </View>
-        <View width={"20%"}>Tanggal</View>
-        <View width="15%">
-          <span style={{ textAlign: "right", display: "block" }}>Total</span>
-        </View>
-      </Flex>
-      <Divider size={"S"} />
+      <Div isHeader isHidden>
+        <Flex
+          isHidden={{ base: true, M: false }}
+          marginX={"size-100"}
+          direction={{ base: "column", M: "row" }}
+          columnGap="size-50"
+        >
+          <View width={"5%"}>ID#</View>
+          <View flex width={{ base: "50%" }}>
+            Keterangan
+          </View>
+          <View width={"20%"}>Tanggal</View>
+          <View width="15%">
+            <span style={{ textAlign: "right", display: "block" }}>Total</span>
+          </View>
+        </Flex>
+      </Div>
       {payments.isLoading && <WaitMe />}
       {payments &&
-        [{ ...initPayment, customerId: customerId }, ...payments.items].map(
-          (x, i) => (
-            <View
-              key={x.id}
-              borderStartColor={
-                selectedPaymentId === x.id ? "blue-500" : "transparent"
-              }
-              //paddingStart={selectedOrderId === x.id ? "size-100" : 0}
-              borderStartWidth={selectedPaymentId === x.id ? "thickest" : "thin"}
-              //marginY={"size-125"}
-            >
-              {selectedPaymentId === x.id ? (
-                <PaymentForm
-                  data={x}
-                  updatePayment={updateOrder}
-                  closeForm={closeForm}
-                />
-              ) : (
-                renderKasbon({ x, isNew })
-              )}
-            </View>
-          )
-        )}
-      <Flex direction={"row"}>
-        <View flex>Grand Total: </View>
-        <View>
-          <Text>
-            <strong>
-              {FormatNumber(payments.items.reduce((a, b) => a + b.total, 0))}
-            </strong>
-          </Text>
-        </View>
-      </Flex>
-      <div style={{ marginBottom: "24px" }} />
+        payments.items.map((x, i) => (
+          <Div
+            key={x.id}
+            isSelected={selectedPaymentId === x.id}
+            selectedColor={"6px solid blue"}
+          >
+            {selectedPaymentId === x.id ? (
+              <PaymentForm
+                data={x}
+                updatePayment={updateOrder}
+                closeForm={closeForm}
+              />
+            ) : (
+              renderKasbon({ x })
+            )}
+          </Div>
+        ))}
+      <Div isFooter>
+        <Flex direction={"row"} marginX={"size-100"}>
+          <View flex>Grand Total: </View>
+          <View>
+            <Text>
+              <strong>
+                {FormatNumber(payments.items.reduce((a, b) => a + b.total, 0))}
+              </strong>
+            </Text>
+          </View>
+        </Flex>
+      </Div>
     </Fragment>
   );
 
-  function renderKasbon({ x, isNew }: { x: iPayment; isNew: boolean }) {
+  function renderKasbon({ x }: { x: iPayment }) {
     return (
-      <Fragment>
-        <Flex
-          isHidden={x.id === 0 && !isNew}
-          marginY={"size-75"}
-          direction={"row"}
-          //direction={{base:"column", M:"row"}}
-          columnGap="size-50"
-          wrap={"wrap"}
-        >
-          <View width={"5%"}>{x.id}</View>
-          <View flex width={{ base: "50%", M: "auto" }}>
-            <ActionButton
-              height={"auto"}
-              isQuiet
-              onPress={() => {
-                setSelectedPaymentId(selectedPaymentId === x.id ? -1 : x.id);
-              }}
-            >
-              <span style={{ fontWeight: 700 }}>
-                {x.id === 0 ? "Piutang Baru" : x.descriptions}
-              </span>
-            </ActionButton>
-          </View>
-          <View width={{ base: "40%", M: "20%" }}>
-            {FormatDate(x.paymentDate)}
-          </View>
-          <View width={{ base: "48%", M: "15%" }}>
-            <span
-              style={{ textAlign: "right", display: "block", fontWeight: 700 }}
-            >
-              {FormatNumber(x.total)}
+      <Flex
+        marginX={"size-100"}
+        direction={"row"}
+        columnGap="size-50"
+        wrap={"wrap"}
+      >
+        <View width={"5%"}>{x.id}</View>
+        <View flex width={{ base: "50%", M: "auto" }}>
+          <ActionButton
+            height={"auto"}
+            isQuiet
+            onPress={() => {
+              setSelectedPaymentId(selectedPaymentId === x.id ? -1 : x.id);
+            }}
+          >
+            <span style={{ fontWeight: 700 }}>
+              {x.id === 0 ? "Piutang Baru" : x.descriptions}
             </span>
-          </View>
-        </Flex>
-        {x.id > 0 && <Divider size={"S"} />}
-      </Fragment>
+          </ActionButton>
+        </View>
+        <View width={{ base: "40%", M: "20%" }}>
+          {FormatDate(x.paymentDate)}
+        </View>
+        <View width={{ base: "48%", M: "15%" }}>
+          <span
+            style={{ textAlign: "right", display: "block", fontWeight: 700 }}
+          >
+            {FormatNumber(x.total)}
+          </span>
+        </View>
+      </Flex>
     );
   }
 };

@@ -86,7 +86,6 @@ const KasbonForm: NextPage<PaymentFormProps> = ({
 
   return (
     <View
-      backgroundColor={"gray-100"}
       paddingY={"size-100"}
       paddingX={{ base: "size-100", M: "size-1000" }}
     >
@@ -115,7 +114,7 @@ const KasbonForm: NextPage<PaymentFormProps> = ({
           <NumberField
             isRequired
             hideStepper={true}
-            width={{ base: "auto", M: "20%" }}
+            width={{ base: "auto", M: "25%" }}
             label={"Total bayar"}
             onChange={(e) => setPayment((o) => ({ ...o, total: e }))}
             value={payment.total}

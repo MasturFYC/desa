@@ -1,15 +1,21 @@
 import { NextPage } from "next";
+import dynamic from "next/dynamic";
 import React, { useState } from "react";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
 import { useAsyncList } from "@react-stately/data";
 import { iPiutang } from "@components/interfaces";
-import { CustomerBalanceDetail } from "./CustomerBalanceDetail";
 import { FormatNumber } from "@lib/format";
 import WaitMe from "@components/ui/wait-me";
 import Div from "@components/ui/Div";
 import Span from "@components/ui/SpanValue";
+
+const CustomerBalanceDetail = dynamic(() => import("./CustomerBalanceDetail"), {
+  loading: () => <WaitMe />,
+  ssr: false,
+});
+
 
 type CustomerPiutangProps = {
   customerId: number;
@@ -67,14 +73,15 @@ const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
           <Flex flex direction={"row"} columnGap={"size-100"}>
             <Span isNumber width={"33.3%"}>{FormatNumber(payments.items.reduce((a, b) => a + b.debt, 0))}</Span>
             <Span isNumber width={"33.3%"}>{FormatNumber(payments.items.reduce((a, b) => a + b.cred, 0))}</Span>
-            <Span isNumber width={"33.3%"} isTotal>{FormatNumber(payments.items.reduce((a, b) => a + b.cred - b.debt, 0))}</Span>
+            <Span isNumber width={"33.3%"} isTotal>{FormatNumber(payments.items.reduce((a, b) => a + b.debt - b.cred, 0))}</Span>
           </Flex>
         </Flex>
       </Div>
+      <View><i>Keterangan: *) <b>minus</b> berarti ada kelebihan pembayaran yang harus dikembalikan ke pelanggan</i></View>
       <Button
         isDisabled={showDetail}
         variant={"primary"}
-        marginBottom={"size-100"}
+        marginY={"size-100"}
         onPress={() => setShowDetail(true)}
       >
         Balance Detail

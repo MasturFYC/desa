@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
--- Dumped by pg_dump version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
+-- Dumped from database version 13.5 (Ubuntu 13.5-2.pgdg20.04+1)
+-- Dumped by pg_dump version 13.5 (Ubuntu 13.5-2.pgdg20.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -279,10 +279,12 @@ begin
      where c.customer_id = cust_id;
 
      return query select
-         c.id, c.descriptions, c.debt, c.cred, sum(c.cred - c.debt)
+         c.id, c.descriptions, c.debt, c.cred, sum(c.debt - c.cred)
          over (order by c.id
          rows between unbounded preceding and current row) as saldo
-         from temp_table as c;
+         from temp_table as c
+	where c.debt > 0 or c.cred > 0;
+
 
  end;
 
@@ -486,7 +488,7 @@ begin
     select t.id, t.customer_id, t.descriptions, t.trx_date,
         t.debt,
         t.cred,
-        sum(t.cred - t.debt)
+        sum(t.debt - t.cred)
         over (order by t.id rows between unbounded preceding and current row) as saldo
     from trx t
     order by t.id;
@@ -497,6 +499,48 @@ $$;
 
 
 ALTER FUNCTION public.sip_cust_balance_detail(cust_id integer) OWNER TO postgres;
+
+--
+-- Name: sip_sup_balance_detail(integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.sip_sup_balance_detail(sup_id integer) RETURNS TABLE(id integer, supplier_id integer, trx_ref character varying, descriptions character varying, trx_date timestamp without time zone, debt numeric, cred numeric, saldo numeric)
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    return query with recursive trx as (
+
+	select s.id, s.supplier_id, s.stock_num trx_ref, s.descriptions,
+	s.stock_date trx_date, s.total debt, s.cash cred
+	from stocks s
+	where s.supplier_id = sup_id
+
+	union all
+
+	select p.id, c.supplier_id, p.pay_num trx_ref, p.descriptions,
+	p.pay_date trx_date, 0::numeric, p.nominal cred
+	from stock_payments p
+	inner join stocks c on c.id = p.stock_id
+	where c.supplier_id = sup_id
+
+    )
+
+    select t.id, t.supplier_id, t.trx_ref, t.descriptions, t.trx_date,
+        t.debt,
+        t.cred,
+        sum(t.debt - t.cred)
+        over (order by t.id rows between unbounded preceding and current row) as saldo
+    from trx t
+    order by t.id;	
+
+end;
+
+$$;
+
+
+ALTER FUNCTION public.sip_sup_balance_detail(sup_id integer) OWNER TO postgres;
 
 --
 -- Name: stc_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -605,12 +649,12 @@ begin
          debt decimal(12,2)
      );
 
-     insert into temp_table (id, descriptions, cred, debt)
+     insert into temp_table (id, descriptions, debt, cred)
      select 1, 'Piutang Barang', coalesce(sum(c.total),0), coalesce(sum(c.cash),0)
      from stocks c
      where c.supplier_id = sup_id;
 
-     insert into temp_table (id, descriptions, cred, debt)
+     insert into temp_table (id, descriptions, debt, cred)
      select 2, 'Angsuran', 0, coalesce(sum(c.nominal),0)
      from stock_payments c
      inner join stocks s on s.id = c.stock_id
@@ -627,10 +671,11 @@ begin
 --     where c.customer_id = cust_id;
 
      return query select
-         c.id, c.descriptions, c.cred, c.debt, sum(c.cred - c.debt)
+         c.id, c.descriptions, c.cred, c.debt, sum(c.debt - c.cred)
          over (order by c.id
          rows between unbounded preceding and current row) as saldo
-         from temp_table as c;
+         from temp_table as c
+	where c.cred > 0 or c.debt > 0;
 
  end;
 
@@ -1002,7 +1047,7 @@ COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
 --
 
 COPY public.grass (customer_id, id, descriptions, order_date, price, total, qty) FROM stdin;
-2	35	Pembelian Rumput Laut	2021-11-19 00:15:00	25000.00	3125000.00	125.00
+2	35	Pembelian Rumput Laut	2021-11-19 00:15:00	25000.00	1500000.00	60.00
 \.
 
 
@@ -1011,8 +1056,9 @@ COPY public.grass (customer_id, id, descriptions, order_date, price, total, qty)
 --
 
 COPY public.grass_details (grass_id, id, qty) FROM stdin;
-35	8	65.00
-35	7	60.00
+35	8	20.00
+35	7	30.00
+35	9	10.00
 \.
 
 
@@ -1022,7 +1068,7 @@ COPY public.grass_details (grass_id, id, qty) FROM stdin;
 
 COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, total) FROM stdin;
 31	2	Kasbon Beli Terpal	2021-12-17 00:00:00	2021-12-24 00:00:00	1500000.00
-36	2	Kasbon Beli Mesin Diesel	2021-11-24 19:07:00	2021-12-01 19:07:00	3250000.00
+37	2	Kasbon ewe	2021-11-25 13:01:00	2021-12-02 13:01:00	25000.00
 \.
 
 
@@ -1033,6 +1079,7 @@ COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, to
 COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_qty, price, subtotal, buy_price, product_id) FROM stdin;
 29	84	24	5.00	3.00	pak	15.00	5850.00	29250.00	4500.00	16
 32	87	17	1.00	1.00	pcs	1.00	39000.00	39000.00	30000.00	1
+36	105	17	2.00	1.00	pcs	2.00	39000.00	78000.00	30000.00	1
 \.
 
 
@@ -1043,7 +1090,7 @@ COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_
 COPY public.orders (id, customer_id, order_date, total, payment, remain_payment, descriptions) FROM stdin;
 29	1	2021-11-17 00:46:00	29250.00	0.00	29250.00	Pembelian Barang
 32	2	2021-11-17 15:38:00	39000.00	30000.00	9000.00	Utang Obat
-42	1	2021-11-25 00:56:00	0.00	0.00	0.00	Pembelian Barang qweqwe
+36	2	2021-11-25 12:15:00	78000.00	70000.00	8000.00	Utang Pupuk dan Obat
 \.
 
 
@@ -1062,9 +1109,9 @@ COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total
 
 COPY public.products (id, name, spec, price, stock, first_stock, unit, update_notif) FROM stdin;
 16	eqweqwe	eqweqwe	1500.00	5.00	20.00	pcs	t
-1	EM 4 Perikanan	1 ltr	30000.00	173.00	100.00	pcs	f
 15	Pakan Bandeng	Pelet KW1	250000.00	103.00	110.00	zak	t
-7	Abachel	250cc	10000.00	106.00	90.00	btl	t
+7	Abachel	250cc	10000.00	105.00	90.00	btl	t
+1	EM 4 Perikanan	1 ltr	30000.00	173.00	100.00	pcs	f
 \.
 
 
@@ -1073,7 +1120,6 @@ COPY public.products (id, name, spec, price, stock, first_stock, unit, update_no
 --
 
 COPY public.stock_details (stock_id, id, product_id, unit_id, qty, content, unit_name, real_qty, price, subtotal) FROM stdin;
-12	89	7	1	1.00	1.00	btl	1.00	10000.00	10000.00
 12	91	7	2	1.00	10.00	pak	10.00	100000.00	100000.00
 4	94	15	21	3.00	1.00	zak	3.00	250000.00	750000.00
 12	90	1	20	10.00	3.00	pak	30.00	90000.00	900000.00
@@ -1081,8 +1127,8 @@ COPY public.stock_details (stock_id, id, product_id, unit_id, qty, content, unit
 11	95	1	17	2.00	1.00	pcs	2.00	30000.00	60000.00
 29	96	7	1	3.00	1.00	btl	3.00	10000.00	30000.00
 4	97	1	17	50.00	1.00	pcs	50.00	30000.00	1500000.00
-33	98	1	17	1.00	1.00	pcs	1.00	30000.00	30000.00
 45	99	1	17	1.00	1.00	pcs	1.00	30000.00	30000.00
+33	98	1	17	3.00	1.00	pcs	3.00	30000.00	90000.00
 \.
 
 
@@ -1099,9 +1145,8 @@ COPY public.stock_payments (id, stock_id, pay_num, pay_date, nominal, descriptio
 30	29	x9898	2021-11-23 03:39:00	10000.00	Bayar Stock Pembelian #ssssss
 31	29	x-695554	2021-11-23 13:40:00	15000.00	Bayar Stock Pembelian #ssssss
 32	4	c-6522	2021-11-23 14:38:00	1250000.00	Bayar Stock Pembelian #x-10256559
-46	12	wwww	2021-11-24 19:05:00	100000.00	Bayar Stock Pembelian #CV/3-985441
-47	4	6565ss	2021-11-24 19:05:00	50000.00	Bayar Stock Pembelian #x-10256559
-48	33	wwww	2021-11-24 21:21:00	25000.00	Bayar Stock Pembelian #dddd
+46	33	ww	2021-11-25 11:54:00	25000.00	Bayar Stock Pembelian #dddd
+47	33	ewqewe	2021-11-25 11:56:00	5000.00	Bayar Stock Pembelian #dddd
 \.
 
 
@@ -1110,12 +1155,12 @@ COPY public.stock_payments (id, stock_id, pay_num, pay_date, nominal, descriptio
 --
 
 COPY public.stocks (id, supplier_id, stock_num, stock_date, total, cash, payments, remain_payment, descriptions) FROM stdin;
-11	4	BG-562987	2021-11-22 21:04:00	100000.00	5000.00	95000.00	0.00	\N
 29	6	ssssss	2021-11-23 03:38:00	30000.00	5000.00	25000.00	0.00	\N
 45	3	weqweq weqwe	2021-11-23 14:53:00	30000.00	0.00	0.00	30000.00	qwewe
-12	5	CV/3-985441	2021-11-22 21:14:00	1010000.00	300000.00	610000.00	100000.00	\N
-4	2	x-10256559	2021-11-22 20:49:00	2250000.00	700000.00	1350000.00	200000.00	\N
-33	1	dddd	2021-11-23 14:41:00	30000.00	0.00	25000.00	5000.00	\N
+4	2	x-10256559	2021-11-22 20:49:00	2250000.00	700000.00	1300000.00	250000.00	test
+11	4	BG-562987	2021-11-22 21:04:00	100000.00	5000.00	95000.00	0.00	Jatuh tempo tanggal 8-10-2021
+12	5	CV/3-985441	2021-11-22 21:14:00	1000000.00	300000.00	510000.00	190000.00	\N
+33	1	dddd	2021-11-23 14:41:00	90000.00	50000.00	30000.00	10000.00	\N
 \.
 
 
@@ -1162,21 +1207,21 @@ SELECT pg_catalog.setval('public.customer_seq', 2, true);
 -- Name: grass_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.grass_detail_seq', 8, true);
+SELECT pg_catalog.setval('public.grass_detail_seq', 9, true);
 
 
 --
 -- Name: order_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_detail_seq', 99, true);
+SELECT pg_catalog.setval('public.order_detail_seq', 105, true);
 
 
 --
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 42, true);
+SELECT pg_catalog.setval('public.order_seq', 37, true);
 
 
 --
@@ -1190,7 +1235,7 @@ SELECT pg_catalog.setval('public.product_seq', 16, true);
 -- Name: seq_stock; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.seq_stock', 48, true);
+SELECT pg_catalog.setval('public.seq_stock', 47, true);
 
 
 --
@@ -1379,6 +1424,13 @@ CREATE INDEX ix_sd_unit ON public.stock_details USING btree (unit_id);
 --
 
 CREATE INDEX ix_stock_payments ON public.stock_payments USING btree (stock_id);
+
+
+--
+-- Name: ix_stock_product; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX ix_stock_product ON public.stock_details USING btree (stock_id, product_id);
 
 
 --
