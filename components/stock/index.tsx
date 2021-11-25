@@ -144,12 +144,13 @@ const StockPage = () => {
     }
   };
 
-  const updateTotal = (stockId: number, subtotal: number) => {
+  const updateTotal = (stockId: number, subtotal: number, payments: number) => {
     let o = stocks.getItem(stockId);
     let total = o.total + subtotal;
-    let remain = total - o.cash - o.payments;
-    stocks.update(stockId, { ...o, total: total, remainPayment: remain });
+    let remain = total - o.cash - payments;
+    stocks.update(stockId, { ...o, payments: payments, total: total, remainPayment: remain });
   };
+
 
   return (
     <Layout activeMenu={"Pembelian (Stock)"}>
@@ -188,7 +189,7 @@ const StockPage = () => {
         />
       </Flex>
       <View backgroundColor="gray-100" paddingY={"size-50"}>
-        <Flex direction={"row"} columnGap={"size-50"}>
+        <Flex direction={"row"} columnGap={"size-50"} marginX={"size-100"}>
           <View width={{ base: "5%", M: "5%" }}>#ID</View>
           <View flex>FAKTUR</View>
           <View width={{ base: "50%", M: "15%" }}>TANGGAL</View>
@@ -205,17 +206,17 @@ const StockPage = () => {
         stocks.items.map((item, i) => (
           stockId === item.id ?
             <View key={item.id} backgroundColor={"gray-100"} paddingX={"size-200"} borderWidth={"thin"} borderColor={"gray-300"}
-            borderStartColor={"indigo-400"} borderStartWidth={"thickest"}>
-              <StockForm 
-              updateData={updateData} 
+              borderStartColor={"indigo-400"} borderStartWidth={"thickest"}>
+              <StockForm
+                updateData={updateData}
                 updateTotal={updateTotal}
-              data={item}
-              closeForm={closeForm} 
-              suppliers={suppliers} 
-              products={products} />
+                data={item}
+                closeForm={closeForm}
+                suppliers={suppliers}
+                products={products} />
             </View> :
             <RenderStock key={item.id} index={i} item={item}>
-              <SpanLink                
+              <SpanLink
                 onClick={() => setStockId(item.id)}
               ><span>{item.id === 0 ? '---' : item.stockNum}</span></SpanLink>
             </RenderStock>
@@ -235,14 +236,18 @@ type RenderStockProps = {
   item: iStock,
   children: JSX.Element
 }
-function RenderStock({index, item, children }: RenderStockProps) {
+function RenderStock({ index, item, children }: RenderStockProps) {
   return (
     <View backgroundColor={index % 2 === 0 ? "gray-50" : "gray-75"} paddingY={"size-50"}>
-      <Flex direction={"row"} columnGap={"size-50"}>
+      <Flex direction={"row"} columnGap={"size-50"} marginX={"size-100"}>
         <View width={{ base: "5%", M: "5%" }}>{item.id}</View>
         <View flex>{children}</View>
         <View width={{ base: "50%", M: "15%" }}>{FormatDate(item.stockDate)}</View>
-        <View width={{ base: "50%", M: "15%" }}>{item.supplierName}</View>
+        <View width={{ base: "50%", M: "15%" }}>
+          <Link href={`/supplier/${item.supplierId}`} passHref>
+            <a style={{ textDecoration: "none", fontWeight: 700 }}>{item.supplierName}</a>
+          </Link>
+        </View>
         <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.total)}</span></View>
         <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.cash)}</span></View>
         <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.payments)}</span></View>

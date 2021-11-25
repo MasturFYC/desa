@@ -21,6 +21,7 @@ import {
 import { FormatDate, FormatNumber } from "@lib/format";
 import Pin from "@spectrum-icons/workflow/PinOff";
 import product from "@components/product";
+import Div from "@components/ui/Div";
 
 const OrderDetail = dynamic(
   () => import("@components/customer-detail/piutang-barang/order-detail"),
@@ -53,7 +54,6 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
   let [showDetail, setShowDetail] = useState<boolean>(false);
   let [selectedOrderId, setSelectedOrderId] = useState<number>(-1);
   let [detailId, setDetailId] = useState<number>(0);
-  let [isNew, setIsNew] = useState<boolean>(false);
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
@@ -75,8 +75,8 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
 
   const closeForm = () => {
     setSelectedOrderId(-1);
-    if (isNew) {
-      setIsNew(false);
+    if (selectedOrderId === 0) {
+      orders.remove(0)
     }
   };
 
@@ -85,6 +85,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
       case "POST":
         {
           orders.insert(0, p);
+          orders.remove(0)
         }
         break;
       case "PUT":
@@ -113,46 +114,39 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
       <Button
         variant={"cta"}
         onPress={() => {
-          setSelectedOrderId(isNew ? -1 : 0);
-          setIsNew(!isNew);
+          orders.insert(0, {...initOrder, customerId: customerId});
+          setSelectedOrderId(0);
         }}
         marginBottom={"size-200"}
       >
         Piutang Baru
       </Button>
-      <Flex
-        isHidden={{ base: true, M: false }}
-        marginBottom={"size-100"}
-        direction={{ base: "column", M: "row" }}
-        columnGap="size-100"
-      >
-        <View width={"5%"}>ID#</View>
-        <View flex>Keterangan</View>
-        <View width={"20%"}>Tanggal</View>
-        <View width="10%">
-          <span style={{ textAlign: "right", display: "block" }}>Total</span>
-        </View>
-        <View width="10%">
-          <span style={{ textAlign: "right", display: "block" }}>Bayar</span>
-        </View>
-        <View width="10%">
-          <span style={{ textAlign: "right", display: "block" }}>Piutang</span>
-        </View>
-      </Flex>
-      <Divider size={"S"} />
+      <Div isHeader isHidden>
+        <Flex
+          isHidden={{ base: true, M: false }}
+          marginX={"size-100"}
+          direction={{ base: "column", M: "row" }}
+          columnGap="size-100"
+        >
+          <View width={"5%"}>ID#</View>
+          <View flex>Keterangan</View>
+          <View width={"20%"}>Tanggal</View>
+          <View width="10%">
+            <span style={{ textAlign: "right", display: "block" }}>Total</span>
+          </View>
+          <View width="10%">
+            <span style={{ textAlign: "right", display: "block" }}>Bayar</span>
+          </View>
+          <View width="10%">
+            <span style={{ textAlign: "right", display: "block" }}>Piutang</span>
+          </View>
+        </Flex>
+      </Div>
       {products.isLoading || (orders.isLoading && <WaitMe />)}
       {orders &&
-        [{ ...initOrder, customerId: customerId }, ...orders.items].map(
+        orders.items.map(
           (x, i) => (
-            <View
-              key={x.id}
-              borderStartColor={
-                selectedOrderId === x.id ? "blue-500" : "transparent"
-              }
-              //paddingStart={selectedOrderId === x.id ? "size-100" : 0}
-              borderStartWidth={selectedOrderId === x.id ? "thickest" : "thin"}
-              //marginY={"size-125"}
-            >
+            <Div key={x.id} index={i} isSelected={selectedOrderId === x.id || (detailId === x.id && showDetail)} selectedColor={"6px solid dodgerblue"} >
               {selectedOrderId === x.id ? (
                 <OrderForm
                   data={x}
@@ -160,33 +154,33 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
                   closeForm={closeForm}
                 />
               ) : (
-                renderPiutang({ x, isNew })
+                renderPiutang({ x })
               )}
-            </View>
+            </Div>
           )
         )}
-      <Flex direction={"row"}>
-        <View flex>Grand Total</View>
-        <View>
-          <Text>
-            <strong>
-              {FormatNumber(
-                orders.items.reduce((a, b) => a + b.remainPayment, 0)
-              )}
-            </strong>
-          </Text>
-        </View>
-      </Flex>
-      <div style={{ marginBottom: "24px" }} />
+      <Div isFooter>
+        <Flex direction={"row"} marginX={"size-100"}>
+          <View flex>Grand Total</View>
+          <View>
+            <Text>
+              <strong>
+                {FormatNumber(
+                  orders.items.reduce((a, b) => a + b.remainPayment, 0)
+                )}
+              </strong>
+            </Text>
+          </View>
+        </Flex>
+      </Div>
     </Fragment>
   );
 
-  function renderPiutang({ x, isNew }: { x: iOrder; isNew: boolean }) {
+  function renderPiutang({ x }: { x: iOrder }) {
     return (
       <Fragment>
-        <Flex
-          isHidden={x.id === 0 && !isNew}
-          marginY={"size-75"}
+        <Flex          
+          marginX={"size-100"}
           direction={"row"}
           //direction={{base:"column", M:"row"}}
           columnGap="size-100"
@@ -226,7 +220,6 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
             orderId={x.id}
           />
         )}
-        {x.id > 0 && <Divider size={"S"} />}
       </Fragment>
     );
   }

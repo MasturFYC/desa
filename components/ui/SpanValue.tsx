@@ -1,26 +1,28 @@
 import React from "react";
-import { LabelAriaProps } from "@react-aria/label";
-import { useLabel } from "react-aria";
 
-interface SpanProps extends LabelAriaProps {
-  isNumber?: boolean,
-  isTotal?: boolean
+interface SpanProps {
+  isNumber?: boolean;
+  isTotal?: boolean;
+  children: React.ReactNode;
+  width?: string | number;
+  'aria-label'?: string | undefined
 }
 
 export default function Span(props: SpanProps) {
-  let {labelProps} = useLabel(props);
-  let {label, isNumber, isTotal} = props;
+  let { isNumber, children, width, isTotal, "aria-label": ariaLabel } = props;
 
   return (
     <span
-      {...labelProps}
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabel}
       style={{
         color: 'var(--blue)',
         textAlign: isNumber ? "right" : "left",
         fontWeight: isTotal ? 700 : 400,
-        display: "block"
+        display: "block",
+        width: width || 'auto'
       }}>
-      {label}
+      {children}
     </span>
   );
 }

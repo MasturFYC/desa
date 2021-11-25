@@ -178,7 +178,7 @@ const SupplierComponent: NextPage = () => {
       <DialogContainer
         type={"modal"}
         onDismiss={() => setOpen(false)}
-        isDismissable
+        isDismissable        
       >
         {open && (
           <Dialog size="L">

@@ -6,10 +6,7 @@ import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { TextField } from "@react-spectrum/textfield";
-import { Picker } from "@react-spectrum/picker";
-import { Item } from "@react-spectrum/combobox";
 import { NumberField } from "@react-spectrum/numberfield";
-import { FormatNumber } from "@lib/format";
 
 type OrderFormProps = {
   data: iOrder;
@@ -87,7 +84,7 @@ const OrderForm: NextPage<OrderFormProps> = ({
     }
   }
 
-  return (<View backgroundColor={"gray-100"} paddingY={"size-100"} paddingX={{base: "size-100", M:"size-1000"}}>
+  return (<View backgroundColor={"gray-100"} paddingX={{base: "size-100", M:"size-1000"}}>
     <Form onSubmit={handleSubmit}>
       <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
         <TextField

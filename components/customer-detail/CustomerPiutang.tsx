@@ -8,6 +8,8 @@ import { iPiutang } from "@components/interfaces";
 import { CustomerBalanceDetail } from "./CustomerBalanceDetail";
 import { FormatNumber } from "@lib/format";
 import WaitMe from "@components/ui/wait-me";
+import Div from "@components/ui/Div";
+import Span from "@components/ui/SpanValue";
 
 type CustomerPiutangProps = {
   customerId: number;
@@ -31,7 +33,7 @@ const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
       <View marginBottom={"size-200"}>
         <span style={{ fontWeight: 700 }}>Piutang</span>
       </View>
-      <View paddingY={"size-50"} backgroundColor={"gray-200"}>
+      <Div isHeader isHidden aria-label={"Div header Piutang"}>
         <Flex
           direction={{ base: "column", M: "row" }}
           marginX={"size-100"}
@@ -39,101 +41,46 @@ const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
         >
           <View width={{ base: "auto", M: "40%" }}>KETERANGAN</View>
           <Flex flex direction={"row"} columnGap={"size-100"}>
-            <View width={colWidth}>
-              <span style={{ textAlign: "right", display: "block" }}>
-                DEBIT
-              </span>
-            </View>
-            <View width={colWidth}>
-              <span style={{ textAlign: "right", display: "block" }}>
-                CREDIT
-              </span>
-            </View>
-            <View width={colWidth}>
-              <span style={{ textAlign: "right", display: "block" }}>
-                SALDO
-              </span>
-            </View>
+            <Span width={"33.3%"} isNumber>DEBIT</Span>
+            <Span isNumber width={"33.3%"}>CREDIT</Span>
+            <Span isNumber width={"33.3%"}>SALDO</Span>
           </Flex>
         </Flex>
-      </View>
+      </Div>
       {payments.isLoading && <WaitMe />}
       {payments &&
         payments.items.map((x, i) => (
-          <View
-            paddingY={"size-50"}
-            backgroundColor={i % 2 === 0 ? "transparent" : "gray-100"}
-          >
+          <Div index={i} key={x.id} aria-label={"Div body value"}>
             <Flex direction={{ base: "column", M: "row" }} marginX={"size-100"}>
               <View width={{ base: "auto", M: "40%" }}>{x.descriptions}</View>
               <Flex flex direction={"row"} columnGap={"size-100"}>
-                <View width={colWidth}>
-                  <span style={{ textAlign: "right", display: "block" }}>
-                    {FormatNumber(x.debt)}
-                  </span>
-                </View>
-                <View width={colWidth}>
-                  <span style={{ textAlign: "right", display: "block" }}>
-                    {FormatNumber(x.cred)}
-                  </span>
-                </View>
-                <View width={colWidth}>
-                  <span
-                    style={{
-                      textAlign: "right",
-                      display: "block",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {FormatNumber(x.saldo)}
-                  </span>
-                </View>
+                <Span width={"33.3%"} isNumber>{FormatNumber(x.debt)}</Span>
+                <Span width={"33.3%"} isNumber>{FormatNumber(x.cred)}</Span>
+                <Span width={"33.3%"} isTotal isNumber>{FormatNumber(x.saldo)}</Span>
               </Flex>
             </Flex>
-          </View>
+          </Div>
         ))}
-      <View paddingY={"size-50"} backgroundColor={"gray-200"}>
+      <Div isFooter>
         <Flex direction={{ base: "column", M: "row" }} marginX={"size-100"}>
           <View width={{ base: "auto", M: "40%" }}>GRAND TOTAL</View>
           <Flex flex direction={"row"} columnGap={"size-100"}>
-            <View width={colWidth}>
-              <span style={{ textAlign: "right", display: "block" }}>
-                {FormatNumber(payments.items.reduce((a, b) => a + b.debt, 0))}
-              </span>
-            </View>
-            <View width={colWidth}>
-              <span style={{ textAlign: "right", display: "block" }}>
-                {FormatNumber(payments.items.reduce((a, b) => a + b.cred, 0))}
-              </span>
-            </View>
-            <View width={colWidth}>
-              <span
-                style={{
-                  textAlign: "right",
-                  display: "block",
-                  fontWeight: 700,
-                }}
-              >
-                {FormatNumber(
-                  payments.items.reduce((a, b) => a + b.cred - b.debt, 0)
-                )}
-              </span>
-            </View>
+            <Span isNumber width={"33.3%"}>{FormatNumber(payments.items.reduce((a, b) => a + b.debt, 0))}</Span>
+            <Span isNumber width={"33.3%"}>{FormatNumber(payments.items.reduce((a, b) => a + b.cred, 0))}</Span>
+            <Span isNumber width={"33.3%"} isTotal>{FormatNumber(payments.items.reduce((a, b) => a + b.cred - b.debt, 0))}</Span>
           </Flex>
         </Flex>
-      </View>
+      </Div>
       <Button
         isDisabled={showDetail}
         variant={"primary"}
+        marginBottom={"size-100"}
         onPress={() => setShowDetail(true)}
-        marginTop={"size-400"}
       >
         Balance Detail
       </Button>
       {showDetail && (
-        <View marginTop={"size-100"}>
           <CustomerBalanceDetail customerId={customerId} />
-        </View>
       )}
     </>
   );

@@ -1,5 +1,5 @@
 import { NextPage } from "next";
-import React, { FormEvent, useState } from "react";
+import React, { useState } from "react";
 import {
   iStock,
   iStockDetail,
@@ -8,7 +8,6 @@ import {
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
-import { Form } from "@react-spectrum/form";
 import { Item } from "@react-spectrum/combobox";
 import { NumberField } from "@react-spectrum/numberfield";
 import { AsyncListData } from "@react-stately/data";

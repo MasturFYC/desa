@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.5 (Ubuntu 13.5-2.pgdg20.04+1)
--- Dumped by pg_dump version 13.5 (Ubuntu 13.5-2.pgdg20.04+1)
+-- Dumped from database version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
+-- Dumped by pg_dump version 13.4 (Ubuntu 13.4-4.pgdg20.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1022,6 +1022,7 @@ COPY public.grass_details (grass_id, id, qty) FROM stdin;
 
 COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, total) FROM stdin;
 31	2	Kasbon Beli Terpal	2021-12-17 00:00:00	2021-12-24 00:00:00	1500000.00
+36	2	Kasbon Beli Mesin Diesel	2021-11-24 19:07:00	2021-12-01 19:07:00	3250000.00
 \.
 
 
@@ -1042,6 +1043,7 @@ COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_
 COPY public.orders (id, customer_id, order_date, total, payment, remain_payment, descriptions) FROM stdin;
 29	1	2021-11-17 00:46:00	29250.00	0.00	29250.00	Pembelian Barang
 32	2	2021-11-17 15:38:00	39000.00	30000.00	9000.00	Utang Obat
+42	1	2021-11-25 00:56:00	0.00	0.00	0.00	Pembelian Barang qweqwe
 \.
 
 
@@ -1097,6 +1099,9 @@ COPY public.stock_payments (id, stock_id, pay_num, pay_date, nominal, descriptio
 30	29	x9898	2021-11-23 03:39:00	10000.00	Bayar Stock Pembelian #ssssss
 31	29	x-695554	2021-11-23 13:40:00	15000.00	Bayar Stock Pembelian #ssssss
 32	4	c-6522	2021-11-23 14:38:00	1250000.00	Bayar Stock Pembelian #x-10256559
+46	12	wwww	2021-11-24 19:05:00	100000.00	Bayar Stock Pembelian #CV/3-985441
+47	4	6565ss	2021-11-24 19:05:00	50000.00	Bayar Stock Pembelian #x-10256559
+48	33	wwww	2021-11-24 21:21:00	25000.00	Bayar Stock Pembelian #dddd
 \.
 
 
@@ -1105,12 +1110,12 @@ COPY public.stock_payments (id, stock_id, pay_num, pay_date, nominal, descriptio
 --
 
 COPY public.stocks (id, supplier_id, stock_num, stock_date, total, cash, payments, remain_payment, descriptions) FROM stdin;
-12	5	CV/3-985441	2021-11-22 21:14:00	1010000.00	300000.00	510000.00	200000.00	\N
 11	4	BG-562987	2021-11-22 21:04:00	100000.00	5000.00	95000.00	0.00	\N
 29	6	ssssss	2021-11-23 03:38:00	30000.00	5000.00	25000.00	0.00	\N
-4	2	x-10256559	2021-11-22 20:49:00	2250000.00	700000.00	1300000.00	250000.00	\N
-33	1	dddd	2021-11-23 14:41:00	30000.00	0.00	0.00	30000.00	\N
 45	3	weqweq weqwe	2021-11-23 14:53:00	30000.00	0.00	0.00	30000.00	qwewe
+12	5	CV/3-985441	2021-11-22 21:14:00	1010000.00	300000.00	610000.00	100000.00	\N
+4	2	x-10256559	2021-11-22 20:49:00	2250000.00	700000.00	1350000.00	200000.00	\N
+33	1	dddd	2021-11-23 14:41:00	30000.00	0.00	25000.00	5000.00	\N
 \.
 
 
@@ -1171,7 +1176,7 @@ SELECT pg_catalog.setval('public.order_detail_seq', 99, true);
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 35, true);
+SELECT pg_catalog.setval('public.order_seq', 42, true);
 
 
 --
@@ -1185,7 +1190,7 @@ SELECT pg_catalog.setval('public.product_seq', 16, true);
 -- Name: seq_stock; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.seq_stock', 45, true);
+SELECT pg_catalog.setval('public.seq_stock', 48, true);
 
 
 --
