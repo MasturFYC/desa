@@ -22,6 +22,16 @@ const KasbonForm: NextPage<PaymentFormProps> = ({
   let [payment, setPayment] = React.useState<iPayment>({} as iPayment);
   let [message, setMessage] = useState<string>("");
 
+  const isTotalValid = React.useMemo(
+    () => payment && payment.total && payment.total > 0,
+    [payment.total]
+  )
+
+  const isDescriptionValid = React.useMemo(
+    () => payment && payment.descriptions && payment.descriptions.length > 0,
+    [payment.descriptions]
+  )
+  
   React.useEffect(() => {
     let isLoaded = false;
 
@@ -92,6 +102,7 @@ const KasbonForm: NextPage<PaymentFormProps> = ({
       <Form onSubmit={handleSubmit}>
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <TextField
+            validationState={isDescriptionValid ? "valid" : "invalid"}
             autoFocus
             width={"auto"}
             flex
@@ -113,6 +124,7 @@ const KasbonForm: NextPage<PaymentFormProps> = ({
           />
           <NumberField
             isRequired
+            validationState={isTotalValid ? "valid" : "invalid"}
             hideStepper={true}
             width={{ base: "auto", M: "25%" }}
             label={"Total bayar"}
@@ -127,7 +139,8 @@ const KasbonForm: NextPage<PaymentFormProps> = ({
           marginTop={"size-200"}
         >
           <View flex>
-            <Button type={"submit"} variant="cta">
+            <Button type={"submit"} variant="cta"
+            isDisabled={isTotalValid <= 0 || isDescriptionValid === ""}>
               Save
             </Button>
             <Button

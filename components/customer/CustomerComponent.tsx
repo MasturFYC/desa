@@ -1,7 +1,7 @@
 import Head from "next/head";
 import dynamic from "next/dynamic";
 import router from "next/router";
-import React, { FormEvent, Fragment, useState } from "react";
+import { Fragment, useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import Layout from "@components/layout";
 import { customerType, iCustomer } from "@components/interfaces";
@@ -29,9 +29,9 @@ const initCustomer: iCustomer = {
 };
 
 const CustomerComponent: NextPage = () => {
-  let [selectedId, setSelectedId] = React.useState<number>(-1);
-  let [txtSearch, setTxtSearch] = React.useState<string>("");
-  let [message, setMessage] = React.useState<string>("");
+  let [selectedId, setSelectedId] = useState<number>(-1);
+  let [txtSearch, setTxtSearch] = useState<string>("");
+  let [message, setMessage] = useState<string>("");
 
   let customers = useAsyncList<iCustomer>({
     async load({ signal }) {

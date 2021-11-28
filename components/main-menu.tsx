@@ -41,9 +41,14 @@ const menus: MenuType[] = [
   },
   {
     id: 4,
-    name: "Penjualan",
-    link: "/sale",
+    name: "Penjualan (Toko)",
+    link: "/orders",
   },
+  {
+    id: 6,
+    name: "Penjualan (Khusus)",
+    link: "/spesial-order",
+  }
 ];
 
 type LayoutProps = {

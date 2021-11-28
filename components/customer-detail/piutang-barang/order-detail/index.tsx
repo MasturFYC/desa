@@ -7,7 +7,7 @@ import { NextPage } from "next";
 import { ActionButton, Divider, Flex } from "@adobe/react-spectrum";
 import PinAdd from "@spectrum-icons/workflow/Add";
 
-import {iOrderDetail, iOrder, iProduct } from "@components/interfaces";
+import { iOrderDetail, iOrder, iProduct } from "@components/interfaces";
 import { FormatNumber } from "@lib/format";
 import Div from "@components/ui/Div";
 
@@ -33,14 +33,12 @@ const initOrderDetail: iOrderDetail = {
 type OrderDetailProps = {
   products: AsyncListData<iProduct>;
   orderId: number;
-  order: iOrder;
   updateTotal: (orderId: number, subtotal: number) => void;
 };
 
 const OrderDetail: NextPage<OrderDetailProps> = ({
   products,
   orderId,
-  order,
   updateTotal,
 }) => {
   let [selectedDetailId, setSelectedDetailId] = useState<number>(-1);
@@ -88,7 +86,7 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
 
   return (
     <Fragment>
-      <View backgroundColor={"gray-50"} marginY={"size-100"} padding={{ base: "size-50", M: "size-200" }}>
+      <View backgroundColor={"gray-50"}>
         <Div isHeader>
           <Flex
             isHidden={{ base: true, M: false }}
@@ -113,19 +111,20 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
           [...orderDetails.items, { ...initOrderDetail, orderId: orderId }].map(
             (x, i) => (
               <Div
-              isSelected={selectedDetailId === x.id}
-              selectedColor={'6px solid green'}
+                isSelected={selectedDetailId === x.id}
+                selectedColor={'6px solid green'}
                 key={x.id}
               >
                 {renderDetails(x, isNew)}
                 {selectedDetailId === x.id && (
+
                   <OrderDetailForm
                     products={products}
                     data={x}
                     updateDetail={updateOrderDetail}
                     closeForm={closeForm}
-                  />)}
-
+                  />
+                )}
               </Div>
             )
           )}
@@ -135,38 +134,38 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
 
   function renderDetails(x: iOrderDetail, isNew: boolean) {
     return (
-        <Flex
-          marginX={"size-100"}
-          direction={"row"}
-          //direction={{base:"column", M:"row"}}
-          columnGap="size-100"
-          wrap={"wrap"}
-        >
-          {x.id > 0 && <View width={"5%"}>{x.id}</View>}
-          <View flex={{ base: "50%", M: 1 }}>
-            <ActionButton
-              flex
-              height={"auto"}
-              isQuiet
-              onPress={() => {
-                setSelectedDetailId(selectedDetailId === x.id ? -1 : x.id);
-                setDetail(x);
-              }}
-            >
-              {x.id === 0 ? (
-                <>
-                  <PinAdd size="S" />
-                  Add Item
-                </>
-              ) : (
-                <span style={{ fontWeight: 700 }}>
-                  {x.productName} - {x.spec}
-                </span>
-              )}
-            </ActionButton>
-          </View>
-          {x.id > 0 && renderDetail(x)}
-        </Flex>
+      <Flex
+        marginX={"size-100"}
+        direction={"row"}
+        //direction={{base:"column", M:"row"}}
+        columnGap="size-100"
+        wrap={"wrap"}
+      >
+        {x.id > 0 && <View width={"5%"}>{x.id}</View>}
+        <View flex={{ base: "50%", M: 1 }}>
+          <ActionButton
+            flex
+            height={"auto"}
+            isQuiet
+            onPress={() => {
+              setSelectedDetailId(selectedDetailId === x.id ? -1 : x.id);
+              setDetail(x);
+            }}
+          >
+            {x.id === 0 ? (
+              <>
+                <PinAdd size="S" />
+                Add Item
+              </>
+            ) : (
+              <span style={{ fontWeight: 700 }}>
+                {x.productName} - {x.spec}
+              </span>
+            )}
+          </ActionButton>
+        </View>
+        {x.id > 0 && renderDetail(x)}
+      </Flex>
     );
   }
 

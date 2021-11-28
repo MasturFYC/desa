@@ -73,7 +73,7 @@ const SupplierPiutang: NextPage<SupplierPiutangProps> = ({ supplierId }) => {
       {payments.isLoading && <WaitMe />}
       {payments &&
         payments.items.map((x, i) => (
-          <Div index={i}>
+          <Div index={i} key={x.id}>
             <Flex direction={{ base: "column", M: "row" }} marginX={"size-100"}>
               <View width={{ base: "auto", M: "40%" }}>{x.descriptions}</View>
               <Flex flex direction={"row"} columnGap={"size-100"}>

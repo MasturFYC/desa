@@ -22,6 +22,20 @@ const GrassForm: NextPage<GrassFormProps> = ({
   let [grass, setGrass] = React.useState<iGrass>({} as iGrass);
   let [message, setMessage] = useState<string>('');
 
+  const isQtyValid = React.useMemo(
+    () => grass && grass.qty && grass.qty > 0,
+    [grass.qty]
+  )
+  const isPriceValid = React.useMemo(
+    () => grass && grass.price && grass.price > 0,
+    [grass.price]
+  )
+
+  const isDescriptionValid = React.useMemo(
+    () => grass && grass.descriptions && grass.descriptions.length > 0,
+    [grass.descriptions]
+  )
+
   React.useEffect(() => {
     let isLoaded = false;
 
@@ -88,6 +102,7 @@ const GrassForm: NextPage<GrassFormProps> = ({
     <Form onSubmit={handleSubmit}>
       <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
         <TextField
+          validationState={isDescriptionValid ? "valid" : "invalid"}
           autoFocus
           width={"auto"}
           flex
@@ -108,25 +123,27 @@ const GrassForm: NextPage<GrassFormProps> = ({
           onChange={(e) => setGrass((o) => ({ ...o, orderDate: e }))}
         />
       </Flex>
-      {grass.id > 0 ? (
+      {/* {grass.id > 0 ? ( */}
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <NumberField
+            validationState={isQtyValid ? "valid" : "invalid"}
+            isRequired
+            hideStepper={true}
+            width={{ base: "auto", M: "25%" }}
+            label={"Qty (kg)"}
+            onChange={(e) => setGrass((o) => ({ ...o, qty: e, total: o.price * e }))}
+            value={grass.qty} />
+          <NumberField
             flex
+            isRequired
+            validationState={isPriceValid ? "valid" : "invalid"}
             width={"auto"}
             hideStepper={true}
-            label={"Bayar"}
+            label={"Harga"}
             value={grass.price}
             onChange={(e) =>
               setGrass((o) => ({ ...o, price: e, total: o.qty * e }))
             } />
-          <NumberField
-            isReadOnly
-            hideStepper={true}
-            width={{base:"auto", M:"25%"}}
-            label={"Qty"}
-            onChange={(e) => setGrass((o) => ({ ...o, qty: e }))}
-            value={grass.qty} />
-
           <NumberField
             flex
             isReadOnly
@@ -136,10 +153,12 @@ const GrassForm: NextPage<GrassFormProps> = ({
             onChange={(e) => setGrass((o) => ({ ...o, total: e }))}
             value={grass.total} />
         </Flex>
-      ) : <></>}
+      {/* ) : <></>} */}
       <Flex direction="row" gap="size-100" marginBottom={"size-100"} marginTop={"size-200"}>
         <View flex>
-          <Button type={"submit"} variant="cta">
+          <Button type={"submit"} variant="cta"
+            isDisabled={isPriceValid <= 0 || isDescriptionValid === "" || isQtyValid <= 0}
+          >
             Save
           </Button>
           <Button

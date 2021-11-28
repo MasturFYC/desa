@@ -7,7 +7,6 @@ import { NextPage } from "next";
 import {
   ActionButton,
   Button,
-  Divider,
   Flex,
   Text,
   ToggleButton,
@@ -15,12 +14,10 @@ import {
 import {
   dateParam,
   iOrder,
-  iOrderDetail,
   iProduct,
 } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
 import Pin from "@spectrum-icons/workflow/PinOff";
-import product from "@components/product";
 import Div from "@components/ui/Div";
 
 const OrderDetail = dynamic(
@@ -53,7 +50,7 @@ type PiutangBarangProps = {
 const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
   let [showDetail, setShowDetail] = useState<boolean>(false);
   let [selectedOrderId, setSelectedOrderId] = useState<number>(-1);
-  let [detailId, setDetailId] = useState<number>(0);
+ // let [detailId, setDetailId] = useState<number>(0);
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
@@ -74,18 +71,18 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
   });
 
   const closeForm = () => {
-    setSelectedOrderId(-1);
-    if (selectedOrderId === 0) {
-      orders.remove(0)
+    if(selectedOrderId === 0) {
+      orders.remove(0);
     }
+    setSelectedOrderId(-1);
   };
 
   const updateOrder = (method: string, p: iOrder) => {
     switch (method) {
       case "POST":
         {
-          orders.insert(0, p);
-          orders.remove(0)
+          orders.update(0, p);
+          setSelectedOrderId(p.id)
         }
         break;
       case "PUT":
@@ -114,7 +111,9 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
       <Button
         variant={"cta"}
         onPress={() => {
-          orders.insert(0, {...initOrder, customerId: customerId});
+          if(!orders.getItem(0)) {
+            orders.insert(0, {...initOrder, customerId: customerId});
+          }
           setSelectedOrderId(0);
         }}
         marginBottom={"size-200"}
@@ -146,13 +145,20 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
       {orders &&
         orders.items.map(
           (x, i) => (
-            <Div key={x.id} index={i} isSelected={selectedOrderId === x.id || (detailId === x.id && showDetail)} selectedColor={"6px solid dodgerblue"} >
+            <Div key={x.id} index={i} isSelected={selectedOrderId === x.id} selectedColor={"6px solid dodgerblue"} >
               {selectedOrderId === x.id ? (
                 <OrderForm
                   data={x}
                   updateOrder={updateOrder}
                   closeForm={closeForm}
-                />
+                >
+                  <OrderDetail
+                    products={products}
+                    updateTotal={updateTotal}
+                    orderId={x.id}
+                  />
+
+                  </OrderForm>
               ) : (
                 renderPiutang({ x })
               )}
@@ -193,14 +199,14 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
               height={"auto"}
               isQuiet
               onPress={() => {
-                setSelectedOrderId(selectedOrderId === x.id ? -1 : x.id);
+                setSelectedOrderId(x.id);
               }}
             >
               <span style={{ fontWeight: 700 }}>
                 {x.id === 0 ? "Piutang Baru" : x.descriptions}
               </span>
             </ActionButton>
-            {x.id > 0 && (
+            {/* {x.id > 0 && (
               <ToggleDetail
                 isSelected={detailId === x.id && showDetail}
                 showOrderDetail={(e) => {
@@ -208,18 +214,17 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
                   setShowDetail(e);
                 }}
               />
-            )}
+            )} */}
           </View>
           {x.id > 0 && renderDetail(x)}
         </Flex>
-        {detailId === x.id && showDetail && (
-          <OrderDetail
+        {/* {detailId === x.id && showDetail && ( */}
+          {/* <OrderDetail
             products={products}
-            order={x}
             updateTotal={updateTotal}
             orderId={x.id}
-          />
-        )}
+          /> */}
+        {/* )} */}
       </Fragment>
     );
   }

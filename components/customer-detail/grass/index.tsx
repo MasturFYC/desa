@@ -17,13 +17,13 @@ import { FormatDate, FormatNumber } from "@lib/format";
 import Pin from "@spectrum-icons/workflow/PinOff";
 import Div from "@components/ui/Div";
 
-const GrassDetail = dynamic(
-  () => import("@components/customer-detail/grass/grass-detail"),
-  {
-    loading: () => <WaitMe />,
-    ssr: false,
-  }
-);
+// const GrassDetail = dynamic(
+//   () => import("@components/customer-detail/grass/grass-detail"),
+//   {
+//     loading: () => <WaitMe />,
+//     ssr: false,
+//   }
+// );
 
 const GrassForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -45,9 +45,9 @@ type GrassProps = {
 };
 
 const Grass: NextPage<GrassProps> = ({ customerId }) => {
-  let [showDetail, setShowDetail] = useState<boolean>(false);
+//  let [showDetail, setShowDetail] = useState<boolean>(false);
   let [selectedGrassId, setSelectedGrassId] = useState<number>(-1);
-  let [detailId, setDetailId] = useState<number>(0);
+ // let [detailId, setDetailId] = useState<number>(0);
 
   let grasses = useAsyncList<iGrass>({
     async load({ signal }) {
@@ -59,10 +59,10 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
   });
 
   const closeForm = () => {
-    setSelectedGrassId(-1);
-    if (selectedGrassId === 0) {
+    if(selectedGrassId === 0) {
       grasses.remove(0);
     }
+    setSelectedGrassId(-1);
   };
 
   const updateData = (method: string, p: iGrass) => {
@@ -98,7 +98,9 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
       <Button
         variant={"cta"}
         onPress={() => {
-          grasses.insert(0, { ...initGrass, customerId: customerId });
+          if(!grasses.getItem(0)) {
+            grasses.insert(0, { ...initGrass, customerId: customerId });
+          }
           setSelectedGrassId(0);
         }}
         marginBottom={"size-200"}
@@ -134,7 +136,8 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
           <Div
             key={x.id}
             index={i}
-            isSelected={selectedGrassId === x.id || showDetail}
+            isSelected={selectedGrassId === x.id} 
+            // || showDetail}
             selectedColor={"6px solid darkgreen"}
           >
             {selectedGrassId === x.id ? (
@@ -185,14 +188,14 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
               height={"auto"}
               isQuiet
               onPress={() => {
-                setSelectedGrassId(selectedGrassId === x.id ? -1 : x.id);
+                setSelectedGrassId(x.id);
               }}
             >
               <span style={{ fontWeight: 700 }}>
                 {x.id === 0 ? "Pembelian Baru" : x.descriptions}
               </span>
             </ActionButton>
-            {x.id > 0 && (
+            {/* {x.id > 0 && (
               <ToggleDetail
                 isSelected={detailId === x.id && showDetail}
                 showGrassDetail={(e) => {
@@ -200,13 +203,13 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
                   setShowDetail(e);
                 }}
               />
-            )}
+            )} */}
           </View>
           {x.id > 0 && renderDetail(x)}
         </Flex>
-        {detailId === x.id && showDetail && (
+        {/* {detailId === x.id && showDetail && (
           <GrassDetail grassId={x.id} updateTotal={updateTotal} />
-        )}
+        )} */}
       </Fragment>
     );
   }
@@ -239,29 +242,29 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
 
 export default Grass;
 
-type ToggleDetailProps = {
-  isSelected: boolean;
-  showGrassDetail: (isShow: boolean) => void;
-};
+// type ToggleDetailProps = {
+//   isSelected: boolean;
+//   showGrassDetail: (isShow: boolean) => void;
+// };
 
-function ToggleDetail({ isSelected, showGrassDetail }: ToggleDetailProps) {
-  // let [isShow, setIsShow] = useState<boolean>(isSelected);
+// function ToggleDetail({ isSelected, showGrassDetail }: ToggleDetailProps) {
+//   // let [isShow, setIsShow] = useState<boolean>(isSelected);
 
-  return (
-    <ToggleButton
-      flex
-      height={"auto"}
-      marginStart={"size-200"}
-      isEmphasized
-      isSelected={isSelected}
-      onChange={(e) => {
-        //        setIsShow(e);
-        showGrassDetail(e);
-      }}
-      isQuiet
-    >
-      <Pin aria-label="Pin" />
-      <Text>Details</Text>
-    </ToggleButton>
-  );
-}
+//   return (
+//     <ToggleButton
+//       flex
+//       height={"auto"}
+//       marginStart={"size-200"}
+//       isEmphasized
+//       isSelected={isSelected}
+//       onChange={(e) => {
+//         //        setIsShow(e);
+//         showGrassDetail(e);
+//       }}
+//       isQuiet
+//     >
+//       <Pin aria-label="Pin" />
+//       <Text>Details</Text>
+//     </ToggleButton>
+//   );
+// }

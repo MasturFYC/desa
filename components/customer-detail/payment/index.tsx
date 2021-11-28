@@ -46,10 +46,10 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
   });
 
   const closeForm = () => {
-    setSelectedPaymentId(-1);
-    if (selectedPaymentId === 0) {
-      payments.remove(0);
+    if(selectedPaymentId === 0) {
+      payments.remove(0)
     }
+    setSelectedPaymentId(-1);
   };
 
   const updateOrder = (method: string, p: iPayment) => {
@@ -77,7 +77,9 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
       <Button
         variant={"cta"}
         onPress={() => {
-          payments.insert(0, { ...initPayment, customerId: customerId });
+          if(!payments.getItem(0)) {
+            payments.insert(0, { ...initPayment, customerId: customerId });
+          }
           setSelectedPaymentId(0);
         }}
         marginBottom={"size-200"}
@@ -149,7 +151,7 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
             height={"auto"}
             isQuiet
             onPress={() => {
-              setSelectedPaymentId(selectedPaymentId === x.id ? -1 : x.id);
+              setSelectedPaymentId(x.id);
             }}
           >
             <span style={{ fontWeight: 700 }}>

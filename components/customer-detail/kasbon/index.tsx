@@ -59,10 +59,10 @@ const KasbonPage: NextPage<KasbonProps> = ({ customerId }) => {
   });
 
   const closeForm = () => {
-    setSelectedKasbonId(-1);
-    if (selectedKasbonId === 0) {
-      kasbons.remove(0);
+    if(selectedKasbonId === 0) {
+      kasbons.remove(0)
     }
+    setSelectedKasbonId(-1);
   };
 
   const updateOrder = (method: string, p: iKasbon) => {
@@ -90,7 +90,9 @@ const KasbonPage: NextPage<KasbonProps> = ({ customerId }) => {
       <Button
         variant={"cta"}
         onPress={() => {
-          kasbons.insert(0, { ...initKasbon, customerId: customerId });
+          if(!kasbons.getItem(0)) {
+            kasbons.insert(0, { ...initKasbon, customerId: customerId });
+          }
           setSelectedKasbonId(0);
         }}
         marginBottom={"size-200"}
@@ -161,7 +163,7 @@ const KasbonPage: NextPage<KasbonProps> = ({ customerId }) => {
             height={"auto"}
             isQuiet
             onPress={() => {
-              setSelectedKasbonId(selectedKasbonId === x.id ? -1 : x.id);
+              setSelectedKasbonId(x.id);
             }}
           >
             <span style={{ fontWeight: 700 }}>

@@ -1,17 +1,14 @@
+import { NextPage } from "next";
 import dynamic from "next/dynamic";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
-import { Content, View } from "@react-spectrum/view";
-import { NextPage } from "next";
+import { View } from "@react-spectrum/view";
 import Link from "next/link";
 import {
-  ActionButton,
   Button,
-  Column,
   Divider,
   Flex,
-  Heading,
   SearchField
 } from "@adobe/react-spectrum";
 import {
@@ -21,11 +18,8 @@ import {
   iSupplier
 } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
-import Pin from "@spectrum-icons/workflow/PinOff";
 import Layout from "@components/layout";
 import Head from "next/head";
-import InfoIcon from "@spectrum-icons/workflow/Info";
-import product from "@components/product";
 import SpanLink from "@components/ui/span-link";
 
 const siteTitle = "Stock"
@@ -46,7 +40,7 @@ const initStock: iStock = {
   remainPayment: 0
 };
 
-const StockPage = () => {
+const StockComponent: NextPage = () => {
   let [stockId, setStockId] = useState<number>(-1);
   let [txtSearch, setTxtSearch] = useState<string>("");
 
@@ -168,7 +162,9 @@ const StockPage = () => {
             width={"size-1600"}
             variant={"cta"}
             onPress={() => {
-              stocks.insert(0, initStock);
+              if (!stocks.getItem(0)) {
+                stocks.insert(0, initStock);
+              }
               setStockId(0);
             }}
           >
@@ -227,6 +223,9 @@ const StockPage = () => {
   );
 
   function closeForm() {
+    if (stockId === 0) {
+      stocks.remove(0)
+    }
     setStockId(-1)
   }
 }
@@ -257,4 +256,4 @@ function RenderStock({ index, item, children }: RenderStockProps) {
   )
 }
 
-export default StockPage;
+export default StockComponent;

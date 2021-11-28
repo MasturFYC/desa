@@ -1,4 +1,3 @@
-import React from 'react';
 import Document, { Html, Head, Main, NextScript } from 'next/document';
 
 // https://mui.com/styles/advanced/#next-js

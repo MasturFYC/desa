@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { useHover } from "@react-aria/interactions";
-import { useViewportSize } from "@react-aria/utils";
+import { isAndroid, isIPhone } from "@react-aria/utils";
 
 type DivLinkProps = {
   onClick?: React.MouseEventHandler<HTMLDivElement>;
@@ -19,8 +19,7 @@ type DivLinkProps = {
 };
 
 export default function Div(props: DivLinkProps) {
-  let { width: mobile } = useViewportSize();
-  //let ref = useRef<HTMLDivElement>(null);
+ //let ref = useRef<HTMLDivElement>(null);
   let [events, setEvents] = React.useState<string[]>([]);
   let {
     children,
@@ -38,6 +37,7 @@ export default function Div(props: DivLinkProps) {
     onHoverEnd: (e) =>
       setEvents((events) => [...events, `hover end with ${e.pointerType}`]),
   });
+  //let { width: mobile } = useViewportSize();
 
   return (
     <div
@@ -46,14 +46,14 @@ export default function Div(props: DivLinkProps) {
       {...hoverProps}
       className={"div-row"}
       style={{
-        display: isHidden && mobile <= 640 ? "none" : "block",
+        display: isHidden && (isIPhone() || isAndroid()) ? "none" : "block",
         padding: isHeader || isFooter ? "8px 0" : "6px 0",
         borderTopLeftRadius: isHeader ? "6px" : "none",
         borderTopRightRadius: isHeader ? "6px" : "none",
         borderBottomLeftRadius: isFooter ? "6px" : "none",
         borderBottomRightRadius: isFooter ? "6px" : "none",
         borderTop:
-          isHeader || (index === 0 && mobile <= 640)
+          isHeader || (index === 0 && (isIPhone() || isAndroid()))
             ? "1px solid #c8cfdf"
             : undefined, //|| (index === 0 && mobile <= 640) ? '1px solid #c8cfdf' : isFooter ? '1px solid #c8cfdf' : 'none',
         marginBottom: isFooter ? "16px" : 0,

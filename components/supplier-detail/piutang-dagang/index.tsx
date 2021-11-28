@@ -22,6 +22,7 @@ import {
 import { FormatDate, FormatNumber } from "@lib/format";
 import supplier from "@components/supplier";
 import SpanLink from "@components/ui/span-link";
+import Span from "@components/ui/SpanValue";
 
 const siteTitle = "Stock"
 
@@ -110,7 +111,7 @@ const StockPage: NextPage<{ supplierId: number }> = ({ supplierId}) => {
         {
           stocks.update(0, p);
           if(stockId === 0) {
-          setStockId(p.id);
+            setStockId(p.id);
           }
          // stocks.remove(0);
         }
@@ -143,7 +144,9 @@ const StockPage: NextPage<{ supplierId: number }> = ({ supplierId}) => {
             width={"size-1600"}
             variant={"cta"}
             onPress={() => {
-              stocks.insert(0, initStock);
+              if(!stocks.getItem(0)) {
+                stocks.insert(0, initStock);
+              }
               setStockId(0);
             }}
           >
@@ -163,7 +166,15 @@ const StockPage: NextPage<{ supplierId: number }> = ({ supplierId}) => {
           onSubmit={() => searchData()}
         />
       </Flex>
-      <View backgroundColor="gray-100" paddingY={"size-50"}>
+      <View backgroundColor="gray-100"
+        borderTopStartRadius={"medium"} borderTopEndRadius={"medium"}
+        borderTopWidth={"thin"}
+        borderStartWidth={"thin"}
+        borderEndWidth={"thin"}
+        borderColor={"blue-400"}
+        borderBottomWidth={"thick"}
+        paddingY={"size-100"}
+      >
         <Flex direction={"row"} columnGap={"size-50"} marginX={"size-100"}>
           <View width={{ base: "5%", M: "5%" }}>#ID</View>
           <View flex>FAKTUR</View>
@@ -174,13 +185,19 @@ const StockPage: NextPage<{ supplierId: number }> = ({ supplierId}) => {
           <View width={{ base: "50%", M: "13%" }}><span style={{ textAlign: "right", display: "block" }}>UTANG</span></View>
         </Flex>
       </View>
-      <Divider size="S" />
       {(products.isLoading || stocks.isLoading) && <WaitMe />}
       {stocks &&
         stocks.items.map((item, i) => (
           stockId === item.id ?
-            <View key={item.id} backgroundColor={"gray-100"} paddingX={"size-200"} borderWidth={"thin"} borderColor={"gray-300"}
-              borderStartColor={"indigo-400"} borderStartWidth={"thickest"}>
+            <View key={item.id} 
+              backgroundColor={"gray-100"}
+              paddingX={"size-100"}
+              paddingBottom={"size-200"}
+              borderEndWidth={"thin"}
+              borderColor={"gray-300"}
+              borderStartColor={"indigo-400"}
+              borderStartWidth={"thickest"}
+              >
               <StockForm
                 updateData={updateData}
                 updateTotal={updateTotal}
@@ -191,7 +208,7 @@ const StockPage: NextPage<{ supplierId: number }> = ({ supplierId}) => {
             <RenderStock key={item.id} index={i} item={item}>
               <SpanLink
               onClick={() => setStockId(item.id)}
-              >{item.stockNum}</SpanLink>
+              >{item.id === 0 ? '---' : item.stockNum}</SpanLink>
               {/* <ActionButton
                 isQuiet
                 width={"auto"}
@@ -201,11 +218,26 @@ const StockPage: NextPage<{ supplierId: number }> = ({ supplierId}) => {
             </RenderStock>
         ))
       }
-      <br />
+      <View backgroundColor={"gray-100"}
+        borderBottomStartRadius={"medium"} borderBottomEndRadius={"medium"}
+        paddingY={"size-50"}
+        borderStartWidth={"thin"}
+        borderEndWidth={"thin"}
+        borderBottomWidth={"thin"}
+        borderTopWidth={"thick"}
+      >
+        <Flex direction={"row"} columnGap={"size-50"} marginX={"size-100"}>
+          <View flex>TOTAL</View>
+          <Span isNumber isTotal>{FormatNumber(stocks.items.reduce((a, b) => a + b.remainPayment, 0))}</Span>
+        </Flex>
+      </View>
     </Fragment>
   );
 
   function closeForm() {
+    if(stockId === 0) {
+      stocks.remove(0)
+    }
     setStockId(-1)
   }
 }
@@ -217,7 +249,11 @@ type RenderStockProps = {
 }
 function RenderStock({ index, item, children }: RenderStockProps) {
   return (
-    <View backgroundColor={index % 2 === 0 ? "gray-50" : "gray-75"} paddingY={"size-50"}>
+    <View backgroundColor={index % 2 === 0 ? "gray-50" : "gray-75"}
+    paddingY={"size-50"}
+      borderStartWidth={"thin"}
+      borderEndWidth={"thin"}
+    >
       <Flex direction={"row"} columnGap={"size-50"} marginX={"size-100"}>
         <View width={{ base: "5%", M: "5%" }}>{item.id}</View>
         <View flex>{children}</View>

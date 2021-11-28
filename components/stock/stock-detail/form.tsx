@@ -1,5 +1,5 @@
 import { NextPage } from "next";
-import React, { useState } from "react";
+import React, { FormEvent, useState } from "react";
 import { iStock, iStockDetail, iProduct } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
@@ -7,7 +7,8 @@ import { Button } from "@react-spectrum/button";
 import { Item } from "@react-spectrum/combobox";
 import { NumberField } from "@react-spectrum/numberfield";
 import { AsyncListData } from "@react-stately/data";
-import { ComboBox } from "@adobe/react-spectrum";
+import { ComboBox } from "@react-spectrum/combobox";
+import { Form } from "@react-spectrum/form";
 //import { Text } from "@adobe/react-spectrum";
 //import WaitMe from "@components/ui/wait-me";
 
@@ -28,6 +29,18 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
   let [message, setMessage] = useState<string>("");
   //let [units, setUnits] = useState<iUnit[] | undefined>([]);
 
+  const isProductValid = React.useMemo(
+    () => detail && detail.productId && detail.productId > 0,
+    [detail.productId]
+  )
+  const isUnitValid = React.useMemo(
+    () => detail && detail.unitId && detail.unitId > 0,
+    [detail.unitId]
+  )
+  const isQtyValid = React.useMemo(
+    () => detail && detail.qty && detail.qty > 0,
+    [detail.qty]
+  )
   React.useEffect(() => {
     let isLoaded = false;
 
@@ -69,8 +82,8 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
     }
   }
 
-  const handleSubmit = () => {
-    //e.preventDefault();
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
     postData(detail.id === 0 ? "POST" : "PUT");
   };
 
@@ -99,14 +112,15 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
 
   return (
     <View
-      backgroundColor={"gray-75"}
       paddingY={"size-100"}
       paddingX={{ base: "size-100", M: "size-1000" }}
     >
+    <Form onSubmit={handleSubmit}>
       <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
         <ComboBox
           autoFocus
           flex
+          validationState={isProductValid ? "valid" : "invalid"}
           label={"Nama Barang"}
           selectedKey={detail.productId}
           defaultItems={products.items}
@@ -147,7 +161,9 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
           flex
           hideStepper={true}
           width={"auto"}
+          validationState={isQtyValid ? "valid" : "invalid"}
           label={"Qty"}
+          minValue={0}
           onChange={(e) =>
             setDetail((o) => ({ ...o, qty: e, subtotal: e * o.price }))
           }
@@ -155,6 +171,7 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
         />
         <ComboBox
           label={"Unit"}
+          validationState={isUnitValid ? "valid" : "invalid"}
           defaultItems={
             products.getItem(detail.productId)
               ? products.getItem(detail.productId).units
@@ -202,7 +219,8 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
         marginTop={"size-200"}
       >
         <View flex>
-          <Button type={"button"} variant="cta" onPress={() => handleSubmit()}>
+          <Button type={"submit"} variant="cta"
+          isDisabled={isUnitValid === 0 || isProductValid === 0 || isQtyValid === 0}>
             Save
           </Button>
           <Button
@@ -229,6 +247,7 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
       <View>
         {message && <span style={{ color: "red" }}>{message}</span>}
       </View>
+      </Form>
     </View>
   );
 };

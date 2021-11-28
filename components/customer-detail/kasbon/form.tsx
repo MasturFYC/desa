@@ -22,6 +22,16 @@ const KasbonForm: NextPage<KasbonFormProps> = ({
   let [kasbon, setKasbon] = React.useState<iKasbon>({} as iKasbon);
   let [message, setMessage] = useState<string>("");
 
+  const isDescriptionValid = React.useMemo(
+    () => kasbon && kasbon.descriptions && kasbon.descriptions.length > 0,
+    [kasbon.descriptions]
+  )
+
+  const isNominalValid = React.useMemo(
+    () => kasbon && kasbon.total && kasbon.total > 0,
+    [kasbon.total]
+  )
+
   React.useEffect(() => {
     let isLoaded = false;
 
@@ -94,6 +104,7 @@ const KasbonForm: NextPage<KasbonFormProps> = ({
           <TextField
             autoFocus
             width={"auto"}
+            validationState={isDescriptionValid ? "valid" : "invalid"}
             flex
             //width={{ base: "auto", M: "67%" }}
             isRequired
@@ -123,6 +134,7 @@ const KasbonForm: NextPage<KasbonFormProps> = ({
           <NumberField
             flex
             isRequired
+            validationState={isNominalValid ? "valid" : "invalid"}
             hideStepper={true}
             width={{ base: "auto", M: "15%" }}
             label={"Total"}
@@ -137,7 +149,8 @@ const KasbonForm: NextPage<KasbonFormProps> = ({
           marginTop={"size-200"}
         >
           <View flex>
-            <Button type={"submit"} variant="cta">
+            <Button type={"submit"} variant="cta"
+            isDisabled={isNominalValid <= 0 || isDescriptionValid === ""}>
               Save
             </Button>
             <Button

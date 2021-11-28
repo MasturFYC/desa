@@ -1,6 +1,6 @@
 import Head from "next/head";
 import type { AppProps } from "next/app";
-import * as React from "react";
+import { Fragment } from "react";
 import { SWRConfig } from "swr";
 import { SSRProvider, Provider, defaultTheme } from "@adobe/react-spectrum";
 import { I18nProvider } from '@react-aria/i18n';
@@ -9,7 +9,7 @@ import fetchJson from "@lib/fetch-json";
 export default function MyApp(props: AppProps) {
   const { Component, pageProps } = props;
   return (
-    <React.Fragment>
+    <Fragment>
       <Head>
         <title>Next App</title>
         <link href="/favicon.ico" rel="icon" />
@@ -36,6 +36,6 @@ export default function MyApp(props: AppProps) {
           </I18nProvider>
         </Provider>
       </SSRProvider>
-    </React.Fragment>
+    </Fragment>
   );
 }

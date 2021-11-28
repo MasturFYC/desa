@@ -90,7 +90,7 @@ const StockDetail: NextPage<StockDetailProps> = ({
 
   return (
     <View>
-      <View paddingY={"size-50"} backgroundColor={"gray-200"}>
+      <View paddingY={"size-50"} backgroundColor={"gray-200"} marginY={"size-200"}>
           <Flex
             isHidden={{ base: true, M: false }}
             direction={{ base: "column", M: "row" }}

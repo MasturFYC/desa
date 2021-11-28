@@ -52,6 +52,11 @@ const StockForm: NextPage<StockFormProps> = ({
   let [stock, setStock] = React.useState<iStock>({} as iStock);
   let [message, setMessage] = useState<string>("");
   const [open, setOpen] = React.useState(false);
+  
+  const isStockNumValid = React.useMemo(
+    () => stock && stock.stockNum && stock.stockNum.length > 0,
+    [stock.stockNum]
+  )
 
   React.useEffect(() => {
     let isLoaded = false;
@@ -179,12 +184,51 @@ const StockForm: NextPage<StockFormProps> = ({
           </Dialog>
         )}
       </DialogContainer>
-      <Form onSubmit={submitForm} isEmphasized marginY={"size-100"}>
+      <Form onSubmit={submitForm} isEmphasized>
+        <Flex
+          direction="row"
+          gap="size-100"
+          marginBottom={"size-100"}
+          marginTop={"size-200"}
+        >
+          <View flex>
+            <Button variant={"cta"} type={"submit"}
+              isDisabled={isStockNumValid === "" || stock.cash < 0}>
+              Save
+            </Button>
+            <Button
+              type={"button"}
+              variant="secondary"
+              marginStart={"size-100"}
+              onPress={() => {
+                if (stock.id === 0) {
+                  updateStock("DELETE", stock);
+                }
+                closeForm()
+              }}
+            >
+              Close
+            </Button>
+          </View>
+          {stock.id > 0 && (
+            <View>
+              <Button
+                type={"button"}
+                variant="negative"
+                onPress={() => deleteStock()}
+              >
+                Delete
+              </Button>
+            </View>
+          )}
+        </Flex>
+
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <TextField
             autoFocus
             width={"auto"}
             flex
+            validationState={isStockNumValid ? "valid" : "invalid"}
             //width={{ base: "auto", M: "67%" }}
             isRequired
             placeholder={"e.g. x-0001"}
@@ -203,12 +247,6 @@ const StockForm: NextPage<StockFormProps> = ({
           />
         </Flex>
 
-        <View backgroundColor={"gray-50"}>
-          {stock.id > 0 &&
-            <StockDetail products={products} stockId={stock.id} updateTotal={reUpdateStock} />
-          }
-        </View>
-
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <NumberField
             flex
@@ -225,6 +263,7 @@ const StockForm: NextPage<StockFormProps> = ({
             hideStepper={true}
             width={"auto"}
             label={"Bayar"}
+            validationState={stock.cash >=0 ? "valid" :"invalid"}
             onChange={(e) => setStock((o) => ({
               ...o,
               cash: e,
@@ -271,43 +310,13 @@ const StockForm: NextPage<StockFormProps> = ({
           onChange={(e) => setStock((o) => ({ ...o, descriptions: e }))}
         />
 
-        <Flex
-          direction="row"
-          gap="size-100"
-          marginBottom={"size-100"}
-          marginTop={"size-200"}
-        >
-          <View flex>
-            <Button variant={"cta"} type={"button"} onPress={() => handleSubmit()}>
-              Save
-            </Button>
-            <Button
-              type={"button"}
-              variant="secondary"
-              marginStart={"size-100"}
-              onPress={() => {
-                if (stock.id === 0) {
-                  updateStock("DELETE", stock);
-                }
-                closeForm()
-              }}
-            >
-              Close
-            </Button>
-          </View>
-          {stock.id > 0 && (
-            <View>              
-              <Button
-                type={"button"}
-                variant="negative"
-                onPress={() => deleteStock()}
-              >
-                Delete
-              </Button>
-            </View>
-          )}
-        </Flex>        
       </Form>
+      <View backgroundColor={"gray-50"} marginTop={"size-200"}>
+        {stock.id > 0 &&
+          <StockDetail products={products} stockId={stock.id} updateTotal={reUpdateStock} />
+        }
+      </View>
+
     </Fragment>
 
   );

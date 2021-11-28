@@ -7,6 +7,7 @@ type apiReturn = Promise<any[] | (readonly iOrder[] | undefined)[]>;
 
 interface apiFunction {
   list: () => apiReturn;
+  search: (name: string) => apiReturn;
   getByCustomer: (customerId: number) => apiReturn;
   getOrder: (id: number) => apiReturn;
   delete: (id: number) => apiReturn;
@@ -27,10 +28,37 @@ const apiOrder: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  list: async () => {
+  search: async (name: string) => {
 
-    const query = sql`SELECT c.id, c.customer_id, c.order_date, c.total, c.payment, c.remain_payment, c.descriptions
+    const id = isNaN(parseInt(name)) ? 0 : parseInt(name);
+
+    const query = id === 0 ? sql`SELECT
+      c.id, c.customer_id, c.order_date, c.total, c.payment,
+      c.remain_payment, c.descriptions, cust.name
     FROM orders AS c
+    inner join customers cust on cust.id = c.customer_id
+    WHERE POSITION(${name} IN LOWER(cust.name)) > 0 OR POSITION(${name} IN LOWER(c.descriptions)) > 0
+    ORDER BY cust.name` :
+      sql`SELECT
+      c.id, c.customer_id, c.order_date, c.total, c.payment,
+      c.remain_payment, c.descriptions, cust.name
+    FROM orders AS c
+    inner join customers cust on cust.id = c.customer_id
+    WHERE c.id = ${id}`;
+
+    return await db
+      .query(query)
+      .then((data) => [data.rows, undefined])
+      .catch((error) => [undefined, error]);
+  },
+
+  list: async() => {
+
+    const query = sql`SELECT
+      c.id, c.customer_id, c.order_date, c.total, c.payment,
+      c.remain_payment, c.descriptions, cust.name
+    FROM orders AS c
+    inner join customers cust on cust.id = c.customer_id
     ORDER BY c.id DESC`;
 
     return await db

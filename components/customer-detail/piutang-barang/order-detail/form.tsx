@@ -35,6 +35,19 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
   );
   let [message, setMessage] = useState<string>("");
   //let [units, setUnits] = useState<iUnit[] | undefined>([]);
+  const isProductValid = React.useMemo(
+    () => orderDetail && orderDetail.productId && orderDetail.productId > 0,
+    [orderDetail.productId]
+  )
+
+  const isQtyValid = React.useMemo(
+    () => orderDetail && orderDetail.qty && orderDetail.qty > 0,
+    [orderDetail.qty]
+  )
+  const isUnitValid = React.useMemo(
+    () => orderDetail && orderDetail.unitId && orderDetail.unitId > 0,
+    [orderDetail.unitId]
+  )
 
   React.useEffect(() => {
     let isLoaded = false;
@@ -113,6 +126,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
           <ComboBox
             autoFocus
             flex
+            validationState={isProductValid ? "valid" : "invalid"}
             label={"Nama Barang"}
             selectedKey={orderDetail.productId}
             defaultItems={products.items}
@@ -156,8 +170,10 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <NumberField
             flex
+            validationState={isQtyValid ? "valid" : "invalid"}
             hideStepper={true}
             width={"auto"}
+            minValue={1}
             label={"Qty"}
             onChange={(e) =>
               setOrderDetail((o) => ({ ...o, qty: e, subtotal: e * o.price, realQty: e * o.content }))
@@ -165,6 +181,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
             value={orderDetail.qty}
           />
           <ComboBox
+            validationState={isUnitValid ? "valid" : "invalid"}
             label={"Unit"}
             defaultItems={
               products.getItem(orderDetail.productId)
@@ -215,7 +232,8 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
           marginTop={"size-200"}
         >
           <View flex>
-            <Button type={"submit"} variant="cta">
+            <Button type={"submit"} variant="cta"
+            isDisabled={orderDetail.subtotal<=0}>
               Save
             </Button>
             <Button
