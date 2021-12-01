@@ -31,15 +31,15 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
 
   const isProductValid = React.useMemo(
     () => detail && detail.productId && detail.productId > 0,
-    [detail.productId]
+    [detail]
   )
   const isUnitValid = React.useMemo(
     () => detail && detail.unitId && detail.unitId > 0,
-    [detail.unitId]
+    [detail]
   )
   const isQtyValid = React.useMemo(
     () => detail && detail.qty && detail.qty > 0,
-    [detail.qty]
+    [detail]
   )
   React.useEffect(() => {
     let isLoaded = false;

@@ -1,43 +1,114 @@
-# Next.js example with styled components
+# UPGRADE DATABASE
 
-## How to use
-
-Download the example [or clone the repo](https://github.com/mui-org/material-ui):
-
-<!-- #default-branch-switch -->
-
+Masuk ke database.. ganti * dengan password.
+___
 ```sh
-curl https://codeload.github.com/mui-org/material-ui/tar.gz/master | tar -xz --strip=2  material-ui-master/examples/nextjs-with-styled-components-typescript
-cd nextjs-with-styled-components-typescript
+psql postgres://postgres:********@localhost:5432/sip
 ```
 
-Install it and run:
-
+Copy per baris perintah berikut ke terminal database.
+___
 ```sh
-npm install
-npm run dev
+ALTER TABLE customers ADD COLUMN customer_div integer NOT NULL DEFAULT 0;
+
+ALTER TYPE public.cust_type ADD VALUE 'Pabrik';
+
+ALTER TABLE grass ADD COLUMN total_div decimal(12,2) NOT NULL DEFAULT 0;
 ```
 
-or:
+Copy sekaligus perintah berikut:
+___
+```sh
+DROP FUNCTION public.grass_before_insert_update_func;
+CREATE OR REPLACE FUNCTION public.grass_before_insert_update_func()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
 
-<!-- #default-branch-switch -->
+BEGIN
 
-[![Edit on CodeSandbox](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/mui-org/material-ui/tree/master/examples/nextjs-with-styled-components-typescript)
+  NEW.total = (NEW.qty * NEW.price) - NEW.total_div;
 
-## The idea behind the example
+RETURN NEW;
 
-The project uses [Next.js](https://github.com/zeit/next.js), which is a framework for server-rendered React apps.
-It includes `@mui/material` and its peer dependencies, including `styled-components`, which is used instead of the default style engine in MUI v5.
+END; $function$ ;
+```
+___
+```sh
+CREATE OR REPLACE FUNCTION public.get_customer_div(customer_id integer)
+ RETURNS record
+ LANGUAGE plpgsql
+AS $function$
+        DECLARE ret RECORD;
+BEGIN
 
-## The link component
+        SELECT c.customer_div, c.name INTO ret
+        FROM customers c
+        WHERE c.id = customer_id;
 
-Next.js has [a custom Link component](https://nextjs.org/docs/api-reference/next/link).
-The example folder provides adapters for usage with MUI.
-More information [in the documentation](https://mui.com/guides/routing/#next-js).
+        return ret;
 
-## What's next?
+END;
+$function$ ;
+```
 
-<!-- #default-branch-switch -->
+```sh
+CREATE OR REPLACE FUNCTION public.grass_after_insert_func()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
 
-You now have a working example project.
-You can head back to the documentation, continuing browsing it from the [templates](https://mui.com/getting-started/templates/) section.
+declare cid integer;
+declare cname varchar(50);
+declare total decimal(12,2);
+declare grass_id integer;
+declare cust_id integer;
+
+BEGIN
+
+  total := NEW.total_div;
+  grass_id := NEW.id;
+  cust_id := NEW.customer_id;
+
+  SELECT a, b into cid, cname from get_customer_div(cust_id) as (a integer, b varchar(50));
+
+  INSERT INTO payments (
+    customer_id, descriptions, ref_id, payment_date, total
+  ) VALUES (
+    cid, concat('Bagi hasil dengan ', cname), grass_id, now(), total
+  );
+  
+
+  RETURN NEW;
+
+END; $function$ ;
+```
+___
+
+```sh
+CREATE OR REPLACE FUNCTION public.grass_after_update_func()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+
+BEGIN
+
+  UPDATE payments SET total = NEW.total_div
+  WHERE ref_id = NEW.id;
+
+  RETURN NEW;
+
+END; $function$ ;
+```
+
+```sh
+CREATE TRIGGER grass_after_insert_trig 
+AFTER INSERT ON grass FOR EACH ROW
+EXECUTE FUNCTION grass_after_insert_func();
+```
+
+```sh
+CREATE TRIGGER grass_after_update_trig 
+AFTER UPDATE ON grass FOR EACH ROW
+EXECUTE FUNCTION grass_after_update_func();
+```

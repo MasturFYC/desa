@@ -8,7 +8,6 @@ import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { Item, TabList, Tabs } from "@adobe/react-spectrum";
-import Grass from "./grass";
 
 const siteTitle = "Pelanggan";
 
@@ -31,6 +30,13 @@ const Payment = dynamic(() => import("./payment"), {
   loading: () => <WaitMe />,
   ssr: false,
 });
+
+
+const Grass = dynamic(() => import("./grass"), {
+  loading: () => <WaitMe />,
+  ssr: false,
+});
+
 
 type tabContent = {
   id: number;
@@ -128,7 +134,7 @@ const CustomerDetailComponent: NextPage = () => {
       )}
       {tabId === 1 && <PiutangBarang customerId={customerId} />}
       {tabId === 2 && <Kasbon customerId={customerId} />}
-      {tabId === 3 && <Grass customerId={customerId} />}
+      {tabId === 3 && <Grass customerId={customerId} customerDiv={customer.customerDiv} />}
       {tabId === 4 && <Payment customerId={customerId} />}
     </Layout>
   );

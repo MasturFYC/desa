@@ -24,12 +24,12 @@ const KasbonForm: NextPage<KasbonFormProps> = ({
 
   const isDescriptionValid = React.useMemo(
     () => kasbon && kasbon.descriptions && kasbon.descriptions.length > 0,
-    [kasbon.descriptions]
+    [kasbon]
   )
 
   const isNominalValid = React.useMemo(
     () => kasbon && kasbon.total && kasbon.total > 0,
-    [kasbon.total]
+    [kasbon]
   )
 
   React.useEffect(() => {

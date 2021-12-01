@@ -24,7 +24,7 @@ export interface iUser {
   updatedAt?: string;
 }
 
-export enum customerType { BANDENG = "Bandeng", RUMPUT = "Rumput Laut" }
+export enum customerType { BANDENG = "Bandeng", RUMPUT = "Rumput Laut", PABRIK = "Pabrik" }
 export const isNullOrEmpty = (s: string | undefined): string | null => {
   if (undefined === s) return null;
   if (s === null) return null;
@@ -56,6 +56,7 @@ export interface iCustomer {
   street?: string,
   city?: string,
   phone?: string,
+  customerDiv: number;
   customerType: customerType;
   orders?: iOrder[];
 }
@@ -140,6 +141,7 @@ export interface iGrass {
   price: number;
   qty: number;
   total: number;
+  totalDiv: number;
   customer?: iCustomer;
 }
 

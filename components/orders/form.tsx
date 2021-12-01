@@ -37,12 +37,12 @@ const OrderForm: NextPage<OrderFormProps> = ({
 
   const isCustomerIdValid = React.useMemo(
     () => order && order.customerId && order.customerId > 0,
-    [order.customerId]
+    [order]
   )
 
   const isDescriptionValid = React.useMemo(
     () => order && order.descriptions && order.descriptions.length > 0,
-    [order.descriptions]
+    [order]
   )
 
   // const isPaymentValid = React.useMemo(

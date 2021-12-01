@@ -22,11 +22,89 @@ SET row_security = off;
 
 CREATE TYPE public.cust_type AS ENUM (
     'Bandeng',
-    'Rumput Laut'
+    'Rumput Laut',
+    'Pabrik'
 );
 
 
 ALTER TYPE public.cust_type OWNER TO postgres;
+
+--
+-- Name: get_customer_div(integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_customer_div(customer_id integer) RETURNS record
+    LANGUAGE plpgsql
+    AS $$
+	DECLARE ret RECORD;
+BEGIN
+
+	SELECT c.customer_div, c.name INTO ret
+	FROM customers c
+  	WHERE c.id = customer_id;
+
+	return ret;
+
+END;
+$$;
+
+
+ALTER FUNCTION public.get_customer_div(customer_id integer) OWNER TO postgres;
+
+--
+-- Name: grass_after_insert_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.grass_after_insert_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+declare cid integer;
+declare cname varchar(50);
+declare total decimal(12,2);
+declare grass_id integer;
+declare cust_id integer;
+
+BEGIN
+
+  total := NEW.total_div;
+  grass_id := NEW.id;
+  cust_id := NEW.customer_id;
+
+  SELECT a, b into cid, cname from get_customer_div(cust_id) as (a integer, b varchar(50));
+
+  INSERT INTO payments (
+    customer_id, descriptions, ref_id, payment_date, total
+  ) VALUES (
+    cid, concat('Berbagi hasil dengan ', cname), grass_id, now(), total
+  );
+  
+
+  RETURN NEW;
+END; $$;
+
+
+ALTER FUNCTION public.grass_after_insert_func() OWNER TO postgres;
+
+--
+-- Name: grass_after_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.grass_after_update_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+BEGIN
+
+  UPDATE payments SET total = NEW.total_div
+  WHERE ref_id = NEW.id;
+
+  RETURN NEW;
+
+END; $$;
+
+
+ALTER FUNCTION public.grass_after_update_func() OWNER TO postgres;
 
 --
 -- Name: grass_before_insert_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -38,7 +116,7 @@ CREATE FUNCTION public.grass_before_insert_update_func() RETURNS trigger
 
 begin
 
-NEW.total = NEW.qty * NEW.price;
+NEW.total = (NEW.qty * NEW.price) - NEW.total_div;
 
 RETURN NEW;
 
@@ -713,7 +791,8 @@ CREATE TABLE public.customers (
     street character varying(128),
     city character varying(50),
     phone character varying(25),
-    customer_type public.cust_type DEFAULT 'Bandeng'::public.cust_type NOT NULL
+    customer_type public.cust_type DEFAULT 'Bandeng'::public.cust_type NOT NULL,
+    customer_div integer DEFAULT 0 NOT NULL
 );
 
 
@@ -745,7 +824,8 @@ CREATE TABLE public.grass (
     order_date timestamp without time zone NOT NULL,
     price numeric(12,2) DEFAULT 0 NOT NULL,
     total numeric(12,2) DEFAULT 0 NOT NULL,
-    qty numeric(10,2) DEFAULT 0 NOT NULL
+    qty numeric(10,2) DEFAULT 0 NOT NULL,
+    total_div numeric(12,2) DEFAULT 0 NOT NULL
 );
 
 
@@ -1036,9 +1116,9 @@ ALTER TABLE public.units OWNER TO postgres;
 -- Data for Name: customers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
-2	Agung Priatna	RT. 14 / 06	Ds. Plumbon	085-5556-65656	Bandeng
-1	Dhoni Armadi	Ds. Telukagung	Indramayu	085-5556-65656	Rumput Laut
+COPY public.customers (id, name, street, city, phone, customer_type, customer_div) FROM stdin;
+1	Dhoni Armadi	Ds. Telukagung	Indramayu	085-5556-65656	Rumput Laut	0
+2	Agung Priatna	RT. 14 / 06	Ds. Plumbon	085-5556-65656	Bandeng	1
 \.
 
 
@@ -1046,8 +1126,10 @@ COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
 -- Data for Name: grass; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.grass (customer_id, id, descriptions, order_date, price, total, qty) FROM stdin;
-2	35	Pembelian Rumput Laut	2021-11-19 00:15:00	25000.00	1500000.00	60.00
+COPY public.grass (customer_id, id, descriptions, order_date, price, total, qty, total_div) FROM stdin;
+2	48	Pembelian Rumput Laut	2021-12-01 14:51:00	30000.00	300000.00	25.00	450000.00
+2	35	Pembelian Rumput Laut	2021-11-19 00:15:00	25000.00	1500000.00	60.00	0.00
+2	50	Pembelian Rumput Laut	2021-12-01 16:18:00	5000.00	125000.00	50.00	125000.00
 \.
 
 
@@ -1100,6 +1182,8 @@ COPY public.orders (id, customer_id, order_date, total, payment, remain_payment,
 
 COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total) FROM stdin;
 33	2	Cicilan Bayar Obat	0	2021-11-18 11:55:00	25000.00
+49	1	Berbagi hasil dengan Agung Priatna	48	2021-12-01 15:56:02.090103	450000.00
+51	1	Berbagi hasil dengan Agung Priatna	50	2021-12-01 16:27:09.137033	125000.00
 \.
 
 
@@ -1221,7 +1305,7 @@ SELECT pg_catalog.setval('public.order_detail_seq', 105, true);
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 37, true);
+SELECT pg_catalog.setval('public.order_seq', 51, true);
 
 
 --
@@ -1480,6 +1564,20 @@ CREATE UNIQUE INDEX uq_unit_name ON public.units USING btree (product_id, name);
 --
 
 CREATE UNIQUE INDEX ux_supplier_name ON public.suppliers USING btree (name);
+
+
+--
+-- Name: grass grass_after_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER grass_after_insert_trig AFTER INSERT ON public.grass FOR EACH ROW EXECUTE FUNCTION public.grass_after_insert_func();
+
+
+--
+-- Name: grass grass_after_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER grass_after_update_trig AFTER UPDATE ON public.grass FOR EACH ROW EXECUTE FUNCTION public.grass_after_update_func();
 
 
 --

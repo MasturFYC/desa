@@ -1,6 +1,6 @@
 import moment from 'moment';
-import { dateParam, hour24Format, iGrass, isNullOrEmpty } from '@components/interfaces'
-import db, { sql } from "../config";
+import { dateParam, hour24Format, iGrass } from '@components/interfaces'
+import db, { nestQuerySingle, sql } from "../config";
 
 
 type apiReturn = Promise<any[] | (readonly iGrass[] | undefined)[]>;
@@ -17,8 +17,14 @@ interface apiFunction {
 const apiGrass: apiFunction = {
   getGrass: async (id: number) => {
 
+    const queryCustomer = sql`SELECT
+      d.id, d.name, d.street, d.city, d.phone, d.customer_type as "customerType", d.customer_div as "customerDiv"
+    FROM customers AS d
+    WHERE d.id = c.customer_id`;
+
     const query = sql`SELECT
-      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total
+      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div,
+      ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     WHERE c.id = ${id}`;
 
@@ -30,8 +36,14 @@ const apiGrass: apiFunction = {
 
   list: async () => {
 
+    const queryCustomer = sql`SELECT
+      d.id, d.name, d.street, d.city, d.phone, d.customer_type as "customerType", d.customer_div as "customerDiv"
+    FROM customers AS d
+    WHERE d.id = c.customer_id`;
+
     const query = sql`SELECT
-      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total
+      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div,
+      ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     ORDER BY c.id DESC`;
 
@@ -43,8 +55,14 @@ const apiGrass: apiFunction = {
 
   getByCustomer: async (customerId: number) => {
 
+    const queryCustomer = sql`SELECT
+      d.id, d.name, d.street, d.city, d.phone, d.customer_type as "customerType", d.customer_div as "customerDiv"
+    FROM customers AS d
+    WHERE d.id = c.customer_id`;
+
     const query = sql`SELECT
-      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total
+      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div,
+      ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     WHERE c.customer_id = ${customerId}
     ORDER BY c.id DESC`;
@@ -72,7 +90,8 @@ const apiGrass: apiFunction = {
       customer_id = ${p.customerId},
       descriptions = ${p.descriptions},      
       qty = ${p.qty},
-      price = ${p.price}
+      price = ${p.price},
+      total_div = ${p.totalDiv}
       WHERE id = ${p.id}
       RETURNING *
     `;
@@ -87,13 +106,14 @@ const apiGrass: apiFunction = {
 
     const query = sql`
       INSERT INTO grass (
-        order_date, customer_id, descriptions, qty, price
+        order_date, customer_id, descriptions, qty, price, total_div
       ) VALUES (
         to_timestamp(${dateParam(p.orderDate)}, ${hour24Format}),
         ${p.customerId},
         ${p.descriptions},
         ${p.qty},
-        ${p.price}
+        ${p.price},
+        ${p.totalDiv}
       )
       RETURNING *
     `;

@@ -50,7 +50,7 @@ const apiCustomer: apiFunction = {
 
   getCustomer: async (id: number) => {
     const query = sql`SELECT
-      c.id, c.name, c.street, c.city, c.phone, c.customer_type
+      c.id, c.name, c.street, c.city, c.phone, c.customer_type, c.customer_div
     FROM customers AS c
     WHERE c.id = ${id}`;
 
@@ -64,7 +64,7 @@ const apiCustomer: apiFunction = {
 
   list: async () => {
 
-    const query = sql`SELECT c.id, c.name, c.street, c.city, c.phone, c.customer_type
+    const query = sql`SELECT c.id, c.name, c.street, c.city, c.phone, c.customer_type, c.customer_div
     FROM customers AS c
     ORDER BY c.name`;
 
@@ -79,7 +79,7 @@ const apiCustomer: apiFunction = {
   
   find: async (name: string | string[]) => {
 
-    const query = sql`SELECT c.id, c.name, c.street, c.city, c.phone, c.customer_type
+    const query = sql`SELECT c.id, c.name, c.street, c.city, c.phone, c.customer_type, c.customer_div
     FROM customers AS c
     WHERE POSITION(${name} IN LOWER(c.name)) > 0
     ORDER BY c.name`;
@@ -111,7 +111,8 @@ const apiCustomer: apiFunction = {
       street = ${isNullOrEmpty(p.street)},
       city = ${isNullOrEmpty(p.city)},
       phone = ${isNullOrEmpty(p.phone)},
-      customer_type = ${p.customerType}
+      customer_type = ${p.customerType},
+      customer_div = ${p.customerDiv}
       WHERE id = ${p.id}
       RETURNING *
     `;
@@ -126,13 +127,14 @@ const apiCustomer: apiFunction = {
 
     const query = sql`
       INSERT INTO customers (
-        name, street, city, phone, customer_type
+        name, street, city, phone, customer_type, customer_div
       ) VALUES (
         ${p.name},
         ${isNullOrEmpty(p.street)},
         ${isNullOrEmpty(p.city)},
         ${isNullOrEmpty(p.phone)},
-        ${p.customerType}
+        ${p.customerType},
+        ${p.customerDiv}
       )
       on conflict (name) do nothing
       RETURNING *

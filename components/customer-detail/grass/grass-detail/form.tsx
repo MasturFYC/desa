@@ -2,8 +2,7 @@ import { NextPage } from "next";
 import React, { FormEvent, useState } from "react";
 import {
   iGrass,
-  iGrassDetail,
-  iProduct,
+  iGrassDetail
 } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";

@@ -29,7 +29,7 @@ const StockPaymentForm: NextPage<StockPaymentFormProps> = ({
   )
   const isNominalValid = React.useMemo(
     () => payment && payment.nominal && payment.nominal <= data.nominal && payment.nominal !== 0,
-    [payment, data.nominal]
+    [payment, data]
   )
 
   React.useEffect(() => {

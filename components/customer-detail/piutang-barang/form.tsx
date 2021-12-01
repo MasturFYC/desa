@@ -26,7 +26,7 @@ const OrderForm: NextPage<OrderFormProps> = ({
 
   const isDescriptionValid = React.useMemo(
     () => order && order.descriptions && order.descriptions.length > 0,
-    [order.descriptions]
+    [order]
   )
 
   React.useEffect(() => {

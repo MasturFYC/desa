@@ -1,20 +1,12 @@
 import dynamic from "next/dynamic";
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
-import {
-  ActionButton,
-  Button,
-  Divider,
-  Flex,
-  Text,
-  ToggleButton,
-} from "@adobe/react-spectrum";
-import { dateParam, iGrass } from "@components/interfaces";
+import { ActionButton, Button, Flex, Text } from "@adobe/react-spectrum";
+import { dateParam, iCustomer, iGrass } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
-import Pin from "@spectrum-icons/workflow/PinOff";
 import Div from "@components/ui/Div";
 
 // const GrassDetail = dynamic(
@@ -33,6 +25,7 @@ const GrassForm = dynamic(() => import("./form"), {
 const initGrass: iGrass = {
   id: 0,
   customerId: 0,
+  totalDiv: 0,
   orderDate: dateParam(null),
   descriptions: "Pembelian Rumput Laut",
   qty: 0,
@@ -42,12 +35,14 @@ const initGrass: iGrass = {
 
 type GrassProps = {
   customerId: number;
+  customerDiv: number;
 };
 
-const Grass: NextPage<GrassProps> = ({ customerId }) => {
-//  let [showDetail, setShowDetail] = useState<boolean>(false);
+const Grass: NextPage<GrassProps> = ({ customerId, customerDiv }) => {
+  //  let [showDetail, setShowDetail] = useState<boolean>(false);
   let [selectedGrassId, setSelectedGrassId] = useState<number>(-1);
- // let [detailId, setDetailId] = useState<number>(0);
+  let [custDiv, setCustDiv] = useState<iCustomer>({} as iCustomer);
+  // let [detailId, setDetailId] = useState<number>(0);
 
   let grasses = useAsyncList<iGrass>({
     async load({ signal }) {
@@ -58,8 +53,31 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
     getKey: (item: iGrass) => item.id,
   });
 
+  useEffect(() => {
+    let isLoaded = false;
+
+    const loadCustomerDiv = async () => {
+      let res = await fetch(`/api/customer/${customerDiv}`, {
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      });
+      let json = await res.json();
+      if(res.status === 200) {
+        setCustDiv(json);
+      }
+    };
+
+    if (!isLoaded && customerDiv > 0) {
+      loadCustomerDiv();
+    }
+    return () => {
+      isLoaded = true;
+    };
+  }, [customerDiv]);
+
   const closeForm = () => {
-    if(selectedGrassId === 0) {
+    if (selectedGrassId === 0) {
       grasses.remove(0);
     }
     setSelectedGrassId(-1);
@@ -98,7 +116,7 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
       <Button
         variant={"cta"}
         onPress={() => {
-          if(!grasses.getItem(0)) {
+          if (!grasses.getItem(0)) {
             grasses.insert(0, { ...initGrass, customerId: customerId });
           }
           setSelectedGrassId(0);
@@ -114,19 +132,27 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
           columnGap="size-100"
         >
           <View width={"5%"}>ID#</View>
-          <View flex>Keterangan</View>
-          <View width={"20%"}>Tanggal</View>
-          <View width="10%">
+          <View flex>KETERANGAN</View>
+          <View width={"15%"}>TANGGAL</View>
+          <View width="7%">
             <span style={{ textAlign: "right", display: "block" }}>
-              Qty (kg)
+              QTY (kg)
             </span>
           </View>
-          <View width="13%">
-            <span style={{ textAlign: "right", display: "block" }}>Harga</span>
+          <View width="9%">
+            <span style={{ textAlign: "right", display: "block" }}>HARGA</span>
           </View>
-          <View width="15%">
+          <View width="10%">
+            <span style={{ textAlign: "right", display: "block" }}>JML HARGA</span>
+          </View>
+          <View width="10%">
             <span style={{ textAlign: "right", display: "block" }}>
-              Subtotal
+              BAGI HASIL
+            </span>
+          </View>
+          <View width="10%">
+            <span style={{ textAlign: "right", display: "block" }}>
+              SUBTOTAL
             </span>
           </View>
         </Flex>
@@ -136,13 +162,14 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
           <Div
             key={x.id}
             index={i}
-            isSelected={selectedGrassId === x.id} 
+            isSelected={selectedGrassId === x.id}
             // || showDetail}
             selectedColor={"6px solid darkgreen"}
           >
             {selectedGrassId === x.id ? (
               <GrassForm
                 data={x}
+                customerDiv={custDiv}
                 updateGrass={updateData}
                 closeForm={closeForm}
               />
@@ -191,7 +218,7 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
                 setSelectedGrassId(x.id);
               }}
             >
-              <span style={{ fontWeight: 700 }}>
+              <span style={{ fontWeight: 700, textAlign: "left" }}>
                 {x.id === 0 ? "Pembelian Baru" : x.descriptions}
               </span>
             </ActionButton>
@@ -217,18 +244,32 @@ const Grass: NextPage<GrassProps> = ({ customerId }) => {
   function renderDetail(x: iGrass): React.ReactNode {
     return (
       <>
-        <View width={{ base: "50%", M: "20%" }}>{FormatDate(x.orderDate)}</View>
-        <View width={"10%"} isHidden={{ base: true, M: false }}>
+        <View width={{ base: "50%", M: "15%" }}>{FormatDate(x.orderDate)}</View>
+        <View width={"7%"} isHidden={{ base: true, M: false }}>
           <span style={{ textAlign: "right", display: "block" }}>
             {FormatNumber(x.qty)}
           </span>
         </View>
-        <View width={"13%"} isHidden={{ base: true, M: false }}>
+        <View width={"9%"} isHidden={{ base: true, M: false }}>
           <span style={{ textAlign: "right", display: "block" }}>
             {FormatNumber(x.price)}
           </span>
         </View>
-        <View width={{ base: "47%", M: "15%" }}>
+        <View width={{ base: "47%", M: "10%" }}>
+          <span
+            style={{ textAlign: "right", display: "block", fontWeight: 700 }}
+          >
+            {FormatNumber(x.totalDiv + x.total)}
+          </span>
+        </View>
+        <View width={{ base: "47%", M: "10%" }}>
+          <span
+            style={{ textAlign: "right", display: "block", fontWeight: 700 }}
+          >
+              {FormatNumber(x.totalDiv)}
+          </span>
+        </View>
+        <View width={{ base: "47%", M: "10%" }}>
           <span
             style={{ textAlign: "right", display: "block", fontWeight: 700 }}
           >

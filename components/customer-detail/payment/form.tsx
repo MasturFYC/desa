@@ -24,12 +24,12 @@ const KasbonForm: NextPage<PaymentFormProps> = ({
 
   const isTotalValid = React.useMemo(
     () => payment && payment.total && payment.total > 0,
-    [payment.total]
+    [payment]
   )
 
   const isDescriptionValid = React.useMemo(
     () => payment && payment.descriptions && payment.descriptions.length > 0,
-    [payment.descriptions]
+    [payment]
   )
   
   React.useEffect(() => {

@@ -7,21 +7,29 @@ import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { TextField } from "@react-spectrum/textfield";
 import { Picker } from "@react-spectrum/picker";
-import { Item } from "@react-spectrum/combobox";
+import { ComboBox, Item } from "@react-spectrum/combobox";
 
 type CustomerFormProps = {
   data: iCustomer;
+  customers: iCustomer[],
   updateCustomer: (method: string, id: number, data: iCustomer) => void;
   closeForm: () => void;
 };
+
+interface CustomerDiv {
+  id: number;
+  name: string;
+}
 
 const CustomerForm: NextPage<CustomerFormProps> = ({
   data,
   updateCustomer,
   closeForm,
+  customers
 }) => {
   let [customer, setCustomer] = useState<iCustomer>({} as iCustomer);
-  
+  let [customerDivs, setCustomerDivs] = useState<CustomerDiv[]>([...customers.map( x => ({id: x.id, name: x.name}))])
+
   useEffect(() => {
     let isLoaded = false;
 
@@ -34,6 +42,7 @@ const CustomerForm: NextPage<CustomerFormProps> = ({
     };
   }, [data]);
 
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     updateCustomer(customer.id === 0 ? "POST" : "PUT", customer.id, customer);
@@ -41,7 +50,7 @@ const CustomerForm: NextPage<CustomerFormProps> = ({
 
   return (
     <Form onSubmit={handleSubmit} marginTop={"size-100"}>
-      <View backgroundColor={"gray-100"} borderRadius={"medium"}>
+      <View borderRadius={"medium"}>
         <Flex direction={{ base: "column", M: "row" }} gap={"size-200"} margin={"size-100"}>
           <TextField
             placeholder={"e.g. Mustakim"}
@@ -65,8 +74,7 @@ const CustomerForm: NextPage<CustomerFormProps> = ({
               setCustomer((o) => ({ ...o, customerType: e as customerType }))
             }
           >
-            <Item key={customerType.BANDENG}>{customerType.BANDENG}</Item>
-            <Item key={customerType.RUMPUT}>{customerType.RUMPUT}</Item>
+            {Object.values(customerType).map(item => <Item key={item}>{item}</Item>)}
           </Picker>
         </Flex>
         <Flex direction={"column"} gap={"size-100"} marginX={"size-100"}>
@@ -95,6 +103,20 @@ const CustomerForm: NextPage<CustomerFormProps> = ({
               value={customer.phone || ""}
               onChange={(e) => setCustomer((o) => ({ ...o, phone: e }))}
             />
+        <ComboBox
+          width={{ base: "auto", M: "28%" }}
+          label={"Berbagi dengan"}
+          placeholder={"e.g. pilih pelanggan"}
+          defaultItems={[{id:0, name:'none'},...customerDivs]}
+          selectedKey={customer.customerDiv}
+          onSelectionChange={(e) => setCustomer((o) => ({
+            ...o,
+            customerDiv: +e
+          }))}
+        >
+          {(item) => <Item>{item.id === 0 ? 'None' : item.name}</Item>}
+        </ComboBox>
+
           </Flex>
         </Flex>
         <Flex marginTop={"size-200"} direction="row" gap="size-100" margin={"size-100"}>

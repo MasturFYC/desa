@@ -14,6 +14,8 @@ import { NextPage } from "next";
 import { SearchField } from "@react-spectrum/searchfield";
 import InfoIcon from '@spectrum-icons/workflow/Info'
 import SpanLink from "@components/ui/span-link";
+import { Picker } from "@react-spectrum/picker";
+import { Item } from "@react-spectrum/combobox";
 
 const CustomerForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -25,6 +27,7 @@ const siteTitle = "Pelanggan";
 const initCustomer: iCustomer = {
   id: 0,
   name: "",
+  customerDiv: 0,
   customerType: customerType.BANDENG,
 };
 
@@ -32,44 +35,48 @@ const CustomerComponent: NextPage = () => {
   let [selectedId, setSelectedId] = useState<number>(-1);
   let [txtSearch, setTxtSearch] = useState<string>("");
   let [message, setMessage] = useState<string>("");
+  let [customerSearch, setCustomerSearch] = useState<string>('');
+  let [custType, setCustType] = useState<string>('All');
 
   let customers = useAsyncList<iCustomer>({
     async load({ signal }) {
       let res = await fetch("/api/customer", { signal });
       let json = await res.json();
-      return { items: [initCustomer, ...json] };
+      return { items: json };
     },
-    getKey: (item: iCustomer) => item.id,
+    getKey: (item: iCustomer) => item.id
   });
 
   const searchCustomer = async () => {
 
-    const txt = txtSearch.toLocaleLowerCase();
-    const url = `/api/customer/search/${txt}`;
-    const fetchOptions = {
-      method: "GET",
-      headers: {
-        "Content-type": "application/json; charset=UTF-8",
-      },
-    };
+    //customers.setFilterText(txtSearch);
+    setCustomerSearch(txtSearch);
+    // const txt = txtSearch.toLocaleLowerCase();
+    // const url = `/api/customer/search/${txt}`;
+    // const fetchOptions = {
+    //   method: "GET",
+    //   headers: {
+    //     "Content-type": "application/json; charset=UTF-8",
+    //   },
+    // };
 
-    await fetch(url, fetchOptions)
-      .then(async (response) => {
-        if (response.ok) {
-          return response.json().then((data) => data);
-        }
-        return response.json().then((error) => {
-          return Promise.reject(error);
-        });
-      })
-      .then((data) => {
-        customers.setSelectedKeys("all");
-        customers.removeSelectedItems();
-        customers.insert(0, initCustomer, ...data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    // await fetch(url, fetchOptions)
+    //   .then(async (response) => {
+    //     if (response.ok) {
+    //       return response.json().then((data) => data);
+    //     }
+    //     return response.json().then((error) => {
+    //       return Promise.reject(error);
+    //     });
+    //   })
+    //   .then((data) => {
+    //     customers.setSelectedKeys("all");
+    //     customers.removeSelectedItems();
+    //     customers.insert(0, initCustomer, ...data);
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //   });
   };
 
   const deleteData = async (id: number) => {
@@ -143,6 +150,23 @@ const CustomerComponent: NextPage = () => {
         </span>
       </View>
       <Flex justifyContent={"center"} marginY={"size-250"}>
+        <View flex>
+        <Picker
+        aria-label={"Customer type list"}
+            isRequired
+            placeholder={"Tipe pelanggan"}
+            width={"auto"}
+            minWidth={"size-2000"}
+            defaultSelectedKey={custType}
+            selectedKey={custType}
+            onSelectionChange={(e) =>
+              setCustType(e.toString())
+            }
+          >
+            {['All', ...Object.values(customerType)].map(item => <Item key={item}>{item}</Item>)}
+          </Picker>
+
+          </View>
         <SearchField
           alignSelf="center"
           justifySelf="center"
@@ -151,7 +175,7 @@ const CustomerComponent: NextPage = () => {
           width="auto"
           maxWidth="size-3600"
           value={txtSearch}
-          onClear={() => customers.reload()}
+          onClear={() => setCustomerSearch('')}
           onChange={(e) => setTxtSearch(e)}
           onSubmit={() => searchCustomer()}
         />
@@ -159,13 +183,23 @@ const CustomerComponent: NextPage = () => {
       {customers.isLoading && <WaitMe />}
       <Divider size="S" />
       {customers &&
-        customers.items.map((x, i) => (
-          <View key={x.id}>
+        [initCustomer, 
+          ...(custType ==='All' ?
+          (customerSearch.length > 0
+            ? customers.items.filter(f=>f.name.toLocaleLowerCase().includes(customerSearch.toLocaleLowerCase())) 
+            : customers.items)
+          : (customers.items.filter(ct=>ct.customerType === custType)))
+        ]
+        .map((x, i) => (
+          <View
+            key={x.id}>
+              <div style={{
+                padding: "12px 6px",
+                paddingLeft: selectedId === x.id ? "24px" : "12px",
+                borderLeft: selectedId === x.id ? "8px solid #ddccef" :"none",
+                backgroundColor: x.id === 0 ? "gray-50" : x.customerType === customerType.PABRIK  ? "#c8cfd8" : x.customerType === customerType.BANDENG ? "#d8f8e8" : "#f8efdf"
+              }}>
             <View
-              borderColor={selectedId === x.id ? "indigo-500" : "transparent"}
-              paddingStart={selectedId === x.id ? "size-100" : 0}
-              borderStartWidth={"thickest"}
-              marginY={"size-125"}
             >
               <Flex
                 direction={{ base: "column", M: "row" }}
@@ -204,6 +238,7 @@ const CustomerComponent: NextPage = () => {
                   <View paddingX={{ base: 0, M: "size-1000" }}>
                     <CustomerForm
                       data={x}
+                      customers={customers.items.filter(c => c.id !== x.id)}
                       updateCustomer={postCustomer}
                       closeForm={closeForm}
                     />
@@ -212,7 +247,7 @@ const CustomerComponent: NextPage = () => {
                 </Fragment>
               )}
             </View>
-            <Divider size="S" />
+            </div>
           </View>
         ))}
       <div style={{ marginBottom: '24px' }} />

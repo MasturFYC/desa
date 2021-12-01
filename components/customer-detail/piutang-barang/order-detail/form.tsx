@@ -37,16 +37,16 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
   //let [units, setUnits] = useState<iUnit[] | undefined>([]);
   const isProductValid = React.useMemo(
     () => orderDetail && orderDetail.productId && orderDetail.productId > 0,
-    [orderDetail.productId]
+    [orderDetail]
   )
 
   const isQtyValid = React.useMemo(
     () => orderDetail && orderDetail.qty && orderDetail.qty > 0,
-    [orderDetail.qty]
+    [orderDetail]
   )
   const isUnitValid = React.useMemo(
     () => orderDetail && orderDetail.unitId && orderDetail.unitId > 0,
-    [orderDetail.unitId]
+    [orderDetail]
   )
 
   React.useEffect(() => {

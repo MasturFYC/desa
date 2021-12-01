@@ -1,4 +1,0 @@
-sudo service postgresql start
-service postgresql status
-sudo service nginx start
-pm2 start

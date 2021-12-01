@@ -59,12 +59,12 @@ const StockForm: NextPage<StockFormProps> = ({
 
   const isStockNumValid = React.useMemo(
     () => stock && stock.stockNum && stock.stockNum.length > 0,
-    [stock.stockNum]
+    [stock]
   )
 
   const isSupplierValid = React.useMemo(
     () => stock && stock.supplierId && stock.supplierId > 0,
-    [stock.supplierId]
+    [stock]
   )
 
   React.useEffect(() => {
