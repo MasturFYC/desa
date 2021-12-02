@@ -5,8 +5,10 @@ import { iUserLogin } from "@components/interfaces";
 import { Grid } from "@react-spectrum/layout";
 import { View } from "@react-spectrum/view";
 import MainMenu from "./main-menu";
-import { Footer } from "@adobe/react-spectrum";
-
+import { Flex } from "@react-spectrum/layout";
+import { Footer } from "@react-spectrum/view";
+import Logo from "./logo";
+import { Divider } from "@react-spectrum/divider";
 export const siteTitle = "SPBU";
 
 type LayoutProps = {
@@ -37,30 +39,51 @@ const Layout: NextPage<LayoutProps> = ({
         L: ["header  header", "sidebar content", "footer  footer"],
       }}
       columns={["1fr", "3fr"]}
-      rows={["size-1000", "auto", "size-1000"]}
-      minHeight={"100vh"}      
+      rows={["size-1200", "auto", "size-1000"]}
+      minHeight={"100vh"}
     >
-      <View gridArea="header" backgroundColor="gray-50"
-        paddingTop={"size-100"} paddingX={{ base: "size-75", M: "size-400" }}>Sumber Ikan Putri</View>      
+      <View
+        gridArea="header"
+        backgroundColor="gray-50"
+        paddingTop={"size-50"}
+        borderBottomWidth={"thin"}
+        borderBottomColor={"gray-200"}
+        paddingX={{base: "size-100", M:"size-200"}}
+      >
+        <Flex direction={"row"} columnGap={"size-200"} alignItems={"center"}>
+          <View width={"100px"}>
+            <Logo width={96} height={16} />
+          </View>
+          <View flex>
+            <View><div style={{fontSize: "24px", fontWeight: 700, color:"Highlight"}}>Sumber Ikan Putri</div></View>
+          </View>
+        </Flex>
+      </View>
       <View
         //borderWidth={"thin"}
         gridArea="sidebar"
-        isHidden={{ base: true, M: false, L: false }}        
-        backgroundColor={"gray-100"}
+        isHidden={{ base: true, M: false, L: false }}
+        backgroundColor={"gray-50"}
         //width={"size-3000"}
         padding={"size-100"}
       >
         <MainMenu activeMenu={home ? "Home" : activeMenu} />
       </View>
-      
+
       <View gridArea="content" backgroundColor="gray-50" height={"100%"}>
-        <View paddingX={{ base: "size-75", M: "size-200", L: "size-400" }}>
+        <View paddingX={{ base: "size-75", M: "size-200", L: "size-400" }} marginTop={"size-200"}>
           {children}
         </View>
       </View>
 
       <Footer gridArea="footer" flex>
-        <View flex paddingTop={"size-100"} paddingX={{base:"size-75", M:"size-400"}}>&copy; All rights reserved.</View>
+        <View
+          flex
+          paddingTop={"size-100"}
+          paddingX={{ base: "size-75", M: "size-400" }}
+        >
+          &copy; FYC 2021. All rights reserved.
+        </View>
       </Footer>
     </Grid>
   );
