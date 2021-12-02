@@ -1,15 +1,9 @@
 import { NextPage } from "next";
-import Head from "next/head";
-import Link from "next/link";
 import React, { FormEvent, useState } from "react";
-import { useAsyncList } from "@react-stately/data";
-import Layout from "@components/layout";
-import { iUnit, iProduct } from "@components/interfaces";
-import WaitMe from "@components/ui/wait-me";
+import { iProduct, iCategory } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
-import { Divider } from "@react-spectrum/divider";
-import { ActionButton, Button } from "@react-spectrum/button";
+import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { TextField } from "@react-spectrum/textfield";
 import { Picker } from "@react-spectrum/picker";
@@ -19,6 +13,7 @@ import { NumberField } from "@react-spectrum/numberfield";
 
 export const initProduct: iProduct = {
   id: 0,
+  categoryId: 0,
   name: "",
   price: 0.0,
   stock: 0.0,
@@ -29,6 +24,7 @@ export const initProduct: iProduct = {
 
 
 type ProductFormProps = {
+  categories: iCategory[],
   data: iProduct;
   updateProduct: (method: string, id: number, data: iProduct) => void;
   closeForm: () => void;
@@ -38,8 +34,24 @@ const ProductForm: NextPage<ProductFormProps> = ({
   data,
   updateProduct,
   closeForm,
+  categories
 }) => {
   const [product, setProduct] = React.useState<iProduct>(initProduct);
+
+  const isProductValid = React.useMemo(
+    () => product && product.name && product.name.length > 0,
+    [product]
+  )
+
+  const isCategoryValid = React.useMemo(
+    () => product && product.categoryId && product.categoryId > 0,
+    [product]
+  )
+
+  const isUnitValid = React.useMemo(
+    () => product && product.unit && product.unit.length > 0,
+    [product]
+  )
 
   React.useEffect(() => {
     let isLoaded = false;
@@ -66,6 +78,7 @@ const ProductForm: NextPage<ProductFormProps> = ({
             placeholder={"e.g. EM4"}
             autoFocus
             isRequired
+            validationState={isProductValid ? "valid" : "invalid"}
             flex
             width={"auto"}
             label={"Nama Barang"}
@@ -74,38 +87,54 @@ const ProductForm: NextPage<ProductFormProps> = ({
           />
           <TextField
             placeholder={"e.g. pertanian"}
-            flex
             width={"auto"}
+            minWidth={"size-2400"}
             label={"Spec"}
             value={product.spec || ""}
             onChange={(e) => setProduct((o) => ({ ...o, spec: e }))}
           />
+          <Picker
+            minWidth={"size-2400"}
+            label="Kategori"
+            validationState={isCategoryValid ? "valid" : "invalid"}
+            items={categories}
+            width={"auto"}
+            selectedKey={product.categoryId}
+            onSelectionChange={(e) => setProduct((o) => ({ ...o, categoryId: +e }))}
+            >
+            {(item) => <Item>{item.name}</Item>}
+          </Picker>
         </Flex>
         <Flex direction={{ base: "column", M: "row" }} gap={"size-100"} margin={"size-100"}>
           <NumberField
+            flex
             hideStepper={true}
             isRequired
             width={"auto"}
             label={"Harga Beli"}
+            validationState={product.price >= 0 ? "valid" : "invalid"}
             value={product.price}
             onChange={(e) => setProduct((o) => ({ ...o, price: e }))}
           />
-          <Flex flex direction={"row"} gap={"size-200"}>
+          <Flex flex direction={"row"} gap={"size-100"}>
             <NumberField
               hideStepper={true}
-              flex
               isRequired
               width={"auto"}
+              minWidth={"size-2400"}
               label={"Stock Awal"}
+              validationState={product.firstStock >= 0 ? "valid" : "invalid"}
               value={product.firstStock}
               onChange={(e) => setProduct((o) => ({ ...o, firstStock: e }))}
             />
             <TextField
               placeholder={"e.g. EM4"}
-              isRequired
               flex
+              isRequired
+              minWidth={"size-2400"}
               width={"auto"}
               label={"Unit terkecil"}
+              validationState={isUnitValid ? "valid" : "invalid"}
               value={product.unit}
               onChange={(e) => setProduct((o) => ({ ...o, unit: e }))}
             />

@@ -1,5 +1,5 @@
 {
-  "name": "desa-app",
+  "name": "sip-app",
   "version": "5.0.0",
   "private": true,
   "scripts": {
@@ -39,6 +39,6 @@
     "core-js": "^3.19.2",
     "eslint": "latest",
     "eslint-config-next": "latest",
-    "typescript": "^4.5.0"
+    "typescript": "^4.5.2"
   }
 }

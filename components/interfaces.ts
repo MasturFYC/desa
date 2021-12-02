@@ -61,7 +61,15 @@ export interface iCustomer {
   orders?: iOrder[];
 }
 
+export interface iCategory {
+  id: number;
+  name: string;
+  createdAt?: string;
+  updatedAt?: string;
+  products?: iProduct[];
+}
 export interface iProduct {
+  categoryId: number;
   id: number,
   name: string,
   spec?: string,
@@ -69,7 +77,8 @@ export interface iProduct {
   stock: number,
   firstStock: number,
   unit: string,
-  units?: iUnit[]
+  units?: iUnit[];
+  category?: iCategory
 }
 
 export interface iUnit {

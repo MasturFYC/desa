@@ -118,7 +118,7 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
                 closeForm={closeForm}
               />
             ) : (
-              renderKasbon({ x })
+              renderPayment({ x })
             )}
           </Div>
         ))}
@@ -137,7 +137,7 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
     </Fragment>
   );
 
-  function renderKasbon({ x }: { x: iPayment }) {
+  function renderPayment({ x }: { x: iPayment }) {
     return (
       <Flex
         marginX={"size-100"}
@@ -147,6 +147,9 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
       >
         <View width={"5%"}>{x.id}</View>
         <View flex width={{ base: "50%", M: "auto" }}>
+          {x.refId > 0 
+          ? x.descriptions
+          :
           <ActionButton
             height={"auto"}
             isQuiet
@@ -158,6 +161,7 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
               {x.id === 0 ? "Piutang Baru" : x.descriptions}
             </span>
           </ActionButton>
+          }
         </View>
         <View width={{ base: "40%", M: "20%" }}>
           {FormatDate(x.paymentDate)}

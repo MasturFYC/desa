@@ -163,23 +163,17 @@ const GrassForm: NextPage<GrassFormProps> = ({
               }))
             }
           />
-          <NumberField
-            flex
-            isReadOnly
-            width={"auto"}
-            hideStepper={true}
-            label={"Subtotal"}
-            onChange={(e) => setGrass((o) => ({ ...o, total: e }))}
-            value={grass.total}
-          />
+          <View flex alignSelf="flex-end" marginBottom={"size-100"}>
+            Total sebelum dibagi: <strong>{FormatNumber(grass.total + grass.totalDiv)}</strong>
+          </View>
         </Flex>
 
-        <Flex flex direction="row">
-          <View flex>
-            <Flex flex direction={"column"}>
+          <View flex backgroundColor={"static-chartreuse-300"} borderRadius={"medium"}>
+            <View padding={"size-300"}>
+            <Flex flex direction={"row"} gap={"size-300"}>
               {customerDiv && (
-                <>
-                  <View marginTop={"size-200"}>
+                <View flex>
+                  <View>
                     Bagi hasil dengan <strong>{customerDiv.name}</strong>
                   </View>
                   <View>
@@ -202,14 +196,25 @@ const GrassForm: NextPage<GrassFormProps> = ({
                       }
                     />
                   </View>
-                </>
+                </View>
               )}
+              <View>
+                <View>
+                  Bagian <b>{grass.customer?.name} </b>setelah dibagi
+                </View>
+                <NumberField
+                  flex
+                  isReadOnly
+                  width={"auto"}
+                  hideStepper={true}
+                  label={"Subtotal"}
+                  onChange={(e) => setGrass((o) => ({ ...o, total: e }))}
+                  value={grass.total}
+                />
+              </View>
             </Flex>
           </View>
-          <View flex alignSelf="flex-end">
-            Total sebelum dibagi: <strong>{FormatNumber(grass.total + grass.totalDiv)}</strong>
-          </View>
-        </Flex>
+        </View>
 
         <Flex
           direction="row"

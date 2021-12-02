@@ -26,7 +26,8 @@ const apiProduct: apiFunction = {
 // ,
 //   ${ nestQuery(queryUnit)} as "units"
 
-    const query = sql`SELECT c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit
+    const query = sql`SELECT
+      c.category_id, c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit
     FROM products AS c
     WHERE c.id = ${id}`;
 
@@ -47,7 +48,8 @@ const apiProduct: apiFunction = {
     //   order by u.content`
 //,
   // ${ nestQuery(queryUnit)} as "units"
-    const query = sql`SELECT c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit
+    const query = sql`SELECT 
+      c.category_id, c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit
     FROM products AS c
     order by c.name`;
 
@@ -67,7 +69,8 @@ const apiProduct: apiFunction = {
       where u.product_id = c.id
       order by u.content`
 //,
-    const query = sql`SELECT c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit,
+    const query = sql`SELECT
+      c.category_id, c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit,
     ${nestQuery(queryUnit)} as "units"
     FROM products AS c
     order by c.name`;
@@ -89,7 +92,8 @@ const apiProduct: apiFunction = {
     //   order by u.content`
 //    ${ nestQuery(queryUnit) } as "units"
 
-    const query = sql`SELECT c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit
+    const query = sql`SELECT 
+      c.category_id, c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit
     FROM products AS c
     WHERE POSITION(${name} IN LOWER(c.name)) > 0
     order by c.name`;
@@ -119,6 +123,7 @@ const apiProduct: apiFunction = {
 
     const query = sql`
       UPDATE products SET
+      category_id = ${p.categoryId},
       name = ${p.name},
       price = ${p.price},
       spec = ${isNullOrEmpty(p.spec)},
@@ -136,11 +141,13 @@ const apiProduct: apiFunction = {
   },
 
   insert: async (p: iProduct) => {
+    
 
     const query = sql`
       INSERT INTO products (
-        name, spec, price, stock, first_stock, unit
+        category_id, name, spec, price, stock, first_stock, unit
       ) VALUES (
+        ${p.categoryId},
         ${p.name},
         ${isNullOrEmpty(p.spec)},
         ${p.price},
@@ -151,6 +158,8 @@ const apiProduct: apiFunction = {
       on conflict (name) do nothing
       RETURNING *
     `;
+
+    console.log(query.sql, query.values);
 
     return await db
       .query(query)
