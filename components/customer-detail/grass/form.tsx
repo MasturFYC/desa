@@ -1,6 +1,6 @@
 import { NextPage } from "next";
 import React, { FormEvent, useState } from "react";
-import { dateOnly, iCustomer, iGrass } from "@components/interfaces";
+import { dateOnly, iCustomer, iGrass, iProduct } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
@@ -8,9 +8,12 @@ import { Form } from "@react-spectrum/form";
 import { TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
 import { FormatNumber } from "@lib/format";
+import { AsyncListData } from "@react-stately/data";
+import { ComboBox, Item } from "@adobe/react-spectrum";
 
 type GrassFormProps = {
   data: iGrass;
+  products: AsyncListData<iProduct>;
   updateGrass: (method: string, data: iGrass) => void;
   closeForm: () => void;
   customerDiv: iCustomer;
@@ -18,12 +21,23 @@ type GrassFormProps = {
 
 const GrassForm: NextPage<GrassFormProps> = ({
   data,
+  products,
   updateGrass,
   closeForm,
   customerDiv,
 }) => {
   let [grass, setGrass] = React.useState<iGrass>({} as iGrass);
   let [message, setMessage] = useState<string>("");
+
+  const isProductValid = React.useMemo(
+    () => grass && grass.productId && grass.productId > 0,
+    [grass]
+  )
+
+  const isUnitValid = React.useMemo(
+    () => grass && grass.unitId && grass.unitId > 0,
+    [grass]
+  )
 
   const isQtyValid = React.useMemo(
     () => grass && grass.qty && grass.qty > 0,
@@ -108,18 +122,46 @@ const GrassForm: NextPage<GrassFormProps> = ({
     <View paddingY={"size-100"} paddingX={{ base: "size-100", M: "size-1000" }}>
       <Form onSubmit={handleSubmit}>
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
-          <TextField
-            validationState={isDescriptionValid ? "valid" : "invalid"}
-            autoFocus
-            width={"auto"}
-            flex
-            //width={{ base: "auto", M: "67%" }}
-            isRequired
-            placeholder={"e.g. Pembelian rumpur laut"}
-            label={"Keterangan"}
-            value={grass.descriptions}
-            onChange={(e) => setGrass((o) => ({ ...o, descriptions: e }))}
-          />
+          <ComboBox autoFocus flex
+            validationState={isProductValid ? "valid" : "invalid"}
+            label={"Nama produk"}
+            selectedKey={grass.productId}
+            defaultItems={products.items}
+            onSelectionChange={(e) => {
+              let p = products.getItem(+e);
+              if (p && p.units) {
+                let u = p.units[0];
+
+                if (grass.id === 0) {
+                  setGrass((o) => ({
+                    ...o,
+                    productId: +e,
+                    descriptions: products.getItem(+e).name,
+                    unitId: u.id,
+                    price: u.price,
+                    content: u.content,
+                    buyPrice: u.buyPrice,
+                    total: (u.price * o.qty) - o.totalDiv,
+                    realQty: o.qty * u.content,
+                    unitName: u.name
+                  }));
+                } else {
+                  setGrass((o) => ({
+                    ...o,
+                    productId: +e,
+                    descriptions: products.getItem(+e).name,
+                    unitId: u.id,
+                    content: u.content,
+                    buyPrice: u.buyPrice,
+                    realQty: o.qty * u.content,
+                    unitName: u.name
+                  }));
+                }
+              }
+            }}
+          >
+            {(item) => <Item>{item.name}</Item>}
+          </ComboBox>
           <TextField
             type={"date"}
             width={{ base: "auto", M: "35%" }}
@@ -147,6 +189,50 @@ const GrassForm: NextPage<GrassFormProps> = ({
             }
             value={grass.qty}
           />
+          <ComboBox
+            validationState={isUnitValid ? "valid" : "invalid"}
+            label={"Unit"}
+            defaultItems={
+              products.getItem(grass.productId)
+                ? products.getItem(grass.productId).units
+                : []
+            }
+            selectedKey={grass.unitId}
+            onSelectionChange={(e) => {
+              let us = products.getItem(grass.productId).units;
+              if (us) {
+                let s = us.filter((o) => o.id === +e);
+                if (s) {
+                  let u = s[0];
+                  if (u) {
+                    if (grass.id === 0) {
+                      setGrass((o) => ({
+                        ...o,
+                        unitId: u.id,
+                        price: u.price,
+                        content: u.content,
+                        buyPrice: u.buyPrice,
+                        total: (u.price * o.qty) - o.totalDiv,
+                        realQty: u.content * o.qty,
+                        unitName: u.name,
+                      }));
+                    } else {
+                      setGrass((o) => ({
+                        ...o,
+                        unitId: u.id,
+                        content: u.content,
+                        buyPrice: u.buyPrice,
+                        realQty: u.content * o.qty,
+                        unitName: u.name,
+                      }));
+                    }
+                  }
+                }
+              }
+            }}
+          >
+            {(item) => <Item>{item.name}</Item>}
+          </ComboBox>
           <NumberField
             flex
             isRequired
@@ -168,8 +254,8 @@ const GrassForm: NextPage<GrassFormProps> = ({
           </View>
         </Flex>
 
-          <View flex backgroundColor={"static-chartreuse-300"} borderRadius={"medium"}>
-            <View padding={"size-300"}>
+        <View flex backgroundColor={"static-chartreuse-300"} borderRadius={"medium"}>
+          <View padding={"size-300"}>
             <Flex flex direction={"row"} gap={"size-300"}>
               {customerDiv && (
                 <View flex>

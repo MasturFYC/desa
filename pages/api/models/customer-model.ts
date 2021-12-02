@@ -7,6 +7,7 @@ type apiReturn = Promise<any[] | (readonly iCustomer[] | undefined)[]>;
 
 interface apiFunction {
   list: () => apiReturn;
+  getCustomerSpecial: () => apiReturn;
   find: (name: string | string[]) => apiReturn;
   getCustomer: (customerId: number) => apiReturn;
   getPiutang: (customerId: number) => apiReturn;
@@ -16,6 +17,21 @@ interface apiFunction {
 }
 
 const apiCustomer: apiFunction = {
+
+  getCustomerSpecial: async () => {
+    const query = sql`SELECT
+      c.id, c.name, c.street, c.city, c.phone, c.customer_type, c.customer_div
+    FROM customers AS c
+    WHERE c.customer_type = ${'Pabrik'}::cust_type
+    order by c.name`;
+
+    //      console.log(query.sql, query.values)
+
+    return await db
+      .query(query)
+      .then((data) => [data.rows, undefined])
+      .catch((error) => [undefined, error]);
+  },
 
   getPiutang: async (id: number) => {
 

@@ -145,10 +145,16 @@ export interface iPayment {
 export interface iGrass {
   customerId: number;
   id: number;
+  productId: number;
   descriptions: string;
   orderDate: string;
   price: number;
   qty: number;
+  unitId: number;
+  unitName: string;
+  content: number;
+  realQty: number;
+  buyPrice: number;
   total: number;
   totalDiv: number;
   customer?: iCustomer;
@@ -211,3 +217,25 @@ export interface iStockPayment {
   nominal: number;
   stock?: iStock;
 }
+
+export interface iSpecialOrder {
+  id: number;
+  customerId: number;
+  createdAt: string;
+  updatedAt?: string;
+  packagedAt: string;
+  shippedAt: string;
+  driverName: string;
+  policeNumber: string;
+  street: string;
+  city: string;
+  phone: string;
+  total: number;
+  cash: number;
+  payments: number;
+  remainPayment: number;
+  descriptions?: string;
+  customer?: iCustomer;
+}
+
+export interface iSpecialDetail extends iOrderDetail { }

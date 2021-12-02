@@ -17,7 +17,8 @@ create table special_orders (
   total decimal(12,2) not null default 0,
   cash decimal(12,2) not null default 0,
   payments decimal(12,2) not null default 0,
-  remain_payment decimal(12,2) not null default 0
+  remain_payment decimal(12,2) not null default 0,
+  descriptions varchar(128)
 );
 ```
 ```sh
@@ -39,7 +40,7 @@ create table special_details (
   subtotal decimal(12,2) not null default 0,
   content decimal(8,2) not null default 0,
   real_qty decimal(10,2) not null default 0,
-  buy_price decimal(12,2) not null default 0
+  buy_price decimal(12,2) not null default 0  
 );
 ```
 
@@ -54,7 +55,7 @@ create index ix_special_unit_id on special_details (unit_id);
 
 alter table special_details add constraint fx_special_product foreign key (product_id) references products (id) on update cascade on delete restrict;
 
-alter table special_details add constraint fx_special_order foreign key (order_id) references orders (id) on update cascade on delete restrict;
+alter table special_details add constraint fx_special_order foreign key (order_id) references special_orders (id) on update cascade on delete restrict;
 
 alter table special_details add constraint fx_special_unit foreign key (unit_id) references units (id) on update cascade on delete restrict;
 ```
@@ -68,6 +69,7 @@ AS $function$
 begin
 
   NEW.remain_payment = NEW.total - NEW.cash - NEW.payments;
+  NEW.updated_at = now();
   
   RETURN NEW;
 
@@ -76,6 +78,7 @@ $function$;
 ```
 
 ```sh
+create trigger spo_bef_insert_trig before insert on special_orders FOR EACH ROW EXECUTE FUNCTION spo_bef_update_func();
 create trigger spo_bef_update_trig before update of total, cash, payments on special_orders FOR EACH ROW EXECUTE FUNCTION spo_bef_update_func();
 ```
 
@@ -146,17 +149,27 @@ AS $function$
 
 begin
 
-    update products set
-    stock = stock - NEW.real_qty
-    where id = NEW.product_id;
-
-    update products set
-    stock = stock + OLD.real_qty
-    where id = OLD.product_id;
-
     update special_orders set
     total = total + NEW.subtotal - OLD.subtotal
     where id = NEW.order_id;
+
+    if OLD.product_id = NEW.product_id then
+
+      update products set
+      stock = stock + OLD.real_qty - NEW.real_qty
+      where id = NEW.product_id;
+    
+    else
+
+      update products set
+      stock = stock - NEW.real_qty
+      where id = NEW.product_id;
+
+      update products set
+      stock = stock + OLD.real_qty
+      where id = OLD.product_id;
+
+    end if;
 
     return NEW;
 

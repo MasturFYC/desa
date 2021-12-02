@@ -1,4 +1,5 @@
 import { NextPage } from "next";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import React from "react";
 import { iUserLogin } from "@components/interfaces";
@@ -48,14 +49,40 @@ const Layout: NextPage<LayoutProps> = ({
         paddingTop={"size-50"}
         borderBottomWidth={"thin"}
         borderBottomColor={"gray-200"}
-        paddingX={{base: "size-100", M:"size-200"}}
+        paddingX={{ base: "size-100", M: "size-200" }}
       >
         <Flex direction={"row"} columnGap={"size-200"} alignItems={"center"}>
           <View width={"100px"}>
-            <Logo width={96} height={16} />
+            {home
+              ? <Logo width={96} height={16} />
+              : <Link href={'/'} passHref>
+                <a><Logo width={96} height={16} /></a>
+              </Link>
+            }
           </View>
           <View flex>
-            <View><div style={{fontSize: "24px", fontWeight: 700, color:"Highlight"}}>Sumber Ikan Putri</div></View>
+            <View>
+              {home
+                ? <div style={{ 
+                  fontSize: "24px", 
+                  fontWeight: 700,
+                  color: "Highlight" }}
+                  >
+                    Sumber Ikan Putri
+                  </div>
+                : <Link href={'/'} passHref>
+                  <a style={{ 
+                    fontSize: "24px", 
+                    fontWeight: 700, 
+                    textDecoration: 'none', 
+                    color: "Highlight" 
+                  }}
+                  >
+                    Sumber Ikan Putri
+                  </a>
+                </Link>
+              }
+            </View>
           </View>
         </Flex>
       </View>

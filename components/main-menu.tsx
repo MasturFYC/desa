@@ -47,7 +47,7 @@ const menus: MenuType[] = [
   {
     id: 6,
     name: "Penjualan (Khusus)",
-    link: "/spesial-order",
+    link: "/special-order",
   }
 ];
 

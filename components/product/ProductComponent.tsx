@@ -274,10 +274,11 @@ const ProductComponent: NextPage = () => {
       {products && getProductFiler().map((x, i) => (
         <View key={x.id}>
           <View
+            backgroundColor={selectedId === x.id ? "gray-100" : "transparent"}
             borderColor={selectedId === x.id ? "indigo-500" : "transparent"}
             paddingStart={selectedId === x.id ? "size-100" : 0}
-            borderStartWidth={"thickest"}
-            marginY={"size-50"}
+            borderStartWidth={"thickest"}      
+            paddingTop={"size-100"}      
           >
             <Flex
               direction={{ base: "column", M: "row" }}
@@ -290,7 +291,7 @@ const ProductComponent: NextPage = () => {
                     setSelectedId(selectedId === x.id ? -1 : x.id);
                   }}
                 >
-                  {x.id === 0 ? 'Produk Baru' : `${x.name}${x.spec && ', ' + x.spec}`}
+                  {x.id === 0 ? 'Produk Baru' : `${x.name}${x.spec ? ', ' + x.spec : ''}`}
                 </SpanLink>
               </View>
               {x.id > 0 && (
@@ -314,8 +315,7 @@ const ProductComponent: NextPage = () => {
             </Flex>
             {x.id > 0 && selectedId !== x.id && <ToggleUnit data={x} />}
             {selectedId === x.id && (
-              <Fragment>
-                <View paddingX={{ base: 0, M: "size-1000" }}>
+                <View paddingX={{ base: "size-50", M: "size-100" }}>
                   <ProductForm
                     data={x}
                     categories={categories.items.filter(o => o.id !== 0)}
@@ -324,7 +324,6 @@ const ProductComponent: NextPage = () => {
                   />
                   <View marginY={"size-100"}><span style={{ color: 'red' }}>{message}</span></View>
                 </View>
-              </Fragment>
             )}
           </View>
           <Divider size="S" />

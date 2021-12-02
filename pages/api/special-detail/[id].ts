@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import api from '@model/payment-model';
+import api from '@model/special-detail-model';
 
-export default async function productApi(
+export default async function specialDetailApi(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -27,7 +27,7 @@ export default async function productApi(
     case 'GET':
     default: {
       const id: number = req.query.id ? +req.query.id : 0;
-      result = await api.getPayment(id);
+      result = await api.getByOrder(id);
     }
       break;
   }
@@ -37,8 +37,8 @@ export default async function productApi(
   if (data) {
     res.status(200).json(data);
   } else {
-    console.log("PAYMENT Transaction: ", req.method, error);
-    res.status(404).json({ message: 'PAYMENT tidak ditemukan.' });
+    console.log("SPECIAL DETAIL Transaction: ", req.method, error);
+    res.status(404).json({ message: 'SPECIAL DETAIL tidak ditemukan.' });
   }
 
 }

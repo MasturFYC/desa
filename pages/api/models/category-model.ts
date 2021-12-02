@@ -15,8 +15,16 @@ interface apiFunction {
 const apiCategory: apiFunction = {
 
   getProducts: async (id: number) => {
+
+    const queryUnit = sql`select
+      u.product_id as "productId", u.id, u.name, u.content, u.price, u.buy_price as "buyPrice"
+      from units as u
+      where u.product_id = c.id
+      order by u.content`
+
     const query = sql`SELECT
-      c.category_id, c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit
+      c.category_id, c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit,
+      ${nestQuery(queryUnit)} as "units"
     FROM products AS c
     WHERE c.category_id = ${id} or ${id} = 0
     ORDER BY c.name`;

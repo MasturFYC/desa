@@ -1,8 +1,8 @@
 import { NextPage } from "next";
 import React, { FormEvent, useState } from "react";
 import {
-  iOrder,
-  iOrderDetail,
+  iSpecialOrder,
+  iSpecialDetail,
   iProduct,
 } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
@@ -16,21 +16,21 @@ import { ComboBox, Item } from "@adobe/react-spectrum";
 //import WaitMe from "@components/ui/wait-me";
 
 
-export type OrderDetailFormProps = {
+export type SpecialDetailFormProps = {
   products: AsyncListData<iProduct>;
-  data: iOrderDetail;
-  updateDetail: (method: string, data: iOrderDetail) => void;
+  data: iSpecialDetail;
+  updateDetail: (method: string, data: iSpecialDetail) => void;
   closeForm: () => void;
 };
 
-const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
+const SpecialDetailForm: NextPage<SpecialDetailFormProps> = ({
   products,
   data,
   updateDetail,
   closeForm,
 }) => {
-  let [orderDetail, setOrderDetail] = React.useState<iOrderDetail>(
-    {} as iOrderDetail
+  let [orderDetail, setOrderDetail] = React.useState<iSpecialDetail>(
+    {} as iSpecialDetail
   );
   let [message, setMessage] = useState<string>("");
   //let [units, setUnits] = useState<iUnit[] | undefined>([]);
@@ -62,7 +62,9 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
   }, [data]);
 
   async function postOrderDetail(method: string) {
-    const url = `/api/order-detail/${orderDetail.id}`;
+    console.log(orderDetail);
+    
+    const url = `/api/special-detail/${orderDetail.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -94,7 +96,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
   };
 
   const deleteOrderDetail = async () => {
-    const url = `/api/order-detail/${orderDetail.id}`;
+    const url = `/api/special-detail/${orderDetail.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {
@@ -103,7 +105,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
     };
 
     const res = await fetch(url, fetchOptions);
-    const data: iOrder | any = await res.json();
+    const data: iSpecialOrder | any = await res.json();
 
     if (res.status === 200) {
       updateDetail("DELETE", orderDetail);
@@ -261,4 +263,4 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
   );
 };
 
-export default OrderDetailForm;
+export default SpecialDetailForm;

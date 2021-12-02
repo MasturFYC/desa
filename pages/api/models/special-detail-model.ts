@@ -1,17 +1,17 @@
-import { iOrderDetail } from '@components/interfaces'
+import { iSpecialDetail } from '@components/interfaces'
 import db, { sql } from "../config";
 
 
-type apiReturn = Promise<any[] | (readonly iOrderDetail[] | undefined)[]>;
+type apiReturn = Promise<any[] | (readonly iSpecialDetail[] | undefined)[]>;
 
 interface apiFunction {
   getByOrder: (orderId: number) => apiReturn;
   delete: (id: number) => apiReturn;
-  update: (id: number, data: iOrderDetail) => apiReturn;
-  insert: (data: iOrderDetail) => apiReturn;
+  update: (id: number, data: iSpecialDetail) => apiReturn;
+  insert: (data: iSpecialDetail) => apiReturn;
 }
 
-const apiOrderDetail: apiFunction = {
+const apiSpecialDetail: apiFunction = {
 
   getByOrder: async (orderId: number) => {
 
@@ -19,7 +19,7 @@ const apiOrderDetail: apiFunction = {
     c.order_id, c.id, c.product_id, c.qty, c.unit_id, c.content,
     c.unit_name, c.real_qty, c.buy_price, c.price, c.subtotal,
     p.name as "productName", p.spec
-    FROM order_details AS c
+    FROM special_details AS c
     INNER JOIN products as p ON p.id = c.product_id
     WHERE c.order_id = ${orderId}
     ORDER BY c.id`;
@@ -32,7 +32,7 @@ const apiOrderDetail: apiFunction = {
   
   delete: async (id: number) => {
     const query = sql`
-    DELETE FROM order_details
+    DELETE FROM special_details
     WHERE id = ${id}
     RETURNING id`;
     return await db
@@ -41,9 +41,9 @@ const apiOrderDetail: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  update: async (id: number, p: iOrderDetail) => {
+  update: async (id: number, p: iSpecialDetail) => {
     const query = sql`
-      UPDATE order_details SET
+      UPDATE special_details SET
         order_id = ${p.orderId},
         unit_id = ${p.unitId},
         product_id = ${p.productId},
@@ -62,10 +62,12 @@ const apiOrderDetail: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  insert: async (p: iOrderDetail) => {
+  insert: async (p: iSpecialDetail) => {
 
+    console.log(p);
+    
     const query = sql`
-      INSERT INTO order_details (
+      INSERT INTO special_details (
         order_id, unit_id, product_id, qty, content, unit_name, price, buy_price
       ) VALUES (
         ${p.orderId},
@@ -89,4 +91,4 @@ const apiOrderDetail: apiFunction = {
   },
 };
 
-export default apiOrderDetail;
+export default apiSpecialDetail;

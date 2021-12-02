@@ -72,7 +72,7 @@ const ProductForm: NextPage<ProductFormProps> = ({
 
   return (
     <Form onSubmit={handleSubmit} marginTop={"size-100"}>
-      <View backgroundColor={"gray-100"} borderRadius={"medium"}>
+      <View borderRadius={"medium"}>
         <Flex direction={{ base: "column", M: "row" }} gap={"size-100"} margin={"size-100"}>
           <TextField
             placeholder={"e.g. EM4"}
@@ -96,6 +96,7 @@ const ProductForm: NextPage<ProductFormProps> = ({
           <Picker
             minWidth={"size-2400"}
             label="Kategori"
+            placeholder={"Pilih kategori"}
             validationState={isCategoryValid ? "valid" : "invalid"}
             items={categories}
             width={"auto"}

@@ -5,7 +5,7 @@ import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
 import { ActionButton, Button, Flex, Text } from "@adobe/react-spectrum";
-import { dateParam, iCustomer, iGrass } from "@components/interfaces";
+import { dateParam, iCategory, iCustomer, iGrass, iProduct } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
 import Div from "@components/ui/Div";
 
@@ -25,6 +25,12 @@ const GrassForm = dynamic(() => import("./form"), {
 const initGrass: iGrass = {
   id: 0,
   customerId: 0,
+  productId: 0,
+  unitId: 0,
+  unitName: '',
+  content: 0,
+  realQty: 0,
+  buyPrice: 0,
   totalDiv: 0,
   orderDate: dateParam(null),
   descriptions: "Pembelian Rumput Laut",
@@ -51,6 +57,20 @@ const Grass: NextPage<GrassProps> = ({ customerId, customerDiv }) => {
       return { items: json };
     },
     getKey: (item: iGrass) => item.id,
+  });
+
+  let products = useAsyncList<iProduct>({
+    async load({ signal }) {
+      let res = await fetch("/api/category/2", {
+        signal,
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8'
+        }
+      });
+      let json = await res.json();
+      return { items: json };
+    },
+    getKey: (item: iProduct) => item.id,
   });
 
   useEffect(() => {
@@ -169,6 +189,7 @@ const Grass: NextPage<GrassProps> = ({ customerId, customerDiv }) => {
             {selectedGrassId === x.id ? (
               <GrassForm
                 data={x}
+                products={products}
                 customerDiv={custDiv}
                 updateGrass={updateData}
                 closeForm={closeForm}

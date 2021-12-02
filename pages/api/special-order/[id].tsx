@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import api from '@model/customer-model';
+import api from '@model/special-order-model';
 
-export default async function productApi(
+export default async function specialOrderApi(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -9,13 +9,13 @@ export default async function productApi(
 
   switch (req.method) {
     case 'POST': {
-      const {data} = req.body;
+      const { data } = req.body;
       result = await api.insert(data);
     }
       break;
     case 'PUT': {
       const id: number = req.query.id ? +req.query.id : 0;
-      const {data} = req.body;
+      const { data } = req.body;
       result = await api.update(id, data);
     }
       break;
@@ -27,7 +27,7 @@ export default async function productApi(
     case 'GET':
     default: {
       const id: number = req.query.id ? +req.query.id : 0;
-      result = await api.getCustomer(id);
+      result = await api.getOrder(id);
     }
       break;
   }
@@ -37,8 +37,8 @@ export default async function productApi(
   if (data) {
     res.status(200).json(data);
   } else {
-    console.log("CUSTOMER Transaction: ", req.method, error);
-    res.status(404).json({ message: 'CUSTOMER tidak ditemukan.' });
+    console.log("SPECIAL ORDER Transaction: ", req.method, error);
+    res.status(404).json({ message: 'SPECIAL ORDER tidak ditemukan.' });
   }
 
 }

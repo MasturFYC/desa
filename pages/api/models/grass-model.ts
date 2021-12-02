@@ -24,6 +24,7 @@ const apiGrass: apiFunction = {
 
     const query = sql`SELECT
       c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div,
+      c.product_id, c.unit_id, c.content, c.unit_name, c.real_qty, c.buy_price,
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     WHERE c.id = ${id}`;
@@ -43,6 +44,7 @@ const apiGrass: apiFunction = {
 
     const query = sql`SELECT
       c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div,
+      c.product_id, c.unit_id, c.content, c.unit_name, c.real_qty, c.buy_price,
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     ORDER BY c.id DESC`;
@@ -62,6 +64,7 @@ const apiGrass: apiFunction = {
 
     const query = sql`SELECT
       c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div,
+      c.product_id, c.unit_id, c.content, c.unit_name, c.real_qty, c.buy_price,
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     WHERE c.customer_id = ${customerId}
@@ -90,6 +93,11 @@ const apiGrass: apiFunction = {
       customer_id = ${p.customerId},
       descriptions = ${p.descriptions},      
       qty = ${p.qty},
+      content = ${p.content},
+      unit_name = ${p.unitName},
+      unit_id = ${p.unitId},
+      product_id = ${p.productId},
+      buy_price = ${p.buyPrice},
       price = ${p.price},
       total_div = ${p.totalDiv}
       WHERE id = ${p.id}
@@ -106,14 +114,20 @@ const apiGrass: apiFunction = {
 
     const query = sql`
       INSERT INTO grass (
-        order_date, customer_id, descriptions, qty, price, total_div
+        order_date, customer_id, descriptions, qty, price, total_div,
+        product_id, unit_id, content, unit_name, buy_price
       ) VALUES (
         to_timestamp(${dateParam(p.orderDate)}, ${hour24Format}),
         ${p.customerId},
         ${p.descriptions},
         ${p.qty},
         ${p.price},
-        ${p.totalDiv}
+        ${p.totalDiv},
+        ${p.productId},
+        ${p.unitId},
+        ${p.content},
+        ${p.unitName},
+        ${p.buyPrice}
       )
       RETURNING *
     `;
