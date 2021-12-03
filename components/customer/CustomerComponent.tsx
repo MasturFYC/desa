@@ -229,7 +229,7 @@ const CustomerComponent: NextPage = () => {
                 {x.id > 0 && (
                 <View>
                   <ActionButton isQuiet
-                  onPress={()=>router.push("/customer/"+x.id)}
+                        onPress={() => router.push(x.customerType === customerType.PABRIK ? "/special-customer/" + x.id : "/customer/"+x.id)}
                   ><InfoIcon size="S" /></ActionButton>
                 </View>)}
               </Flex>

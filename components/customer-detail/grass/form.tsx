@@ -9,7 +9,7 @@ import { TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
 import { FormatNumber } from "@lib/format";
 import { AsyncListData } from "@react-stately/data";
-import { ComboBox, Item } from "@adobe/react-spectrum";
+import { ComboBox, Item } from "@react-spectrum/combobox";
 
 type GrassFormProps = {
   data: iGrass;

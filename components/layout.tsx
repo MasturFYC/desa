@@ -55,9 +55,9 @@ const Layout: NextPage<LayoutProps> = ({
         <Flex direction={"row"} columnGap={"size-200"} alignItems={"center"}>
           <View width={"100px"}>
             {home
-              ? <Logo width={96} />
+              ? <Logo width={100} />
               : <Link href={'/'} passHref>
-                <a><Logo width={96} /></a>
+                <a><Logo width={100} /></a>
               </Link>
             }
           </View>
@@ -88,11 +88,9 @@ const Layout: NextPage<LayoutProps> = ({
         </Flex>
       </View>
       <View
-        //borderWidth={"thin"}
         gridArea="sidebar"
         isHidden={{ base: true, M: false, L: false }}
         backgroundColor={"gray-50"}
-        //width={"size-3000"}
         padding={"size-100"}
       >
         <MainMenu activeMenu={home ? "Home" : activeMenu} />
@@ -100,7 +98,7 @@ const Layout: NextPage<LayoutProps> = ({
 
       <View gridArea="content" backgroundColor="gray-50" height={"100%"}>
         <View paddingX={{ base: "size-75", M: "size-200", L: "size-400" }} marginTop={"size-200"}>
-          {home ? <ShowFirstPage /> : children}
+          {children}
         </View>
       </View>
 
@@ -117,20 +115,4 @@ const Layout: NextPage<LayoutProps> = ({
   );
 };
 
-function ShowFirstPage(){
-  return (
-    <Flex direction={"column"} alignItems={"center"} justifyContent={"center"}>
-      <Logo width={512} />
-      <span>SUMBER IKAN PUTRI</span>
-      <style jsx>{`
-        span {
-          margin-top: 24px;
-          font-size: 32px;
-          font-weight: 700;
-          letter-spacing: 6px;
-          color: #999;
-        }`}</style>
-    </Flex>
-  )
-}
 export default Layout;

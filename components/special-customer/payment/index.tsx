@@ -4,42 +4,45 @@ import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
-import { ActionButton, Button } from '@react-spectrum/button';
+import { ActionButton } from '@react-spectrum/button';
 import { Flex } from '@react-spectrum/layout';
 import { Text } from '@react-spectrum/text';
-import { dateParam, iPayment } from "@components/interfaces";
+
+import { dateParam, iSpecialPayment } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
-
 import Div from "@components/ui/Div";
+import customer from "@components/customer";
 
-const PaymentForm = dynamic(() => import("./form"), {
+const SpecialPaymentForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
   ssr: false,
 });
 
-const initPayment: iPayment = {
+const initPayment: iSpecialPayment = {
   id: 0,
   customerId: 0,
-  paymentDate: dateParam(null),
-  refId: 0,
-  total: 0,
-  descriptions: "Cicilan",
+  payNum: '',
+  paymentAt: dateParam(null),
+  orderId: 0,
+  nominal: 0,
+  descriptions: "Angsuran pembayaran",
 };
 
-type paymentProps = {
+type SpecialPaymentProps = {
   customerId: number;
 };
 
-const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
+const SpecialPaymentPage: NextPage<SpecialPaymentProps> = (props) => {
+  let { customerId } = props;
   let [selectedPaymentId, setSelectedPaymentId] = useState<number>(-1);
 
-  let payments = useAsyncList<iPayment>({
+  let payments = useAsyncList<iSpecialPayment>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer/payment/${customerId}`, { signal });
+      let res = await fetch(`/api/customer/special-payment/${customerId}`, { signal });
       let json = await res.json();
       return { items: json };
     },
-    getKey: (item: iPayment) => item.id,
+    getKey: (item: iSpecialPayment) => item.id,
   });
 
   const closeForm = () => {
@@ -49,7 +52,7 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
     setSelectedPaymentId(-1);
   };
 
-  const updateOrder = (method: string, p: iPayment) => {
+  const updateOrder = (method: string, p: iSpecialPayment) => {
     switch (method) {
       case "POST":
         {
@@ -71,18 +74,6 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
 
   return (
     <Fragment>
-      <Button
-        variant={"cta"}
-        onPress={() => {
-          if(!payments.getItem(0)) {
-            payments.insert(0, { ...initPayment, customerId: customerId });
-          }
-          setSelectedPaymentId(0);
-        }}
-        marginBottom={"size-200"}
-      >
-        Cicilan Baru
-      </Button>
       <Div isHeader isHidden>
         <Flex
           isHidden={{ base: true, M: false }}
@@ -109,11 +100,13 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
             selectedColor={"6px solid blue"}
           >
             {selectedPaymentId === x.id ? (
-              <PaymentForm
-                data={x}
+              <View paddingX={"size-200"}>
+              <SpecialPaymentForm
+                data={{...x, customerId: customerId}}
                 updatePayment={updateOrder}
-                closeForm={closeForm}
+                closeDialog={closeForm}
               />
+              </View>
             ) : (
               renderPayment({ x })
             )}
@@ -125,7 +118,7 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
           <View>
             <Text>
               <strong>
-                {FormatNumber(payments.items.reduce((a, b) => a + b.total, 0))}
+                {FormatNumber(payments.items.reduce((a, b) => a + b.nominal, 0))}
               </strong>
             </Text>
           </View>
@@ -134,7 +127,7 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
     </Fragment>
   );
 
-  function renderPayment({ x }: { x: iPayment }) {
+  function renderPayment({ x }: { x: iSpecialPayment }) {
     return (
       <Flex
         marginX={"size-100"}
@@ -144,9 +137,6 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
       >
         <View width={"5%"}>{x.id}</View>
         <View flex width={{ base: "50%", M: "auto" }}>
-          {x.refId > 0 
-          ? x.descriptions
-          :
           <ActionButton
             height={"auto"}
             isQuiet
@@ -155,19 +145,18 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
             }}
           >
             <span style={{ fontWeight: 700 }}>
-              {x.id === 0 ? "Piutang Baru" : x.descriptions}
+              {x.payNum}
             </span>
           </ActionButton>
-          }
         </View>
         <View width={{ base: "40%", M: "20%" }}>
-          {FormatDate(x.paymentDate)}
+          {FormatDate(x.paymentAt)}
         </View>
         <View width={{ base: "48%", M: "15%" }}>
           <span
             style={{ textAlign: "right", display: "block", fontWeight: 700 }}
           >
-            {FormatNumber(x.total)}
+            {FormatNumber(x.nominal)}
           </span>
         </View>
       </Flex>
@@ -175,4 +164,4 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
   }
 };
 
-export default PaymentPage;
+export default SpecialPaymentPage;

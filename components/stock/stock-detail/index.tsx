@@ -4,7 +4,9 @@ import { useAsyncList, AsyncListData } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
-import { ActionButton, Divider, Flex } from "@adobe/react-spectrum";
+import { ActionButton } from "@react-spectrum/button";
+import { Divider } from "@react-spectrum/divider";
+import { Flex } from "@react-spectrum/layout";
 import PinAdd from "@spectrum-icons/workflow/Add";
 
 import { iStockDetail, iStock, iProduct } from "@components/interfaces";

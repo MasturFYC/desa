@@ -1,5 +1,6 @@
 import { NextPage } from "next";
 import Head from "next/head";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import React, { Fragment, useState } from "react";
 import { useAsyncList } from "@react-stately/data";
@@ -289,7 +290,7 @@ const OrderComponent: NextPage = () => {
               </ActionButton>
             </View>
             <View width={{ base: "50%", M: "17%" }}>{FormatDate(x.orderDate)}</View>
-            <View width={{ base: "50%", M: "25%" }}>{x.name}</View>
+            <View width={{ base: "50%", M: "25%" }}><Link href={`/customer/${x.customerId}`}><a>{x.name}</a></Link></View>
           </Flex>
           <Flex direction={"row"} width={{ base: "auto", M: "30%" }} columnGap={"size-50"}>
             <Span width={"33.3%"} isNumber >{FormatNumber(x.total)}</Span>

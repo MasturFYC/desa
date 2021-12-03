@@ -7,7 +7,7 @@ export default function Logo({ width, height }: LogoProps) {
   // <!-- Generator: Adobe Illustrator 23.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
   return (
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width={width} viewBox="0 0 394.41 366.46" enableBackground={"new 0 0 394.41 366.46"} xmlSpace="preserve">
+	 width={`${width}%`} viewBox="0 0 394.41 366.46" enableBackground={"new 0 0 394.41 366.46"} xmlSpace="preserve">
 <linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="148.0584" y1="234.9381" x2="298.8794" y2="69.717" gradientTransform="matrix(-0.7675 -0.6411 -0.6411 0.7675 514.1864 186.509)">
 	<stop  offset="0" style={{stopColor:"#1582C6"}}/>
 	<stop  offset="1" style={{stopColor:"#62C8F3"}}/>

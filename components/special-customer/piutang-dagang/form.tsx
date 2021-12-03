@@ -1,44 +1,42 @@
 import { NextPage } from "next";
+import dynamic from "next/dynamic";
 import React, { FormEvent, useState } from "react";
-import { dateOnly, iCustomer, iSpecialOrder } from "@components/interfaces";
-import { AsyncListData } from '@react-stately/data'
+import { dateOnly, dateParam, iCustomer, iSpecialOrder } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { TextArea, TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
-import { ComboBox, Item } from "@react-spectrum/combobox";
 import { Divider } from "@react-spectrum/divider";
+import {
+  DialogContainer,
+  Dialog
+} from "@react-spectrum/dialog";
+import { Heading } from "@react-spectrum/text";
+import { Content } from '@react-spectrum/view'
 
 
-export interface CustomerSpecialOrder extends iSpecialOrder {
-  name?: string;
-}
+const SpecialPaymentForm = dynamic(
+  () => import("../payment/form"),
+  {
+    ssr: false,
+  }
+);
 
 type SpecialOrderFormProps = {
-  customerList: AsyncListData<iCustomer>,
-  data: CustomerSpecialOrder;
-  updateOrder: (method: string, data: CustomerSpecialOrder) => void;
+  data: iSpecialOrder;
+  updateOrder: (method: string, data: iSpecialOrder) => void;
   closeForm: () => void;
+  customer: iCustomer,
   children: JSX.Element
 };
 
-const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
-  customerList,
-  data,
-  updateOrder,
-  closeForm,
-  children
-}) => {
-  let [order, setOrder] = React.useState<CustomerSpecialOrder>({} as CustomerSpecialOrder);
+const SpecialOrderForm: NextPage<SpecialOrderFormProps> = (props) => {
+  let { data, updateOrder, closeForm, customer, children } = props;
+  let [order, setOrder] = React.useState<iSpecialOrder>({} as iSpecialOrder);
   let [message, setMessage] = useState<string>('');
-  let [customer, setCustomer] = useState<iCustomer>(customerList.getItem(data.customerId));
-
-  const isCustomerIdValid = React.useMemo(
-    () => order && order.customerId && order.customerId > 0,
-    [order]
-  )
+  const [open, setOpen] = React.useState(false);
 
   const isDriverValid = React.useMemo(
     () => order && order.driverName && order.driverName.length > 0,
@@ -88,7 +86,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
     const json = await res.json();
 
     if (res.status === 200) {
-      updateOrder(order.id === 0 ? 'POST' : 'PUT', { ...json, name: customerList.getItem(order.customerId).name });
+      updateOrder(order.id === 0 ? 'POST' : 'PUT', json);
       if (order.id > 0) {
         closeForm();
       }
@@ -103,7 +101,6 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
     postOrder(order.id === 0 ? 'POST' : 'PUT');
   };
 
-
   const deleteOrder = async () => {
     const url = `/api/special-order/${order.id}`;
     const fetchOptions = {
@@ -114,7 +111,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
     };
 
     const res = await fetch(url, fetchOptions);
-    const data: CustomerSpecialOrder | any = await res.json();
+    const data: iSpecialOrder | any = await res.json();
 
     if (res.status === 200) {
       updateOrder('DELETE', order)
@@ -126,12 +123,48 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
   }
 
   return (<View paddingX={{ base: "size-50", M: "size-100" }}>
+    <DialogContainer
+      type={"modal"}
+      onDismiss={() => setOpen(false)}
+      isDismissable
+    >
+      {open && (
+        <Dialog size="L">
+          <Heading>
+            Angsuran
+          </Heading>
+          <Divider size="S" />
+          <Content>
+            <SpecialPaymentForm
+              data={{
+                id: 0,
+                customerId: customer.id,
+                orderId: order.id,
+                paymentAt: dateParam(null),
+                nominal: order.remainPayment,
+                payNum: '',
+                descriptions: 'Angsuran piutang dagang #' + order.id,
+              }}
+              updatePayment={(method, data) => {
+                updateOrder(order.id === 0 ? 'POST' : 'PUT', {
+                  ...order, remainPayment: order.remainPayment - data.nominal,
+                  payments: order.payments + data.nominal
+                });
+              }}
+              closeDialog={() => {
+                setOpen(false);
+              }}
+            />
+          </Content>
+        </Dialog>
+      )}
+    </DialogContainer>
+
     <Form onSubmit={handleSubmit}>
       <Flex direction="row" gap="size-100" marginBottom={"size-100"}>
         <View flex>
           <Button type={"submit"} variant="cta"
             isDisabled={
-              isCustomerIdValid === 0 ||
               isPhoneValid === '' ||
               isDriverValid === '' ||
               isPoliceValid === '' ||
@@ -154,6 +187,16 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
         <View flex><b>#{order.id}</b></View>
         {order.id > 0 && (
           <View>
+            {order.remainPayment > 0 &&
+              <Button
+                type={"button"}
+                variant="primary"
+                marginEnd={"size-100"}
+                onPress={() => setOpen(true)}
+              >
+                Tambahkan Angsuran
+              </Button>
+            }
             <Button type={"button"} variant="negative"
               onPress={() => deleteOrder()}>
               Delete
@@ -163,39 +206,12 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
       </Flex>
       <Flex flex direction={{ base: "column", M: "row" }} gap="size-600" marginBottom={"size-100"}>
         <Flex flex direction="column">
-          <div style={{ fontWeight: 700 }}>Informasi pembeli:</div>
-          <ComboBox
-            autoFocus
-            validationState={isCustomerIdValid ? "valid" : "invalid"}
-            width={"auto"}
-            label={"Pembeli"}
-            placeholder={"e.g. pilih pembeli"}
-            defaultItems={customerList.items}
-            selectedKey={order.customerId}
-            onSelectionChange={(e) => {
-              setOrder((o) => ({
-                ...o,
-                customerId: +e
-              }));
-              const c = customerList.getItem(+e)
-              setCustomer(c);
-              if(order.street.length === 0) {
-                setOrder(o => ({
-                  ...o,
-                  street: c.street || '',
-                  city: c.city || '',
-                  phone: c.phone || ''
-                }))
-              }
-            }}
-          >
-            {(item) => <Item>{item.name}</Item>}
-          </ComboBox>
+          <div style={{ fontWeight: 700, marginTop: 12 }}>{customer.name}</div>
           <View flex marginTop={"size-100"}>
             <strong>Alamat</strong>:<br />
             {customer &&
               <View>
-                {customer.street} - {customer.city}, Telp. {customer.phone}
+                {customer.street} - {customer.city},<br />Telp. {customer.phone}
               </View>
             }
           </View>
@@ -205,6 +221,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
           <Flex direction={"row"} columnGap={"size-100"}>
             <TextField
               flex
+              autoFocus
               aria-autocomplete={"both"}
               validationState={isDriverValid ? "valid" : "invalid"}
               placeholder={"e.g. Johni"}
@@ -330,4 +347,4 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
   );
 };
 
-export default SpecualOrderForm;
+export default SpecialOrderForm;

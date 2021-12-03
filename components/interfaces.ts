@@ -218,6 +218,18 @@ export interface iStockPayment {
   stock?: iStock;
 }
 
+
+export interface iSpecialPayment {
+  id: number;
+  orderId: number;
+  customerId: number;
+  payNum: string;
+  descriptions: string;
+  paymentAt: string;
+  nominal: number;
+  specialOrder?: iSpecialOrder;
+}
+
 export interface iSpecialOrder {
   id: number;
   customerId: number;

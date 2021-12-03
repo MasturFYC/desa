@@ -7,9 +7,7 @@ import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { NumberField } from "@react-spectrum/numberfield";
 import { AsyncListData } from "@react-stately/data";
-import { ComboBox, Item } from "@adobe/react-spectrum";
-//import { Text } from "@adobe/react-spectrum";
-//import WaitMe from "@components/ui/wait-me";
+import { ComboBox, Item } from "@react-spectrum/combobox";
 
 export type OrderDetailFormProps = {
   products: AsyncListData<iProduct>;

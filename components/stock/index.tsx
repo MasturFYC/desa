@@ -1,16 +1,15 @@
 import { NextPage } from "next";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import React, { useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
-import Link from "next/link";
-import {
-  Button,
-  Divider,
-  Flex,
-  SearchField
-} from "@adobe/react-spectrum";
+import { Flex } from "@react-spectrum/layout";
+import { Button } from "@react-spectrum/button";
+import { Divider } from "@react-spectrum/divider";
+import {  SearchField} from "@react-spectrum/searchfield";
+
 import {
   dateParam,
   iStock,

@@ -7,7 +7,7 @@ import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { Item, TabList, Tabs } from "@adobe/react-spectrum";
+import { Item, TabList, Tabs } from "@react-spectrum/tabs";
 
 const siteTitle = "Supplier";
 
@@ -16,7 +16,7 @@ const Supplier = dynamic(() => import("./supplier-piutang"), {
   ssr: false,
 });
 
-const PiutangDagang = dynamic(() => import("./piutang-dagang"), {
+const PiutangDagang = dynamic(() => import("./hutang-dagang"), {
    loading: () => <WaitMe />,
    ssr: false,
 });
@@ -38,7 +38,7 @@ type tabContent = {
 
 const tabs: tabContent[] = [
   { id: 0, name: "Informasi" },
-  { id: 1, name: "Piutang Dagang" },
+  { id: 1, name: "Hutang Usaha" },
   { id: 2, name: "Angsuran" },
 ];
 

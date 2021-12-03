@@ -8,8 +8,6 @@ import { NumberField } from "@react-spectrum/numberfield";
 import { AsyncListData } from "@react-stately/data";
 import { ComboBox, Item } from "@react-spectrum/combobox";
 import { Form } from "@react-spectrum/form";
-//import { Text } from "@adobe/react-spectrum";
-//import WaitMe from "@components/ui/wait-me";
 
 export type StockDetailFormProps = {
   products: AsyncListData<iProduct>;

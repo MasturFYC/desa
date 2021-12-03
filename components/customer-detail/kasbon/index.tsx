@@ -4,13 +4,10 @@ import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
-import {
-  ActionButton,
-  Button,
-  Divider,
-  Flex,
-  Text,
-} from "@adobe/react-spectrum";
+
+import { ActionButton, Button } from '@react-spectrum/button';
+import { Flex } from '@react-spectrum/layout';
+import { Text } from '@react-spectrum/text';
 import {
   add,
   dateParam,

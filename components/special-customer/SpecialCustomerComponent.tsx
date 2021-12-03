@@ -10,28 +10,15 @@ import { Item, TabList, Tabs } from "@react-spectrum/tabs";
 
 const siteTitle = "Pelanggan";
 
-const WaitMe = dynamic(() => import("@components/ui/wait-me"), {
+const CustomerPiutang = dynamic(() => import("./piutang"), {
   ssr: false,
 });
 
-const CustomerPiutang = dynamic(() => import("./CustomerPiutang"), {
-  ssr: false,
-});
-
-const PiutangBarang = dynamic(() => import("./piutang-barang"), {
-  ssr: false,
-});
-
-const Kasbon = dynamic(() => import("./kasbon"), {
+const PiutangBarang = dynamic(() => import("./piutang-dagang"), {
   ssr: false,
 });
 
 const Payment = dynamic(() => import("./payment"), {
-  ssr: false,
-});
-
-
-const Grass = dynamic(() => import("./grass"), {
   ssr: false,
 });
 
@@ -43,13 +30,11 @@ type tabContent = {
 
 const tabs: tabContent[] = [
   { id: 0, name: "Informasi" },
-  { id: 1, name: "Piutang Barang" },
-  { id: 2, name: "Piutang Kasbon" },
-  { id: 3, name: "Pembelian" },
-  { id: 4, name: "Angsuran" },
+  { id: 1, name: "Piutang Dagang" },
+  { id: 2, name: "Angsuran" },
 ];
 
-const CustomerDetailComponent: NextPage = () => {
+const SpecialCustomerComponent: NextPage = () => {
   const { query: queryParams } = useRouter();
   let [tabId, setTabId] = React.useState(0);
   let [customerId, setCustomerId] = useState<number>(0);
@@ -130,12 +115,10 @@ const CustomerDetailComponent: NextPage = () => {
           {customerId > 0 && <CustomerPiutang customerId={customerId} />}
         </View>
       )}
-      {tabId === 1 && <PiutangBarang customerId={customerId} />}
-      {tabId === 2 && <Kasbon customerId={customerId} />}
-      {tabId === 3 && <Grass customerId={customerId} customerDiv={customer.customerDiv} />}
-      {tabId === 4 && <Payment customerId={customerId} />}
+      {tabId === 1 && <PiutangBarang customer={customer} />}
+      {tabId === 2 && <Payment customerId={customerId} />}
     </Layout>
   );
 };
 
-export default CustomerDetailComponent;
+export default SpecialCustomerComponent;

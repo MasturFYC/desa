@@ -1,39 +1,33 @@
-import { NextPage } from "next";
-import Head from "next/head";
-import Link from "next/link";
 import dynamic from "next/dynamic";
-import React, { useState } from "react";
+import React, { Fragment, useState } from "react";
 import { AsyncListData, useAsyncList } from "@react-stately/data";
+import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
-import { SearchField } from "@react-spectrum/searchfield";
-import { Button } from "@react-spectrum/button";
 import { Flex } from "@react-spectrum/layout";
-import { FormatDate, FormatNumber } from "@lib/format";
+import { Button } from "@react-spectrum/button";
+import { NextPage } from "next";
 import {
   dateParam,
+  iSpecialOrder,
+  iProduct,
   iCustomer,
-  iProduct
 } from "@components/interfaces";
-import Layout from "@components/layout";
-import WaitMe from "@components/ui/wait-me";
-import { CustomerSpecialOrder } from "./form";
+import { FormatDate, FormatNumber } from "@lib/format";
 import SpanLink from "@components/ui/span-link";
 
-const siteTitle = "Penjualan (Khusus)"
-
-const SpecialDetail = dynamic(
-  () => import("./order-detail/index"),
+const SpecialOrderDetail = dynamic(
+  () => import("@components/special-order/order-detail"),
   {
+    loading: () => <WaitMe />,
     ssr: false,
   }
 );
 
 const SpecialOrderForm = dynamic(() => import("./form"), {
-  loading: () => <WaitMe />,
   ssr: false,
 });
 
-const initOrder: CustomerSpecialOrder = {
+const initOrder: iSpecialOrder = {
   id: 0,
   customerId: 0,
   createdAt: dateParam(null),
@@ -46,16 +40,17 @@ const initOrder: CustomerSpecialOrder = {
   phone: '',
   total: 0,
   cash: 0,
-  name: "",
   payments: 0,
   remainPayment: 0,
   descriptions: ''
 };
 
+type PiutangDagangProps = {
+  customer: iCustomer;
+};
 
-const SpecialOrderComponent: NextPage = () => {
-  let [txtSearch, setTxtSearch] = useState<string>("");
-  let [txt, setTxt] = useState<string>("");
+const SpecialOrderComponent: NextPage<PiutangDagangProps> = (props) => {
+  let { customer } = props;
   let [selectedOrderId, setSelectedOrderId] = useState<number>(-1);
 
   let products = useAsyncList<iProduct>({
@@ -72,23 +67,9 @@ const SpecialOrderComponent: NextPage = () => {
     getKey: (item: iProduct) => item.id,
   });
 
-  let customers = useAsyncList<iCustomer>({
+  let orders = useAsyncList<iSpecialOrder>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer/special`, {
-        signal,
-        headers: {
-          "Content-type": "application/json; charset=UTF-8",
-        }
-      });
-      let json = await res.json();
-      return { items: json };
-    },
-    getKey: (item: iCustomer) => item.id,
-  });
-
-  let orders = useAsyncList<CustomerSpecialOrder>({
-    async load({ signal }) {
-      let res = await fetch(`/api/special-order/list`, {
+      let res = await fetch(`/api/special-order/customer/${customer.id}`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -97,7 +78,7 @@ const SpecialOrderComponent: NextPage = () => {
       let json = await res.json();
       return { items: json };
     },
-    getKey: (item: CustomerSpecialOrder) => item.id,
+    getKey: (item: iSpecialOrder) => item.id,
   });
 
   const closeForm = () => {
@@ -107,7 +88,7 @@ const SpecialOrderComponent: NextPage = () => {
     setSelectedOrderId(-1);
   };
 
-  const updateOrder = (method: string, p: CustomerSpecialOrder) => {
+  const updateOrder = (method: string, p: iSpecialOrder) => {
     switch (method) {
       case "POST":
         {
@@ -137,36 +118,21 @@ const SpecialOrderComponent: NextPage = () => {
     orders.update(orderId, { ...o, total: total, remainPayment: remain });
   };
 
-  function getFilteredData(f?: string) {
-    if (f) {
-      return orders.items.filter(o => 
-        o.driverName.toLocaleLowerCase().includes(f.toLocaleLowerCase()) ||
-        o.name?.toLocaleLowerCase().includes(f.toLocaleLowerCase()) ||
-        o.street.toLocaleLowerCase().includes(f.toLocaleLowerCase()) ||
-        o.city.toLocaleLowerCase().includes(f.toLocaleLowerCase())
-      );
-    }
-    return orders.items;
-  }
-
   return (
-    <Layout activeMenu={siteTitle}>
-      <Head>
-        <title>{siteTitle}</title>
-      </Head>
-      <View marginBottom={"size-400"}>
-        <span style={{ fontWeight: 700, fontSize: "24px" }}>
-          Data {siteTitle}
-        </span>
-      </View>
-
+    <View>
       <Flex marginY={"size-250"} columnGap={"size-100"}>
         <View flex>
           <Button
             variant={"cta"}
             onPress={() => {
               if (!orders.getItem(0)) {
-                orders.insert(0, initOrder);
+                orders.insert(0, {
+                  ...initOrder,
+                  customerId: customer.id,
+                  street: customer.street || '',
+                  city: customer.city || '',
+                  phone: customer.phone || ''
+                });
               }
               setSelectedOrderId(0);
             }}
@@ -176,26 +142,11 @@ const SpecialOrderComponent: NextPage = () => {
           </Button>
         </View>
 
-        <SearchField
-          aria-label="Search orders"
-          placeholder="e.g. kosim"
-          width="auto"
-          maxWidth="size-3600"
-          value={txt}
-          onClear={() => {
-            setTxt('');
-            setTxtSearch('')
-          }}
-          onChange={(e) => setTxt(e)}
-          onSubmit={(e) => setTxtSearch(e)}
-        />
       </Flex>
-
-
-      {products.isLoading || orders.isLoading || customers.isLoading && <WaitMe />}
+      {products.isLoading || orders.isLoading && <WaitMe />}
       {orders &&
-        getFilteredData(txtSearch).map(
-          (x, i) => (            
+        orders.items.map(
+          (x, i) => (
             <View
               key={x.id}
               padding={"size-100"}
@@ -203,30 +154,32 @@ const SpecialOrderComponent: NextPage = () => {
               backgroundColor={selectedOrderId === x.id ? "gray-200" : (i % 2 === 0 ? "gray-100" : "gray-50")}
               borderRadius={selectedOrderId === x.id ? "large" : "medium"}
               borderWidth={selectedOrderId === x.id ? "thick" : "thin"}
-              borderStartWidth={selectedOrderId === x.id ? "thickest" : "thin" }
+              borderStartWidth={selectedOrderId === x.id ? "thickest" : "thin"}
               borderColor={"indigo-400"}
-              //borderBottomWidth={"thin"}
-              //borderColor={selectedOrderId === x.id ? "indigo-400" : "transparent"}
-              // borderStartColor={selectedOrderId === x.id ? "indigo-400" : "transparent"}
+            //borderBottomWidth={"thin"}
+            //borderColor={selectedOrderId === x.id ? "indigo-400" : "transparent"}
+            // borderStartColor={selectedOrderId === x.id ? "indigo-400" : "transparent"}
             >
               {selectedOrderId === x.id ? (
                 <SpecialOrderForm
-                  customerList={customers}
                   data={x}
+                  customer={customer}
                   updateOrder={updateOrder}
                   closeForm={closeForm}
                 >
-                  <SpecialDetail
+                  <SpecialOrderDetail
                     products={products}
                     updateTotal={updateTotal}
                     orderId={x.id}
                   />
                 </SpecialOrderForm>
               ) : (
-                <RenderOrder x={x} customer={customers.getItem(x.customerId)}>
-                  <SpanLink onClick={() => setSelectedOrderId(x.id)}>
-                    <span style={{ textAlign: "left" }}>ORDER ID#: {x.id}</span><br />
-                  </SpanLink>
+                <RenderOrder x={x} customer={customer}>
+                  <View>
+                    <SpanLink onClick={() => setSelectedOrderId(x.id)}>
+                      <span style={{ textAlign: "left" }}>ORDER ID#: {x.id}</span><br />
+                    </SpanLink>
+                  </View>
                 </RenderOrder>
               )}
             </View>
@@ -234,25 +187,25 @@ const SpecialOrderComponent: NextPage = () => {
         )}
 
       <RenderSummary orders={orders} />
-    </Layout>
+    </View>
   );
 };
 
 type RenderOrderProps = {
-  x: CustomerSpecialOrder,
+  x: iSpecialOrder,
   customer: iCustomer,
   children: JSX.Element
 }
 
 type RenderSummaryProps = {
-  orders: AsyncListData<CustomerSpecialOrder>
+  orders: AsyncListData<iSpecialOrder>
 }
 
 function RenderSummary(props: RenderSummaryProps) {
-  let {orders} = props;
+  let { orders } = props;
 
   return <View marginY={"size-200"}>
-    <div style={{fontWeight: 700, fontSize: "16px", fontStyle: "italic", marginBottom: "12px"}}>Summary:</div>
+    <div style={{ fontWeight: 700, fontSize: "16px", fontStyle: "italic", marginBottom: "12px" }}>Summary:</div>
     <table style={{ borderCollapse: "collapse" }}>
       <tbody>
         <tr>
@@ -292,18 +245,16 @@ function RenderOrder(props: RenderOrderProps) {
         <View><span style={{ fontWeight: 700 }}>Piutang</span>: {FormatNumber(x.remainPayment)}</View>
         <View><b>Supir</b>: {x.driverName} / <b>Mobil</b>: {x.policeNumber}</View>
       </View>
-      {customer &&
-        <View flex>
-          <div style={{ marginBottom: "6px", fontWeight: 700 }}>Informasi Pembeli</div>
-          <div>
-            <Link href={`/special-customer/${customer.id}`}><a>{customer.name}</a></Link><br/>
-            {customer.street} - {customer.city},
-            <br />
-            Telp. {customer.phone}
-          </div>
-          <div style={{ marginTop: "6px" }}><span style={{ fontWeight: 700 }}>Keterangan</span>: {x.descriptions || ''}</div>
-        </View>
-      }
+      <View flex>
+        <div style={{ marginBottom: "6px", fontWeight: 700 }}>Informasi Pembeli</div>
+        <div>
+          {customer.name}<br />
+          {customer.street} - {customer.city},
+          <br />
+          Telp. {customer.phone}
+        </div>
+        <div style={{ marginTop: "6px" }}><span style={{ fontWeight: 700 }}>Keterangan</span>: {x.descriptions || ''}</div>
+      </View>
       <View flex>
         <div style={{ marginBottom: "6px" }}>
           <b>Informasi Pengiriman</b><br />
