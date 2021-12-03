@@ -1,4 +1,5 @@
 import { NextPage } from "next";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React from "react";
@@ -8,9 +9,9 @@ import { View } from "@react-spectrum/view";
 import MainMenu from "./main-menu";
 import { Flex } from "@react-spectrum/layout";
 import { Footer } from "@react-spectrum/view";
-import Logo from "./logo";
-import { Divider } from "@react-spectrum/divider";
 export const siteTitle = "SPBU";
+
+const Logo = dynamic(()=> import("./logo"),{ssr:false});
 
 type LayoutProps = {
   activeMenu?: string;
@@ -54,9 +55,9 @@ const Layout: NextPage<LayoutProps> = ({
         <Flex direction={"row"} columnGap={"size-200"} alignItems={"center"}>
           <View width={"100px"}>
             {home
-              ? <Logo width={96} height={16} />
+              ? <Logo width={96} />
               : <Link href={'/'} passHref>
-                <a><Logo width={96} height={16} /></a>
+                <a><Logo width={96} /></a>
               </Link>
             }
           </View>
@@ -99,7 +100,7 @@ const Layout: NextPage<LayoutProps> = ({
 
       <View gridArea="content" backgroundColor="gray-50" height={"100%"}>
         <View paddingX={{ base: "size-75", M: "size-200", L: "size-400" }} marginTop={"size-200"}>
-          {children}
+          {home ? <ShowFirstPage /> : children}
         </View>
       </View>
 
@@ -116,4 +117,20 @@ const Layout: NextPage<LayoutProps> = ({
   );
 };
 
+function ShowFirstPage(){
+  return (
+    <Flex direction={"column"} alignItems={"center"} justifyContent={"center"}>
+      <Logo width={512} />
+      <span>SUMBER IKAN PUTRI</span>
+      <style jsx>{`
+        span {
+          margin-top: 24px;
+          font-size: 32px;
+          font-weight: 700;
+          letter-spacing: 6px;
+          color: #999;
+        }`}</style>
+    </Flex>
+  )
+}
 export default Layout;

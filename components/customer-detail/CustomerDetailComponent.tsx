@@ -1,9 +1,8 @@
 import Head from "next/head";
 import dynamic from "next/dynamic";
-import React, { FormEvent, Fragment, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "@components/layout";
 import { iCustomer } from "@components/interfaces";
-import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
@@ -11,29 +10,28 @@ import { Item, TabList, Tabs } from "@adobe/react-spectrum";
 
 const siteTitle = "Pelanggan";
 
+const WaitMe = dynamic(() => import("@components/ui/wait-me"), {
+  ssr: false,
+});
+
 const CustomerPiutang = dynamic(() => import("./CustomerPiutang"), {
-  loading: () => <WaitMe />,
   ssr: false,
 });
 
 const PiutangBarang = dynamic(() => import("./piutang-barang"), {
-  loading: () => <WaitMe />,
   ssr: false,
 });
 
 const Kasbon = dynamic(() => import("./kasbon"), {
-  loading: () => <WaitMe />,
   ssr: false,
 });
 
 const Payment = dynamic(() => import("./payment"), {
-  loading: () => <WaitMe />,
   ssr: false,
 });
 
 
 const Grass = dynamic(() => import("./grass"), {
-  loading: () => <WaitMe />,
   ssr: false,
 });
 

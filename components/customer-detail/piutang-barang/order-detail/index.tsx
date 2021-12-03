@@ -85,8 +85,7 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
   };
 
   return (
-    <Fragment>
-      <View backgroundColor={"gray-50"}>
+      <View>
         <Div isHeader>
           <Flex
             isHidden={{ base: true, M: false }}
@@ -129,7 +128,6 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
             )
           )}
       </View>
-    </Fragment>
   );
 
   function renderDetails(x: iOrderDetail, isNew: boolean) {

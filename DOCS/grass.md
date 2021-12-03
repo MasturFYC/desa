@@ -102,7 +102,7 @@ BEGIN
     end if;
 
     UPDATE products SET
-        stock = stock - NEW.real_qty
+        stock = stock + NEW.real_qty
         WHERE id = NEW.product_id;
 
     RETURN NEW;
@@ -163,17 +163,17 @@ BEGIN
     IF (OLD.product_id = NEW.product_id) THEN
       
         UPDATE products SET
-            stock = stock - NEW.real_qty + OLD.real_qty
+            stock = stock + NEW.real_qty - OLD.real_qty
             WHERE id = NEW.product_id;
 
     ELSE
 
         UPDATE products SET
-            stock = stock - NEW.real_qty
+            stock = stock + NEW.real_qty
             WHERE id = NEW.product_id;
 
         UPDATE products SET
-            stock = stock + OLD.real_qty
+            stock = stock - OLD.real_qty
             WHERE id = OLD.product_id;
 
     END IF;
@@ -196,7 +196,7 @@ BEGIN
     WHERE ref_id = OLD.id;
 
   UPDATE products SET
-    stock = stock + OLD.real_qty
+    stock = stock - OLD.real_qty
     WHERE id = OLD.product_id;
 
   RETURN OLD;

@@ -159,7 +159,7 @@ const apiProduct: apiFunction = {
       RETURNING *
     `;
 
-    console.log(query.sql, query.values);
+//    console.log(query.sql, query.values);
 
     return await db
       .query(query)

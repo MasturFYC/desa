@@ -1,10 +1,6 @@
 import { NextPage } from "next";
 import React, { FormEvent, useState } from "react";
-import {
-  iOrder,
-  iOrderDetail,
-  iProduct,
-} from "@components/interfaces";
+import { iOrder, iOrderDetail, iProduct } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
@@ -14,7 +10,6 @@ import { AsyncListData } from "@react-stately/data";
 import { ComboBox, Item } from "@adobe/react-spectrum";
 //import { Text } from "@adobe/react-spectrum";
 //import WaitMe from "@components/ui/wait-me";
-
 
 export type OrderDetailFormProps = {
   products: AsyncListData<iProduct>;
@@ -37,17 +32,17 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
   const isProductValid = React.useMemo(
     () => orderDetail && orderDetail.productId && orderDetail.productId > 0,
     [orderDetail]
-  )
+  );
 
   const isQtyValid = React.useMemo(
     () => orderDetail && orderDetail.qty && orderDetail.qty > 0,
     [orderDetail]
-  )
-  
+  );
+
   const isUnitValid = React.useMemo(
     () => orderDetail && orderDetail.unitId && orderDetail.unitId > 0,
     [orderDetail]
-  )
+  );
 
   React.useEffect(() => {
     let isLoaded = false;
@@ -117,10 +112,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
   };
 
   return (
-    <View
-      paddingY={"size-100"}
-      paddingX={{ base: "size-100", M: "size-1000" }}
-    >
+    <View paddingY={"size-100"} paddingX={{ base: "size-100", M: "size-1000" }}>
       <Form onSubmit={handleSubmit}>
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <ComboBox
@@ -129,8 +121,8 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
             validationState={isProductValid ? "valid" : "invalid"}
             label={"Nama Barang"}
             selectedKey={orderDetail.productId}
-            defaultItems={products.items}
-//            autoFocus
+            defaultItems={products.items.filter((o) => o.categoryId !== 2)}
+            //            autoFocus
             onSelectionChange={(e) => {
               //setOrderDetail((o) => ({ ...o, productId: +e }));
 
@@ -138,18 +130,22 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
               if (p && p.units) {
                 //setUnits(p.units);
                 let u = p.units[0];
-                setOrderDetail((o) => ({
-                  ...o,
-                  unitId: u.id,
-                  price: u.price,
-                  content: u.content,
-                  buyPrice: u.buyPrice,
-                  subtotal: u.price * o.qty,
-                  realQty: o.qty * u.content,
-                  unitName: u.name,
-                  productName: p.name,
-                  productId: p.id,
-                }));
+                if (u) {
+                  setOrderDetail((o) => ({
+                    ...o,
+                    unitId: u.id,
+                    price: u.price,
+                    content: u.content,
+                    buyPrice: u.buyPrice,
+                    subtotal: u.price * o.qty,
+                    realQty: o.qty * u.content,
+                    unitName: u.name,
+                    productName: p.name,
+                    productId: p.id,
+                  }));
+                } else {
+                  alert("Produk ini belum punya data unit.");
+                }
               }
             }}
           >
@@ -175,7 +171,12 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
             minValue={1}
             label={"Qty"}
             onChange={(e) =>
-              setOrderDetail((o) => ({ ...o, qty: e, subtotal: e * o.price, realQty: e * o.content }))
+              setOrderDetail((o) => ({
+                ...o,
+                qty: e,
+                subtotal: e * o.price,
+                realQty: e * o.content,
+              }))
             }
             value={orderDetail.qty}
           />
@@ -231,8 +232,11 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
           marginTop={"size-200"}
         >
           <View flex>
-            <Button type={"submit"} variant="cta"
-            isDisabled={orderDetail.subtotal<=0}>
+            <Button
+              type={"submit"}
+              variant="cta"
+              isDisabled={orderDetail.subtotal <= 0}
+            >
               Save
             </Button>
             <Button

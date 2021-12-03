@@ -61,7 +61,7 @@ const Grass: NextPage<GrassProps> = ({ customerId, customerDiv }) => {
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
-      let res = await fetch("/api/category/2", {
+      let res = await fetch("/api/product/list", {
         signal,
         headers: {
           'Content-type': 'application/json; charset=UTF-8'

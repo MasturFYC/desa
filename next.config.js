@@ -42,7 +42,11 @@ const withTM = require('next-transpile-modules')([
   '@react-spectrum/table',
 ]);
 
-module.exports = withTM({
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
+
+module.exports = withBundleAnalyzer(withTM({
   reactStrictMode: true,
   webpack: (config) => {
     config.resolve.alias = {
@@ -50,4 +54,4 @@ module.exports = withTM({
     };
     return config;
   },
-});
+}));

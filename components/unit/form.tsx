@@ -18,12 +18,9 @@ type UnitFormProps = {
   closeForm: () => void;
 };
 
-const UnitForm: NextPage<UnitFormProps> = ({
-  price,
-  data,
-  updateUnit,
-  closeForm,
-}) => {
+const UnitForm: NextPage<UnitFormProps> = (props) => {
+  let { price, data, updateUnit, closeForm } = props;
+
   const [unit, setUnit] = React.useState<iUnit>({} as iUnit);
 
   React.useEffect(() => {

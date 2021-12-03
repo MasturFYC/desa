@@ -119,7 +119,7 @@ const CustomerForm: NextPage<CustomerFormProps> = ({
 
           </Flex>
         </Flex>
-        <Flex marginTop={"size-200"} direction="row" gap="size-100" margin={"size-100"}>
+        <Flex marginTop={"size-300"} direction="row" gap="size-100" margin={"size-100"}>
           <View flex>
             <Button type={"submit"} variant="cta">
               Save

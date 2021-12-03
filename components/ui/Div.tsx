@@ -9,6 +9,7 @@ type DivLinkProps = {
   isHeader?: boolean;
   isFooter?: boolean;
   selectedColor?: string;
+  backColor?: string;
   isSelected?: boolean;
   width?: {
     base?: string;
@@ -29,6 +30,7 @@ export default function Div(props: DivLinkProps) {
     isHidden,
     "aria-label": ariaLabel,
     isSelected,
+    backColor,
     selectedColor,
   } = props;
   let { hoverProps, isHovered } = useHover({
@@ -69,7 +71,8 @@ export default function Div(props: DivLinkProps) {
           ? "#eee"
           : isHovered
           ? "#e8effe"
-          : 'var(--spectrum-alias-background-color-gray-300)'
+          : backColor || '#ffffff'
+          // var(--spectrum-alias-background-color-gray-300)'
           // : "#ffffff"
           };
           border-right: 1px solid #c8cfdf;

@@ -163,7 +163,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
       </Flex>
       <Flex flex direction={{ base: "column", M: "row" }} gap="size-600" marginBottom={"size-100"}>
         <Flex flex direction="column">
-          <div style={{ fontWeight: 700 }}>Informasi pengiriman:</div>
+          <div style={{ fontWeight: 700 }}>Informasi pembeli:</div>
           <ComboBox
             autoFocus
             validationState={isCustomerIdValid ? "valid" : "invalid"}

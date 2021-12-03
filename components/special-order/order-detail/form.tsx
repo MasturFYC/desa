@@ -132,14 +132,14 @@ const SpecialDetailForm: NextPage<SpecialDetailFormProps> = ({
             label={"Nama Barang"}
             selectedKey={orderDetail.productId}
             defaultItems={products.items}
-//            autoFocus
             onSelectionChange={(e) => {
-              //setOrderDetail((o) => ({ ...o, productId: +e }));
 
               let p = products.getItem(+e);
               if (p && p.units) {
-                //setUnits(p.units);
+
                 let u = p.units[0];
+                if(u) {
+                
                 setOrderDetail((o) => ({
                   ...o,
                   unitId: u.id,
@@ -150,20 +150,24 @@ const SpecialDetailForm: NextPage<SpecialDetailFormProps> = ({
                   realQty: o.qty * u.content,
                   unitName: u.name,
                   productName: p.name,
+                  spec: p.spec,
                   productId: p.id,
                 }));
+              } else {
+                alert("Produk ini belum punya data unit.")
+              }
               }
             }}
           >
             {(item) => <Item>{item.name}</Item>}
           </ComboBox>
           <NumberField
-            isReadOnly
+            isRequired
+            validationState={orderDetail.price >= orderDetail.buyPrice ? "valid" : "invalid"}
             hideStepper={true}
             width={"auto"}
-            label={"Harga"}
-            onChange={(e) =>
-              setOrderDetail((o) => ({ ...o, price: e, subtotal: e * o.qty }))
+            label={"Harga Jual"}
+            onChange={(e) => setOrderDetail((o) => ({ ...o, price: e, subtotal: e * o.qty }))              
             }
             value={orderDetail.price}
           />
@@ -234,7 +238,10 @@ const SpecialDetailForm: NextPage<SpecialDetailFormProps> = ({
         >
           <View flex>
             <Button type={"submit"} variant="cta"
-            isDisabled={orderDetail.subtotal<=0}>
+            isDisabled={
+              orderDetail.subtotal<=0 ||
+              orderDetail.price <= orderDetail.buyPrice
+              }>
               Save
             </Button>
             <Button

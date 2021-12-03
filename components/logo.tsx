@@ -1,6 +1,6 @@
 type LogoProps = {
   width: number;
-  height: number;
+  height?: number;
 };
 export default function Logo({ width, height }: LogoProps) {
   // `<?xml version="1.0" encoding="utf-8"?>

@@ -1,5 +1,6 @@
-import Layout from "@components/layout";
+import dynamic from "next/dynamic";
 import { View } from "@react-spectrum/view";
+const Layout = dynamic(()=> import("@components/layout"), {ssr: false});
 
 export default function Index() {
   return (

@@ -1,6 +1,4 @@
-import Head from "next/head";
-import Link from "next/link";
-import React, { FormEvent, Fragment, useEffect, useState } from "react";
+import React, {Fragment } from "react";
 import { useAsyncList } from "@react-stately/data";
 import { iUnit, iProduct } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
@@ -9,10 +7,14 @@ import { Divider } from "@react-spectrum/divider";
 import { ActionButton } from "@react-spectrum/button";
 import { Text } from "@react-spectrum/text";
 import { NextPage } from "next";
-import UnitForm from "./form";
 import { FormatNumber } from "@lib/format";
 import WaitMe from "@components/ui/wait-me";
 import PinAdd from "@spectrum-icons/workflow/Add";
+import dynamic from "next/dynamic";
+
+const UnitForm = dynamic(() => import("./form"), {
+  ssr: false
+})
 
 const initUnit: iUnit = {
   productId: 0,
@@ -30,9 +32,8 @@ type UnitComponentProps = {
   unit: string
 }
 
-
-
-const UnitComponent: NextPage<UnitComponentProps> = ({ productId, price, unit }) => {
+const UnitComponent: NextPage<UnitComponentProps> = (props) => {
+  let { productId, price, unit } = props;
   let [selectedId, setSelectedId] = React.useState<number>(-1);
   let [message, setMessage] = React.useState<string>("");
   let columnWidth = { base: "auto", M: "25%" }
@@ -89,7 +90,7 @@ const UnitComponent: NextPage<UnitComponentProps> = ({ productId, price, unit })
 
     if (res.status === 200) {
       if (method === "POST") {
-        units.insert(1, json);
+        units.append(json);
       } else {
         units.update(id, json);
       }
@@ -109,7 +110,7 @@ const UnitComponent: NextPage<UnitComponentProps> = ({ productId, price, unit })
     <Fragment>
       {units.isLoading && <WaitMe />}
       {units
-        && [...units.items, { ...initUnit, productId: productId, price: price + (price * 30.0 / 100.0), margin: 30.0 / 100.0, buy_price: price, name: unit }].map((x, i) => (
+        && [...units.items, { ...initUnit, productId: productId, price: price + (price * 30.0 / 100.0), margin: 30.0 / 100.0, buyPrice: price, name: unit }].map((x, i) => (
         <View key={x.id}>
           <Divider size="S" />
           <View
@@ -125,14 +126,13 @@ const UnitComponent: NextPage<UnitComponentProps> = ({ productId, price, unit })
                 <ActionButton
                   width={"auto"}
                   height={"auto"}
-                  flex
                   isQuiet
                   onPress={() => {
                     setSelectedId(selectedId === x.id ? -1 : x.id);
                   }}
-                >{x.id === 0 ? 
-                      <><PinAdd size="S" height={"auto"} alignSelf={"center"} /><Text>Baru</Text></> :
-                    <span style={{ fontWeight: 700, textAlign: "left" }}>{x.name}</span>}
+                >{x.id === 0 
+                  ?<><PinAdd size="S" height={"auto"} alignSelf={"center"} /><Text>Baru</Text></>
+                  : <span style={{ fontWeight: 700, textAlign: "left" }}>{x.name}</span>}
                 </ActionButton>
               </View>
               {x.id > 0 && (
@@ -146,7 +146,6 @@ const UnitComponent: NextPage<UnitComponentProps> = ({ productId, price, unit })
                 </View>)}
             </Flex>
             {selectedId === x.id && (
-              <Fragment>
                 <View paddingX={{ base: 0, M: "size-1000" }}>
                   <UnitForm
                     price={price}
@@ -156,7 +155,6 @@ const UnitComponent: NextPage<UnitComponentProps> = ({ productId, price, unit })
                   />
                   <View marginY={"size-250"}><span style={{ color: 'red' }}>{message}</span></View>
                 </View>
-              </Fragment>
             )}
           </View>
         </View>

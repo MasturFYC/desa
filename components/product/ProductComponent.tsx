@@ -1,6 +1,6 @@
 import Head from "next/head";
 import dynamic from "next/dynamic";
-import React, { Fragment, useState } from "react";
+import React, { useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import Layout from "@components/layout";
 import { iProduct, iCategory } from "@components/interfaces";
@@ -26,17 +26,16 @@ import {
 import { Heading } from "@react-spectrum/text";
 
 const UnitComponent = dynamic(() => import("@components/unit/UnitComponent"), {
-  loading: () => <WaitMe />,
   ssr: false
 })
 
 const CategoryForm = dynamic(() => import("./category-form"), {
-  loading: () => <WaitMe />,
+  // loading: () => <WaitMe />,
   ssr: false
 })
 
 const ProductForm = dynamic(() => import("./form"), {
-  loading: () => <WaitMe />,
+  // loading: () => <WaitMe />,
   ssr: false
 })
 
@@ -167,7 +166,7 @@ const ProductComponent: NextPage = () => {
 
     if (res.status === 200) {
       if (method === "POST") {
-        products.insert(1, json);
+        products.insert(0, json);
       } else {
         products.update(id, { ...json, units: p.units });
       }

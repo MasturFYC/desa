@@ -122,13 +122,14 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
           validationState={isProductValid ? "valid" : "invalid"}
           label={"Nama Barang"}
           selectedKey={detail.productId}
-          defaultItems={products.items}
+          defaultItems={products.items.filter(o=>o.categoryId !== 2)}
           //            autoFocus
           onSelectionChange={(e) => {
             let p = products.items.filter((o) => o.id === +e)[0];
             if (p && p.units) {
               //setUnits(p.units);
               let u = p.units[0];
+              if(u) {
               setDetail((o) => ({
                 ...o,
                 unitId: u.id,
@@ -140,6 +141,9 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
                 spec: p.spec,
                 productId: p.id,
               }));
+            } else {
+              alert("Produk ini belum punya data unit.")
+            }
             }
           }}
         >

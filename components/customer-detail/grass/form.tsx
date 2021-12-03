@@ -126,19 +126,20 @@ const GrassForm: NextPage<GrassFormProps> = ({
             validationState={isProductValid ? "valid" : "invalid"}
             label={"Nama produk"}
             selectedKey={grass.productId}
-            defaultItems={products.items}
+            defaultItems={products.items.filter(o=>o.categoryId===2 && o.units)}
             onSelectionChange={(e) => {
               let p = products.getItem(+e);
               if (p && p.units) {
                 let u = p.units[0];
 
-                if (grass.id === 0) {
+                //if (grass.id === 0) {
+                  if(u) {
                   setGrass((o) => ({
                     ...o,
                     productId: +e,
                     descriptions: products.getItem(+e).name,
                     unitId: u.id,
-                    price: u.price,
+                    price: u.buyPrice,
                     content: u.content,
                     buyPrice: u.buyPrice,
                     total: (u.price * o.qty) - o.totalDiv,
@@ -146,17 +147,20 @@ const GrassForm: NextPage<GrassFormProps> = ({
                     unitName: u.name
                   }));
                 } else {
-                  setGrass((o) => ({
-                    ...o,
-                    productId: +e,
-                    descriptions: products.getItem(+e).name,
-                    unitId: u.id,
-                    content: u.content,
-                    buyPrice: u.buyPrice,
-                    realQty: o.qty * u.content,
-                    unitName: u.name
-                  }));
+                  alert("Produk ini belum punya data unit.")
                 }
+                // } else {
+                //   setGrass((o) => ({
+                //     ...o,
+                //     productId: +e,
+                //     descriptions: products.getItem(+e).name,
+                //     unitId: u.id,
+                //     content: u.content,
+                //     buyPrice: u.buyPrice,
+                //     realQty: o.qty * u.content,
+                //     unitName: u.name
+                //   }));
+                // }
               }
             }}
           >
@@ -205,27 +209,27 @@ const GrassForm: NextPage<GrassFormProps> = ({
                 if (s) {
                   let u = s[0];
                   if (u) {
-                    if (grass.id === 0) {
+                    // if (grass.id === 0) {
                       setGrass((o) => ({
                         ...o,
                         unitId: u.id,
-                        price: u.price,
+                        price: u.buyPrice,
                         content: u.content,
                         buyPrice: u.buyPrice,
                         total: (u.price * o.qty) - o.totalDiv,
                         realQty: u.content * o.qty,
                         unitName: u.name,
                       }));
-                    } else {
-                      setGrass((o) => ({
-                        ...o,
-                        unitId: u.id,
-                        content: u.content,
-                        buyPrice: u.buyPrice,
-                        realQty: u.content * o.qty,
-                        unitName: u.name,
-                      }));
-                    }
+                    // } else {
+                    //   setGrass((o) => ({
+                    //     ...o,
+                    //     unitId: u.id,
+                    //     content: u.content,
+                    //     buyPrice: u.buyPrice,
+                    //     realQty: u.content * o.qty,
+                    //     unitName: u.name,
+                    //   }));
+                    // }
                   }
                 }
               }

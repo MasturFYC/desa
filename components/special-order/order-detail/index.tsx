@@ -86,7 +86,7 @@ const SpecialDetail: NextPage<SpecialDetailProps> = ({
 
   return (
     <Fragment>
-      <View backgroundColor={"gray-50"}>
+      <View>
         <Div isHeader>
           <Flex
             isHidden={{ base: true, M: false }}
@@ -159,17 +159,17 @@ const SpecialDetail: NextPage<SpecialDetailProps> = ({
               </>
             ) : (
               <span style={{ fontWeight: 700 }}>
-                {x.productName} - {x.spec}
+                {x.productName}, {x.spec}
               </span>
             )}
           </ActionButton>
         </View>
-        {x.id > 0 && renderDetail(x)}
+        {x.id > 0 && renderTotal(x)}
       </Flex>
     );
   }
 
-  function renderDetail(x: iSpecialDetail): React.ReactNode {
+  function renderTotal(x: iSpecialDetail): React.ReactNode {
     return (
       <>
         <View width={{ base: "50%", M: "20%" }}>

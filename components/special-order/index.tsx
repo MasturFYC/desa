@@ -2,17 +2,16 @@ import { NextPage } from "next";
 import Head from "next/head";
 import dynamic from "next/dynamic";
 import React, { useState } from "react";
-import { useAsyncList } from "@react-stately/data";
+import { AsyncListData, useAsyncList } from "@react-stately/data";
 import { View } from "@react-spectrum/view";
 import { SearchField } from "@react-spectrum/searchfield";
 import { Button } from "@react-spectrum/button";
 import { Flex } from "@react-spectrum/layout";
-import { Text } from "@react-spectrum/text";
 import { FormatDate, FormatNumber } from "@lib/format";
 import {
   dateParam,
   iCustomer,
-  iProduct,
+  iProduct
 } from "@components/interfaces";
 import Layout from "@components/layout";
 import WaitMe from "@components/ui/wait-me";
@@ -192,7 +191,6 @@ const SpecialOrderComponent: NextPage = () => {
         />
       </Flex>
 
-      <Divider size="S" marginY={"size-100"} />
 
       {products.isLoading || orders.isLoading || customers.isLoading && <WaitMe />}
       {orders &&
@@ -201,12 +199,15 @@ const SpecialOrderComponent: NextPage = () => {
             <View
               key={x.id}
               padding={"size-100"}
+              marginTop={"size-100"}
               backgroundColor={selectedOrderId === x.id ? "gray-200" : (i % 2 === 0 ? "gray-100" : "gray-50")}
-              borderStartWidth={selectedOrderId === x.id ? "thickest" : "thin"}
-              borderColor={selectedOrderId === x.id ? "indigo-400" : "transparent"}
-              borderRadius={selectedOrderId === x.id ? "large" : "small"}
-              borderBottomWidth={"thin"}
-              borderBottomColor={"gray-400"}
+              borderRadius={selectedOrderId === x.id ? "large" : "medium"}
+              borderWidth={selectedOrderId === x.id ? "thick" : "thin"}
+              borderStartWidth={selectedOrderId === x.id ? "thickest" : "thin" }
+              borderColor={"indigo-400"}
+              //borderBottomWidth={"thin"}
+              //borderColor={selectedOrderId === x.id ? "indigo-400" : "transparent"}
+              // borderStartColor={selectedOrderId === x.id ? "indigo-400" : "transparent"}
             >
               {selectedOrderId === x.id ? (
                 <SpecialOrderForm
@@ -231,28 +232,8 @@ const SpecialOrderComponent: NextPage = () => {
             </View>
           )
         )}
-      <View marginY={"size-200"}>
-        <table style={{borderCollapse: "collapse"}}>
-          <tbody>
-            <tr>
-              <td style={{paddingRight: "12px"}}>Grand Total</td>
-              <td style={{ fontWeight: 700, textAlign: "right" }}>{FormatNumber(orders.items.reduce((a, b) => a + b.total, 0))}</td>
-            </tr>
-            <tr>
-              <td style={{ paddingRight: "12px" }}>Total Cash</td>
-              <td style={{ fontWeight: 700, textAlign: "right" }}>{FormatNumber(orders.items.reduce((a, b) => a + b.cash, 0))}</td>
-            </tr>
-            <tr>
-              <td style={{ paddingRight: "12px" }}>Total Angsuran</td>
-              <td style={{ fontWeight: 700, textAlign: "right" }}>{FormatNumber(orders.items.reduce((a, b) => a + b.payments, 0))}</td>
-            </tr>
-            <tr>
-              <td style={{ paddingRight: "12px" }}>Total Piutang</td>
-              <td style={{ fontWeight: 700, textAlign: "right" }}>{FormatNumber(orders.items.reduce((a, b) => a + b.remainPayment, 0))}</td>
-            </tr>
-          </tbody>
-        </table>
-      </View>
+
+      <RenderSummary orders={orders} />
     </Layout>
   );
 };
@@ -261,6 +242,38 @@ type RenderOrderProps = {
   x: CustomerSpecialOrder,
   customer: iCustomer,
   children: JSX.Element
+}
+
+type RenderSummaryProps = {
+  orders: AsyncListData<CustomerSpecialOrder>
+}
+
+function RenderSummary(props: RenderSummaryProps) {
+  let {orders} = props;
+
+  return <View marginY={"size-200"}>
+    <div style={{fontWeight: 700, fontSize: "16px", fontStyle: "italic", marginBottom: "12px"}}>Summary:</div>
+    <table style={{ borderCollapse: "collapse" }}>
+      <tbody>
+        <tr>
+          <td style={{ paddingRight: "12px" }}>Total Order</td>
+          <td style={{ fontWeight: 700, textAlign: "right" }}>{FormatNumber(orders.items.reduce((a, b) => a + b.total, 0))}</td>
+        </tr>
+        <tr>
+          <td style={{ paddingRight: "12px" }}>Total Cash</td>
+          <td style={{ fontWeight: 700, textAlign: "right" }}>{FormatNumber(orders.items.reduce((a, b) => a + b.cash, 0))}</td>
+        </tr>
+        <tr>
+          <td style={{ paddingRight: "12px" }}>Total Angsuran</td>
+          <td style={{ fontWeight: 700, textAlign: "right" }}>{FormatNumber(orders.items.reduce((a, b) => a + b.payments, 0))}</td>
+        </tr>
+        <tr>
+          <td style={{ paddingRight: "12px" }}>Total Piutang</td>
+          <td style={{ fontWeight: 700, textAlign: "right" }}>{FormatNumber(orders.items.reduce((a, b) => a + b.remainPayment, 0))}</td>
+        </tr>
+      </tbody>
+    </table>
+  </View>;
 }
 
 function RenderOrder(props: RenderOrderProps) {
