@@ -177,7 +177,16 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
                 ...o,
                 customerId: +e
               }));
-              setCustomer(customerList.getItem(+e));
+              const c = customerList.getItem(+e)
+              setCustomer(c);
+              if(order.street.length === 0) {
+                setOrder(o => ({
+                  ...o,
+                  street: c.street || '',
+                  city: c.city || '',
+                  phone: c.phone || ''
+                }))
+              }
             }}
           >
             {(item) => <Item>{item.name}</Item>}
@@ -196,6 +205,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
           <Flex direction={"row"} columnGap={"size-100"}>
             <TextField
               flex
+              aria-autocomplete={"both"}
               validationState={isDriverValid ? "valid" : "invalid"}
               placeholder={"e.g. Johni"}
               label={"Supir"}
@@ -204,6 +214,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
             />
             <TextField
               flex
+              aria-autocomplete={"both"}
               validationState={isPoliceValid ? "valid" : "invalid"}
               placeholder={"e.g. E-0598-EM"}
               label={"No. Mobil"}

@@ -140,7 +140,12 @@ const SpecialOrderComponent: NextPage = () => {
 
   function getFilteredData(f?: string) {
     if (f) {
-      return orders.items.filter(o => o.driverName.toLocaleLowerCase().includes(f.toLocaleLowerCase()));
+      return orders.items.filter(o => 
+        o.driverName.toLocaleLowerCase().includes(f.toLocaleLowerCase()) ||
+        o.name?.toLocaleLowerCase().includes(f.toLocaleLowerCase()) ||
+        o.street.toLocaleLowerCase().includes(f.toLocaleLowerCase()) ||
+        o.city.toLocaleLowerCase().includes(f.toLocaleLowerCase())
+      );
     }
     return orders.items;
   }
@@ -271,15 +276,16 @@ function RenderOrder(props: RenderOrderProps) {
         <View><span style={{ fontWeight: 700 }}>Total</span>: {FormatNumber(x.total)}</View>
         <View><span style={{ fontWeight: 700 }}>Panjer / Cash</span>: {FormatNumber(x.cash)}</View>
         <View><span style={{ fontWeight: 700 }}>Angsuran</span>: {FormatNumber(x.payments)}</View>
-        <View><span style={{ fontWeight: 700 }}>Tunggakan</span>: {FormatNumber(x.remainPayment)}</View>
+        <View><span style={{ fontWeight: 700 }}>Piutang</span>: {FormatNumber(x.remainPayment)}</View>
         <View><b>Supir</b>: {x.driverName} / <b>Mobil</b>: {x.policeNumber}</View>
       </View>
       {customer &&
         <View flex>
           <div style={{ marginBottom: "6px", fontWeight: 700 }}>Informasi Pembeli</div>
           <div>
-            {customer.name}
-            {customer.street} - {customer.city},<br />
+            {customer.name}<br/>
+            {customer.street} - {customer.city},
+            <br />
             Telp. {customer.phone}
           </div>
           <div style={{ marginTop: "6px" }}><span style={{ fontWeight: 700 }}>Keterangan</span>: {x.descriptions || ''}</div>
