@@ -7,8 +7,11 @@ type apiReturn = Promise<any[] | (readonly iPayment[] | undefined)[]>;
 
 interface apiFunction {
   list: () => apiReturn;
-  getByCustomer: (customerId: number) => apiReturn;
-  getBalanceDetail: (customerId: number) => apiReturn;
+  getByCustomer: (customerId: number, lunasId?: number | null) => apiReturn;
+  getBalanceDetail: (customerId: number, lunasId?: number | null) => apiReturn;
+  getSpecialBalanceDetail: (customerId: number, lunasId?: number | null) => apiReturn;
+  getSpecialTransaction: (customerId: number, lunasId?: number | null) => apiReturn;
+  getTransaction: (customerId: number, lunasId?: number | null) => apiReturn;
   getPayment: (id: number) => apiReturn;
   delete: (id: number) => apiReturn;
   update: (id: number, data: iPayment) => apiReturn;
@@ -17,12 +20,39 @@ interface apiFunction {
 
 const apiPayment: apiFunction = {
 
-  getBalanceDetail: async (customerId: number) => {
+  getBalanceDetail: async (customerId: number, lunasId: number | undefined | null = 0) => {
     return await db
-      .query(sql`select * from sip_cust_balance_detail(${customerId})`)
+      .query(sql`select * from sip_cust_balance_detail(${customerId}, ${lunasId})`)
       .then((data) => [data.rows, undefined])
       .catch((error) => [undefined, error]);
   },
+
+  getTransaction: async (customerId: number, lunasId: number | undefined | null = 0) => {
+    const query = sql`select * from customer_get_transaction_detail(${customerId}, ${lunasId})`;
+
+    return await db
+      .query(query)
+      .then((data) => [data.rows, undefined])
+      .catch((error) => [undefined, error]);
+  },
+
+  getSpecialTransaction: async (customerId: number, lunasId: number | undefined | null = 0) => {
+    const query = sql`select * from customer_get_special_transaction(${customerId}, ${lunasId})`;
+
+    return await db
+      .query(query)
+      .then((data) => [data.rows, undefined])
+      .catch((error) => [undefined, error]);
+  },
+  getSpecialBalanceDetail: async (customerId: number, lunasId: number | undefined | null = 0) => {
+    const query = sql`select * from special_customer_get_balance(${customerId}, ${lunasId})`;
+
+    return await db
+      .query(query)
+      .then((data) => [data.rows, undefined])
+      .catch((error) => [undefined, error]);
+  },
+
   getPayment: async (id: number) => {
 
     const query = sql`SELECT
@@ -49,12 +79,12 @@ const apiPayment: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  getByCustomer: async (customerId: number) => {
+  getByCustomer: async (customerId: number, lunasId: number | undefined | null = 0) => {
 
     const query = sql`SELECT
     c.id, c.customer_id, c.ref_id, c.payment_date, c.total, c.descriptions
     from payments AS c
-    WHERE c.customer_id = ${customerId}
+    WHERE c.customer_id = ${customerId} and lunas_id = ${lunasId}
     ORDER BY c.id DESC`;
 
     return await db

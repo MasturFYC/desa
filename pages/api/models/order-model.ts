@@ -8,7 +8,7 @@ type apiReturn = Promise<any[] | (readonly iOrder[] | undefined)[]>;
 interface apiFunction {
   list: () => apiReturn;
   search: (name: string) => apiReturn;
-  getByCustomer: (customerId: number) => apiReturn;
+  getByCustomer: (customerId: number, lunasId?: number | null ) => apiReturn;
   getOrder: (id: number) => apiReturn;
   delete: (id: number) => apiReturn;
   update: (id: number, data: iOrder) => apiReturn;
@@ -67,11 +67,11 @@ const apiOrder: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  getByCustomer: async (customerId: number) => {
+  getByCustomer: async (customerId: number, lunasId: number | undefined | null = 0) => {
 
     const query = sql`SELECT c.id, c.customer_id, c.order_date, c.total, c.payment, c.remain_payment, c.descriptions
     FROM orders AS c
-    WHERE c.customer_id = ${customerId}
+    WHERE c.customer_id = ${customerId} and c.lunas_id = ${lunasId}
     ORDER BY c.id DESC`;
 
     return await db

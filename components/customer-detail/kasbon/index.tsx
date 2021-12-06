@@ -32,6 +32,7 @@ const getJatuhTempo = () => {
 
 const initKasbon: iKasbon = {
   id: 0,
+  lunasId:0,
   customerId: 0,
   kasbonDate: dateParam(null),
   jatuhTempo: getJatuhTempo(),
@@ -156,6 +157,8 @@ const KasbonPage: NextPage<KasbonProps> = ({ customerId }) => {
       >
         <View width={"5%"}>{x.id}</View>
         <View flex width={{ base: "50%", M: "auto" }}>
+          {x.refLunasId && x.refLunasId === 0
+          ?
           <ActionButton
             height={"auto"}
             isQuiet
@@ -167,6 +170,9 @@ const KasbonPage: NextPage<KasbonProps> = ({ customerId }) => {
               {x.id === 0 ? "Piutang Baru" : x.descriptions}
             </span>
           </ActionButton>
+          :
+            <View>{ x.descriptions}</View>
+          }
         </View>
         <View width={{ base: "40%", M: "20%" }}>
           {FormatDate(x.kasbonDate)}

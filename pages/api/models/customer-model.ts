@@ -10,7 +10,8 @@ interface apiFunction {
   getCustomerSpecial: () => apiReturn;
   find: (name: string | string[]) => apiReturn;
   getCustomer: (customerId: number) => apiReturn;
-  getPiutang: (customerId: number) => apiReturn;
+  getPiutang: (customerId: number, lunasId?: number | undefined | null) => apiReturn;
+  getSpecialPiutang: (customerId: number, lunasId?: number | undefined | null) => apiReturn;
   delete: (id: number) => apiReturn;
   update: (id: number, data: iCustomer) => apiReturn;
   insert: (data: iCustomer) => apiReturn;
@@ -33,29 +34,19 @@ const apiCustomer: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  getPiutang: async (id: number) => {
+  getSpecialPiutang: async (customerId: number, lunasId: number | undefined | null = 0) => {
+    const query = sql`select * from special_piutang_balance_func(${customerId}, ${lunasId})`;
 
-    // const qry_piutang = sql`select
-    //   sum(o.remain_payment) as "total"
-    //   from orders as o
-    //   where o.customer_id = c.id`;
+    return await db
+      .query(query)
+      .then((data) => [data.rows, undefined])
+      .catch((error) => [undefined, error]);
 
-    // const qry_payment = sql`select
-    //   sum(o.total) as "total"
-    //   from payments as o
-    //   where o.customer_id = c.id`;
-    
-    // const qry_kasbon = sql`select
-    // sum(k.total) as "total"
-    // from kasbons as k
-    // where k.customer_id = c.id`;
+  },
 
-    const query = sql`select * from piutang_balance_func(${id})`;
-    // ${nestQuerySingle(qry_piutang)} as "piutang",
-    // ${nestQuerySingle(qry_payment)} as "payment",
-    // ${nestQuerySingle(qry_kasbon)} as "kasbon"
-    // FROM customers AS c
-    // WHERE c.id = ${id}`;
+  getPiutang: async (customerId: number, lunasId: number | undefined | null = 0) => {
+
+    const query = sql`select * from piutang_balance_func(${customerId}, ${lunasId})`;
 
     return await db
       .query(query)

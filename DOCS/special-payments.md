@@ -106,3 +106,106 @@ CREATE TRIGGER
   ON special_payments FOR EACH ROW
   EXECUTE FUNCTION spo_payment_aft_update_func();
 ```
+```sh
+drop function special_piutang_balance_func;
+```
+```sh
+CREATE OR REPLACE FUNCTION
+  public.special_piutang_balance_func(cust_id integer, lunasid integer)
+  RETURNS TABLE(id smallint, descriptions varchar(128),
+  debt numeric, cred numeric, saldo numeric) LANGUAGE plpgsql
+
+AS $function$
+
+begin
+
+  return query with recursive trx as (
+
+    select 1::smallint id,
+      'Piutang Dagang'::varchar(128) descriptions,
+      coalesce(sum(p.total),0) debt,
+      coalesce(sum(p.cash),0) cred
+    from special_orders p
+    where p.customer_id = cust_id
+    and p.lunas_id = lunasid
+
+    union all
+
+    select 2::smallint id,
+      'Angsuran'::varchar(128) descriptions,
+      0::numeric debt, coalesce(sum(a.nominal),0) cred
+    from special_payments a
+    where a.customer_id = cust_id
+    and a.lunas_id = lunasid
+
+  )
+  select t.id, t.descriptions, t.debt, t.cred,
+    sum(t.debt - t.cred) over (order by t.id
+    rows between unbounded preceding and current row) as saldo
+  from trx as t;
+
+end;
+
+$function$;
+```
+### Test
+```sh
+select * from special_piutang_balance_func(3,0);
+```
+```sh
+drop function special_customer_get_balance;
+```
+```sh
+CREATE OR REPLACE FUNCTION public.special_customer_get_balance(cust_id integer, lunasid integer)
+ RETURNS TABLE(
+  id integer,
+  customer_id integer,
+  descriptions character varying,
+  trx_date timestamp without time zone,
+  debt numeric,
+  cred numeric,
+  saldo numeric) LANGUAGE plpgsql
+AS $function$
+
+begin
+
+    return query with recursive trx as (
+
+        select o.id, o.customer_id,
+          coalesce(o.descriptions, concat('ORDER ID#: '::VARCHAR(50), o.id)) descriptions,
+          o.created_at trx_date,
+          o.total debt,
+          o.cash cred
+        from special_orders o
+        where o.customer_id = cust_id
+        and o.lunas_id = lunasid
+
+        union all
+
+        select k.id, k.customer_id,
+          k.pay_num,
+          k.payment_at trx_date,
+          0::numeric debt,
+          k.nominal cred
+        from special_payments k
+        where k.customer_id = cust_id
+        and k.lunas_id = lunasid
+    )
+
+    select t.id, t.customer_id, t.descriptions, t.trx_date,
+        t.debt,
+        t.cred,
+        sum(t.debt - t.cred)
+        over (order by t.id rows between unbounded preceding and current row) as saldo
+    from trx t
+    order by t.id;
+
+end;
+
+$function$;
+```
+
+### Test
+```sh
+select * from special_customer_get_balance(3,0);
+```

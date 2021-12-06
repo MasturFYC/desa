@@ -30,11 +30,13 @@ const Payment = dynamic(() => import("./payment"), {
   ssr: false,
 });
 
-
 const Grass = dynamic(() => import("./grass"), {
   ssr: false,
 });
 
+const Pelunasan = dynamic(() => import("./pelunasan"), {
+  ssr: false,
+});
 
 type tabContent = {
   id: number;
@@ -47,6 +49,7 @@ const tabs: tabContent[] = [
   { id: 2, name: "Piutang Kasbon" },
   { id: 3, name: "Pembelian" },
   { id: 4, name: "Angsuran" },
+  { id: 5, name: "Pelunasan" },
 ];
 
 const CustomerDetailComponent: NextPage = () => {
@@ -134,6 +137,7 @@ const CustomerDetailComponent: NextPage = () => {
       {tabId === 2 && <Kasbon customerId={customerId} />}
       {tabId === 3 && <Grass customerId={customerId} customerDiv={customer.customerDiv} />}
       {tabId === 4 && <Payment customerId={customerId} />}
+      {tabId === 5 && <Pelunasan customerId={customerId} />}
     </Layout>
   );
 };

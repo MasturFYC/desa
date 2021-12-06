@@ -7,7 +7,7 @@ type apiReturn = Promise<any[] | (readonly iKasbon[] | undefined)[]>;
 
 interface apiFunction {
   list: () => apiReturn;
-  getByCustomer: (customerId: number) => apiReturn;
+  getByCustomer: (customerId: number, lunasId?: number | null) => apiReturn;
   getKasbon: (id: number) => apiReturn;
   delete: (id: number) => apiReturn;
   update: (id: number, data: iKasbon) => apiReturn;
@@ -18,7 +18,7 @@ const apiKasbon: apiFunction = {
   getKasbon: async (id: number) => {
 
     const query = sql`SELECT
-    c.id, c.customer_id, c.kasbon_date, c.jatuh_tempo, c.total, c.descriptions
+    c.id, c.customer_id, c.kasbon_date, c.jatuh_tempo, c.total, c.descriptions, ref_lunas_id
     from kasbons AS c
     WHERE c.id = ${id}`;
 
@@ -31,7 +31,7 @@ const apiKasbon: apiFunction = {
   list: async () => {
 
     const query = sql`SELECT 
-    c.id, c.customer_id, c.kasbon_date, c.jatuh_tempo, c.total, c.descriptions
+    c.id, c.customer_id, c.kasbon_date, c.jatuh_tempo, c.total, c.descriptions, ref_lunas_id
     from kasbons AS c
     ORDER BY c.id DESC`;
 
@@ -41,12 +41,12 @@ const apiKasbon: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  getByCustomer: async (customerId: number) => {
+  getByCustomer: async (customerId: number, lunasId: number | undefined | null = 0) => {
 
     const query = sql`SELECT
-    c.id, c.customer_id, c.kasbon_date, c.jatuh_tempo, c.total, c.descriptions
+    c.id, c.customer_id, c.kasbon_date, c.jatuh_tempo, c.total, c.descriptions, ref_lunas_id
     from kasbons AS c
-    WHERE c.customer_id = ${customerId}
+    WHERE c.customer_id = ${customerId} and c.lunas_id = ${lunasId}
     ORDER BY c.id DESC`;
 
     return await db

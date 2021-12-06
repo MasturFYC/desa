@@ -11,7 +11,6 @@ import { Text } from '@react-spectrum/text';
 import { dateParam, iSpecialPayment } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
 import Div from "@components/ui/Div";
-import customer from "@components/customer";
 
 const SpecialPaymentForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -20,6 +19,7 @@ const SpecialPaymentForm = dynamic(() => import("./form"), {
 
 const initPayment: iSpecialPayment = {
   id: 0,
+  lunasId: 0,
   customerId: 0,
   payNum: '',
   paymentAt: dateParam(null),

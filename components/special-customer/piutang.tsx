@@ -11,23 +11,27 @@ import WaitMe from "@components/ui/wait-me";
 import Div from "@components/ui/Div";
 import Span from "@components/ui/SpanValue";
 
+
 const CustomerBalanceDetail = dynamic(() => import("./balance"), {
-  loading: () => <WaitMe />,
   ssr: false,
 });
 
+const CustomerTransaction = dynamic(() => import("./transaction"), {
+  ssr: false,
+});
 
 type CustomerPiutangProps = {
   customerId: number;
 };
 
 const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
-  let colWidth = { base: "33.3%", M: "33.3%" };
+  //let colWidth = { base: "33.3%", M: "33.3%" };
   let [showDetail, setShowDetail] = useState<boolean>(false);
+  let [showTransaction, setShowTransaction] = useState<boolean>(false);
 
   let payments = useAsyncList<iPiutang>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer/piutang/${customerId}`, { signal });
+      let res = await fetch(`/api/customer/special-piutang/${customerId}`, { signal });
       let json = await res.json();
       return { items: json };
     },
@@ -82,12 +86,24 @@ const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
         isDisabled={showDetail}
         variant={"primary"}
         marginY={"size-100"}
+        marginEnd={"size-100"}
         onPress={() => setShowDetail(true)}
       >
-        Balance Detail
+        Balance Details
       </Button>
       {showDetail && (
           <CustomerBalanceDetail customerId={customerId} />
+      )}
+      <Button
+        isDisabled={showTransaction}
+        variant={"primary"}
+        marginY={"size-100"}        
+        onPress={() => setShowTransaction(true)}
+      >
+        Transaction Details
+      </Button>
+      {showTransaction && (
+        <CustomerTransaction customerId={customerId} />
       )}
     </>
   );

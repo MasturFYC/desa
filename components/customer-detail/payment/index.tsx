@@ -19,6 +19,7 @@ const PaymentForm = dynamic(() => import("./form"), {
 
 const initPayment: iPayment = {
   id: 0,
+  lunasId: 0,
   customerId: 0,
   paymentDate: dateParam(null),
   refId: 0,

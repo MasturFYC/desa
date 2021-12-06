@@ -32,6 +32,7 @@ const OrderForm = dynamic(() => import("./form"), {
 
 const initOrder: iOrder = {
   id: 0,
+  lunasId: 0,
   customerId: 0,
   orderDate: dateParam(null),
   total: 0,

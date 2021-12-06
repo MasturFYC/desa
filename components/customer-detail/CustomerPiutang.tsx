@@ -16,14 +16,20 @@ const CustomerBalanceDetail = dynamic(() => import("./CustomerBalanceDetail"), {
   ssr: false,
 });
 
+const CustomerTransaction = dynamic(() => import("./transaction"), {
+  loading: () => <WaitMe />,
+  ssr: false,
+});
+
 
 type CustomerPiutangProps = {
   customerId: number;
 };
 
 const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
-  let colWidth = { base: "33.3%", M: "33.3%" };
+//  let colWidth = { base: "33.3%", M: "33.3%" };
   let [showDetail, setShowDetail] = useState<boolean>(false);
+  let [showTransaction, setShowTransaction] = useState<boolean>(false);
 
   let payments = useAsyncList<iPiutang>({
     async load({ signal }) {
@@ -82,6 +88,7 @@ const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
         isDisabled={showDetail}
         variant={"primary"}
         marginY={"size-100"}
+        marginEnd={"size-100"}
         onPress={() => setShowDetail(true)}
       >
         Balance Detail
@@ -89,6 +96,21 @@ const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
       {showDetail && (
           <CustomerBalanceDetail customerId={customerId} />
       )}
+      <Button
+        isDisabled={showTransaction}
+        variant={"primary"}
+        marginY={"size-100"}
+        onPress={() => setShowTransaction(true)}
+      >
+        Transaction Details
+      </Button>
+      {showTransaction && (
+        <View>
+          <p><strong>Rincian Transaksi</strong></p>
+        <CustomerTransaction customerId={customerId} />
+        </View>
+      )}
+
     </>
   );
 };

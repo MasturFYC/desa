@@ -7,7 +7,7 @@ type apiReturn = Promise<any[] | (readonly iGrass[] | undefined)[]>;
 
 interface apiFunction {
   list: () => apiReturn;
-  getByCustomer: (customerId: number) => apiReturn;
+  getByCustomer: (customerId: number, lunasId?: number  | null) => apiReturn;
   getGrass: (id: number) => apiReturn;
   delete: (id: number) => apiReturn;
   update: (id: number, data: iGrass) => apiReturn;
@@ -55,7 +55,7 @@ const apiGrass: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  getByCustomer: async (customerId: number) => {
+  getByCustomer: async (customerId: number, lunasId: number | undefined | null = 0) => {
 
     const queryCustomer = sql`SELECT
       d.id, d.name, d.street, d.city, d.phone, d.customer_type as "customerType", d.customer_div as "customerDiv"
@@ -67,7 +67,7 @@ const apiGrass: apiFunction = {
       c.product_id, c.unit_id, c.content, c.unit_name, c.real_qty, c.buy_price,
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
-    WHERE c.customer_id = ${customerId}
+    WHERE c.customer_id = ${customerId} AND c.lunas_id = ${lunasId}
     ORDER BY c.id DESC`;
 
     return await db

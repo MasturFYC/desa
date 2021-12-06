@@ -14,7 +14,7 @@ const CustomerPiutang = dynamic(() => import("./piutang"), {
   ssr: false,
 });
 
-const PiutangBarang = dynamic(() => import("./piutang-dagang"), {
+const PiutangDagang = dynamic(() => import("./piutang-dagang"), {
   ssr: false,
 });
 
@@ -115,7 +115,7 @@ const SpecialCustomerComponent: NextPage = () => {
           {customerId > 0 && <CustomerPiutang customerId={customerId} />}
         </View>
       )}
-      {tabId === 1 && <PiutangBarang customer={customer} />}
+      {tabId === 1 && <PiutangDagang customer={customer} />}
       {tabId === 2 && <Payment customerId={customerId} />}
     </Layout>
   );

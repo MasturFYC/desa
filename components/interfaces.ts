@@ -1,4 +1,3 @@
-import { NONAME } from "dns";
 import moment from "moment";
 
 export const stringDateFormat = 'YYYY-MM-DD HH:mm';
@@ -94,6 +93,7 @@ export interface iUnit {
 
 export interface iOrder {
   id: number;
+  lunasId: number;
   customerId: number;
   orderDate: string;
   total: number;
@@ -123,6 +123,8 @@ export interface iOrderDetail {
 
 export interface iKasbon {
   id: number;
+  lunasId: number;
+  refLunasId?: number;
   descriptions: string;
   customerId: number;
   kasbonDate: string;
@@ -134,6 +136,7 @@ export interface iKasbon {
 
 export interface iPayment {
   id: number;
+  lunasId: number;
   descriptions: string;
   customerId: number;
   paymentDate: string;
@@ -144,6 +147,7 @@ export interface iPayment {
 
 export interface iGrass {
   customerId: number;
+  lunasId: number;
   id: number;
   productId: number;
   descriptions: string;
@@ -221,6 +225,7 @@ export interface iStockPayment {
 
 export interface iSpecialPayment {
   id: number;
+  lunasId: number;
   orderId: number;
   customerId: number;
   payNum: string;
@@ -232,6 +237,7 @@ export interface iSpecialPayment {
 
 export interface iSpecialOrder {
   id: number;
+  lunasId: number;
   customerId: number;
   createdAt: string;
   updatedAt?: string;
@@ -251,3 +257,12 @@ export interface iSpecialOrder {
 }
 
 export interface iSpecialDetail extends iOrderDetail { }
+
+export interface iLunas {
+  id: number;
+  customerId: number;
+  remainPayment: number;
+  descriptions: string;
+  createdAt: string;
+  updatedAt?: string;
+}
