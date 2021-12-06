@@ -157,7 +157,7 @@ const KasbonPage: NextPage<KasbonProps> = ({ customerId }) => {
       >
         <View width={"5%"}>{x.id}</View>
         <View flex width={{ base: "50%", M: "auto" }}>
-          {x.refLunasId && x.refLunasId === 0
+          {x.refLunasId === 0
           ?
           <ActionButton
             height={"auto"}

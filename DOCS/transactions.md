@@ -76,6 +76,7 @@ CREATE OR REPLACE FUNCTION public.customer_get_transaction_detail(cust_id intege
   idx integer,
   trx_date timestamp without time zone,
   descriptions character varying,
+  title character varying,
   qty numeric,
   unit varchar(6),
   price numeric,
@@ -89,7 +90,7 @@ begin
     return query with recursive trx as (
 
         select k.id, 1 idx, k.kasbon_date trx_date,
-        concat('Kasbon #', k.id, ', ', k.descriptions)::character varying descriptions,
+        k.descriptions, concat('Kasbon #', k.id)::character varying title,
         0 qty, '-'::varchar(6) unit, 0 price,
         k.total debt, 0 cred
         from kasbons k
@@ -99,7 +100,7 @@ begin
         union all
 
         select d.order_id id, 2 idx, od.order_date trx_date,
-          concat('Order #', d.order_id, ', ', pr.name) desctiptions,
+          pr.name descriptions, concat('Piutang Barang #', d.order_id) title,
           d.qty, d.unit_name unit, d.price,
           d.subtotal debt, 0 cred
         from order_details d
@@ -111,7 +112,7 @@ begin
         union all
 
         select s.id, 3 idx, s.order_date trx_date,
-          concat('DP Order: #', s.id, ', ', s.descriptions) desctiptions,
+          s.descriptions, concat('DP Piutang Barang: #', s.id) title,
           0 qty, '-'::varchar(6) unit, 0 price,
           0 debt, s.payment cred
         from orders s
@@ -121,7 +122,7 @@ begin
         union all
 
       select g.id, 4 idx, g.order_date trx_date,
-        concat('Pembelian: #', g.id, ', ', g.descriptions) descriptions,
+        g.descriptions, concat('Pembelian: #', g.id ) title,
         g.qty, g.unit_name unit, g.price price,
         0::numeric debt,
         g.total cred
@@ -132,7 +133,7 @@ begin
       union all
 
       select pmt.id, 5 idx, pmt.payment_date trx_date,
-        concat('Angsuran: #', pmt.id, ', ', pmt.descriptions) descriptions,
+        pmt.descriptions, concat('Angsuran: #', pmt.id) title,
         0 qty, '-'::varchar(6) unit, 0 price,
         0::numeric debt,
         pmt.total cred
@@ -143,7 +144,7 @@ begin
     )
 
     select t.id, t.idx, t.trx_date,
-        t.descriptions, t.qty, t.unit, t.price,
+        t.descriptions, t.title, t.qty, t.unit, t.price,
         t.debt,
         t.cred,
         sum(t.debt - t.cred)
@@ -258,6 +259,45 @@ BEGIN
 END; 
 $function$;
 ```
+```sh
+CREATE OR REPLACE FUNCTION
+    lunas_update_func()
+    RETURNS trigger
+    LANGUAGE plpgsql
+
+AS $function$
+
+BEGIN
+
+    if NEW.remain_payment > 0 then
+      update kasbons set 
+      total = NEW.remain_payment,
+      kasbon_date = NEW.created_at,
+      jatuh_tempo = NEW.created_at + INTERVAL '7 days'
+      where ref_lunas_id = NEW.id;
+
+      if NOT FOUND then
+
+        if NEW.remain_payment > 0 then
+          insert into kasbons (customer_id, descriptions, kasbon_date, jatuh_tempo, total, ref_lunas_id) values (
+            NEW.customer_id, concat('Saldo piutang pelunasan ID #'::character varying, NEW.id),
+            NEW.created_at, NEW.created_at + INTERVAL '7 days',
+            NEW.remain_payment, NEW.id
+          );
+        end if;
+
+      end if;
+    else
+      DELETE FROM kasbons
+        WHERE ref_lunas_id = NEW.id 
+        AND customer_id = NEW.customer_id;
+    end if;
+    
+    RETURN NEW;
+
+END; 
+$function$;
+```
 
 ```sh
 CREATE OR REPLACE FUNCTION
@@ -319,6 +359,12 @@ CREATE TRIGGER lunas_aft_delete_trig
   for each row execute
   function lunas_delete_func();
 ```
+```sh
+CREATE TRIGGER lunas_aft_update_trig
+  after update on lunas
+  for each row execute
+  function lunas_update_func();
+```
 
 ```sh
 CREATE FUNCTION public.sip_cust_balance_detail(cust_id integer, lunasid integer)
@@ -376,6 +422,18 @@ begin
 end;
 
 $$;
+```
+```sh
+CREATE TRIGGER lunas_aft_insert_trig 
+  after insert on lunas 
+  for each row execute
+  function lunas_insert_func();
+```
+```sh
+CREATE TRIGGER lunas_aft_delete_trig
+  after delete on lunas 
+  for each row execute
+  function lunas_delete_func();
 ```
 
 ## ASK FOR USE

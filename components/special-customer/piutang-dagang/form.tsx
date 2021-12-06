@@ -138,6 +138,7 @@ const SpecialOrderForm: NextPage<SpecialOrderFormProps> = (props) => {
             <SpecialPaymentForm
               data={{
                 id: 0,
+                lunasId:0,
                 customerId: customer.id,
                 orderId: order.id,
                 paymentAt: dateParam(null),

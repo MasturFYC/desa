@@ -242,7 +242,7 @@ function RenderStock({ index, item, children }: RenderStockProps) {
         <View flex>{children}</View>
         <View width={{ base: "50%", M: "15%" }}>{FormatDate(item.stockDate)}</View>
         <View width={{ base: "50%", M: "15%" }}>
-          <Link href={`/supplier/${item.supplierId}`} passHref>
+          <Link href={'/supplier/[id]'} as={`/supplier/${item.supplierId}`} passHref>
             <a style={{ textDecoration: "none", fontWeight: 700 }}>{item.supplierName}</a>
           </Link>
         </View>

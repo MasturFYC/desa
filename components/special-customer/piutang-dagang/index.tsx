@@ -35,6 +35,7 @@ const initOrder: iSpecialOrder = {
   shippedAt: dateParam(null),
   driverName: '',
   policeNumber: '',
+  lunasId: 0,
   street: '',
   city: '',
   phone: '',

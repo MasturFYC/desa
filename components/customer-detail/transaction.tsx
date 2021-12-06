@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FormatDate, FormatNumber } from "@lib/format";
 import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
@@ -8,6 +8,7 @@ interface transactionDetail {
   idx: number;
   trxDate: string;
   descriptions: string;
+  title: string;
   qty: number;
   unit: string;
   price: number;
@@ -29,6 +30,7 @@ type columnType = {
 
 export default function CustomerTransaction(props: TransactionProps) {
   let { customerId, lunasId = 0, handlePiutang } = props;
+
   let columns: columnType[] = [
     { id: 0, name: "REF ID#" },
     {
@@ -64,10 +66,19 @@ export default function CustomerTransaction(props: TransactionProps) {
     getKey: (item: transactionDetail) => item.id,
   });
 
+  useEffect(() => {
+    let isLoaded = false;
+
+    if(!isLoaded && handlePiutang) {
+      handlePiutang(payments.items.reduce((a, b) => a + b.debt - b.cred, 0));
+    }
+
+    return () => {isLoaded = true;}
+  },[payments,handlePiutang])
+
   return (
     <>
       {payments.isLoading && <WaitMe />}
-      {handlePiutang && handlePiutang(payments.items.reduce((a, b) => a + b.debt - b.cred, 0))}
       <table aria-label={"table transaction"}>
         <thead aria-label={"table transaction head"}>
           <tr aria-label={"table transaction head tr"}>
@@ -141,6 +152,7 @@ function TabelRow(props: TableRowProps): JSX.Element {
   let [trHovered, setTrHovered] = useState<boolean>(false);
 
   return (<tr
+    title={item.title}
     aria-label={"table transaction body tr"}
     onMouseEnter={() => setTrHovered(true)}
     onMouseLeave={() => setTrHovered(false)}

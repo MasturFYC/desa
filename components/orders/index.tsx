@@ -41,6 +41,7 @@ const initOrder: CustomerOrder = {
   customerId: 0,
   orderDate: dateParam(null),
   total: 0,
+  lunasId:0,
   name: "",
   payment: 0,
   remainPayment: 0,
@@ -290,7 +291,10 @@ const OrderComponent: NextPage = () => {
               </ActionButton>
             </View>
             <View width={{ base: "50%", M: "17%" }}>{FormatDate(x.orderDate)}</View>
-            <View width={{ base: "50%", M: "25%" }}><Link href={`/customer/${x.customerId}`}><a>{x.name}</a></Link></View>
+            <View width={{ base: "50%", M: "25%" }}><Link 
+            href={'/customer/[id]'}
+            as={`/customer/${x.customerId}`}
+            passHref><a>{x.name}</a></Link></View>
           </Flex>
           <Flex direction={"row"} width={{ base: "auto", M: "30%" }} columnGap={"size-50"}>
             <Span width={"33.3%"} isNumber >{FormatNumber(x.total)}</Span>

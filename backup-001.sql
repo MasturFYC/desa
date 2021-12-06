@@ -107,7 +107,7 @@ ALTER FUNCTION public.customer_get_special_transaction(cust_id integer, lunasid 
 -- Name: customer_get_transaction_detail(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.customer_get_transaction_detail(cust_id integer, lunasid integer) RETURNS TABLE(id integer, idx integer, trx_date timestamp without time zone, descriptions character varying, qty numeric, unit character varying, price numeric, debt numeric, cred numeric, saldo numeric)
+CREATE FUNCTION public.customer_get_transaction_detail(cust_id integer, lunasid integer) RETURNS TABLE(id integer, idx integer, trx_date timestamp without time zone, descriptions character varying, title character varying, qty numeric, unit character varying, price numeric, debt numeric, cred numeric, saldo numeric)
     LANGUAGE plpgsql
     AS $$
 
@@ -116,7 +116,7 @@ begin
     return query with recursive trx as (
 
         select k.id, 1 idx, k.kasbon_date trx_date,
-        concat('Kasbon #', k.id, ', ', k.descriptions)::character varying descriptions,
+        k.descriptions, concat('Kasbon #', k.id)::character varying title,
         0 qty, '-'::varchar(6) unit, 0 price,
         k.total debt, 0 cred
         from kasbons k
@@ -126,7 +126,7 @@ begin
         union all
 
         select d.order_id id, 2 idx, od.order_date trx_date,
-          concat('Order #', d.order_id, ', ', pr.name) desctiptions,
+          pr.name descriptions, concat('Piutang Barang #', d.order_id) title,
           d.qty, d.unit_name unit, d.price,
           d.subtotal debt, 0 cred
         from order_details d
@@ -138,7 +138,7 @@ begin
         union all
 
         select s.id, 3 idx, s.order_date trx_date,
-          concat('DP Order: #', s.id, ', ', s.descriptions) desctiptions,
+          s.descriptions, concat('DP Piutang Barang: #', s.id) title,
           0 qty, '-'::varchar(6) unit, 0 price,
           0 debt, s.payment cred
         from orders s
@@ -148,7 +148,7 @@ begin
         union all
 
       select g.id, 4 idx, g.order_date trx_date,
-        concat('Pembelian: #', g.id, ', ', g.descriptions) descriptions,
+        g.descriptions, concat('Pembelian: #', g.id ) title,
         g.qty, g.unit_name unit, g.price price,
         0::numeric debt,
         g.total cred
@@ -159,7 +159,7 @@ begin
       union all
 
       select pmt.id, 5 idx, pmt.payment_date trx_date,
-        concat('Angsuran: #', pmt.id, ', ', pmt.descriptions) descriptions,
+        pmt.descriptions, concat('Angsuran: #', pmt.id) title,
         0 qty, '-'::varchar(6) unit, 0 price,
         0::numeric debt,
         pmt.total cred
@@ -170,7 +170,7 @@ begin
     )
 
     select t.id, t.idx, t.trx_date,
-        t.descriptions, t.qty, t.unit, t.price,
+        t.descriptions, t.title, t.qty, t.unit, t.price,
         t.debt,
         t.cred,
         sum(t.debt - t.cred)
@@ -1928,303 +1928,6 @@ ALTER TABLE ONLY public.categories ALTER COLUMN id SET DEFAULT nextval('public.c
 --
 
 ALTER TABLE ONLY public.lunas ALTER COLUMN id SET DEFAULT nextval('public.lunas_id_seq'::regclass);
-
-
---
--- Data for Name: categories; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.categories (id, name, created_at, updated_at) FROM stdin;
-2	Pertanian	2021-12-01 19:05:47.43805+07	2021-12-02 00:20:00+07
-1	Produk Toko	2021-12-01 19:05:47.43805+07	2021-12-02 01:11:00+07
-\.
-
-
---
--- Data for Name: customers; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.customers (id, name, street, city, phone, customer_type, customer_div) FROM stdin;
-1	Dhoni Armadi	Ds. Telukagung	Indramayu	085-5556-65656	Rumput Laut	0
-2	Agung Priatna	RT. 14 / 06	Ds. Plumbon	085-5556-65656	Bandeng	1
-3	CV. PURNAMA SEJAHTERA	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	Pabrik	0
-\.
-
-
---
--- Data for Name: grass; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.grass (customer_id, id, descriptions, order_date, price, total, qty, total_div, product_id, unit_id, buy_price, content, unit_name, real_qty, lunas_id) FROM stdin;
-2	50	Pembelian Rumput Laut	2021-11-28 08:16:00	5500.00	137500.00	25.00	0.00	16	24	4500.00	3.00	kg	75.00	0
-2	56	Rumput Laut	2021-12-02 22:22:00	5500.00	550000.00	200.00	550000.00	16	24	4500.00	3.00	kg	600.00	0
-\.
-
-
---
--- Data for Name: grass_details; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.grass_details (grass_id, id, qty) FROM stdin;
-35	8	20.00
-35	9	10.00
-35	7	27.00
-\.
-
-
---
--- Data for Name: kasbons; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, total, lunas_id, ref_lunas_id) FROM stdin;
-31	2	Kasbon Beli Terpal	2021-12-17 00:00:00	2021-12-24 00:00:00	1500000.00	0	0
-37	2	Kasbon ewe	2021-11-25 13:01:00	2021-12-02 13:01:00	25000.00	0	0
-\.
-
-
---
--- Data for Name: lunas; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.lunas (id, customer_id, remain_payment, descriptions, created_at, updated_at) FROM stdin;
-\.
-
-
---
--- Data for Name: order_details; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_qty, price, subtotal, buy_price, product_id) FROM stdin;
-32	87	21	1.00	1.00	zak	1.00	325000.00	325000.00	250000.00	15
-36	105	17	2.00	1.00	pcs	2.00	39000.00	78000.00	30000.00	1
-46	111	21	1.00	1.00	zak	1.00	325000.00	325000.00	250000.00	15
-46	112	1	1.00	1.00	btl	1.00	15000.00	15000.00	10000.00	7
-46	114	17	1.00	1.00	pcs	1.00	39000.00	39000.00	30000.00	1
-49	115	17	1.00	1.00	pcs	1.00	39000.00	39000.00	30000.00	1
-49	157	1	1.00	1.00	btl	1.00	15000.00	15000.00	10000.00	7
-36	159	21	2.00	1.00	zak	2.00	325000.00	650000.00	250000.00	15
-\.
-
-
---
--- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.orders (id, customer_id, order_date, total, payment, remain_payment, descriptions, lunas_id) FROM stdin;
-36	1	2021-11-25 12:15:00	728000.00	70000.00	658000.00	Utang Pupuk dan Obat	0
-46	1	2021-11-28 02:56:00	379000.00	0.00	379000.00	Penjualan Umum	0
-32	2	2021-11-17 15:38:00	325000.00	30000.00	295000.00	Utang Obat	0
-49	2	2021-11-28 08:04:00	54000.00	0.00	54000.00	Pembelian Barang	0
-\.
-
-
---
--- Data for Name: payments; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total, lunas_id) FROM stdin;
-33	2	Cicilan Bayar Obat	0	2021-11-18 11:55:00	25000.00	0
-125	2	Cicilan	0	2021-12-06 01:13:00	500000.00	0
-57	1	Bagi hasil dengan Agung Priatna	56	2021-12-02 22:53:49.203045	550000.00	0
-\.
-
-
---
--- Data for Name: products; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.products (id, name, spec, price, stock, first_stock, unit, update_notif, category_id) FROM stdin;
-16	Rumput Laut	KW-1	1500.00	-1390.00	20.00	kg	t	2
-15	Pakan Bandeng	Pelet KW1	250000.00	109.00	110.00	zak	t	1
-1	EM 4 Perikanan	1 ltr	30000.00	143.00	100.00	pcs	t	2
-23	Rumput Laut KW-2	\N	3500.00	0.00	0.00	kg	t	2
-7	Abachel	250cc	10000.00	103.00	90.00	btl	t	1
-\.
-
-
---
--- Data for Name: special_details; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.special_details (order_id, id, product_id, unit_id, qty, unit_name, price, subtotal, content, real_qty, buy_price) FROM stdin;
-104	153	16	23	25.00	pcs	1950.00	48750.00	1.00	25.00	1500.00
-104	154	16	23	100.00	pcs	1950.00	195000.00	1.00	100.00	1500.00
-106	155	16	23	10.00	pcs	1950.00	19500.00	1.00	10.00	1500.00
-109	156	16	24	100.00	kg	5850.00	585000.00	3.00	300.00	4500.00
-\.
-
-
---
--- Data for Name: special_orders; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.special_orders (id, customer_id, created_at, updated_at, packaged_at, shipped_at, driver_name, police_number, street, city, phone, total, cash, payments, remain_payment, descriptions, lunas_id) FROM stdin;
-104	3	2021-12-04 01:29:00	2021-12-04 23:12:28.012161	2021-12-04 01:29:00	2021-12-04 01:29:00	Udin	-5665656	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	243750.00	43750.00	200000.00	0.00	\N	0
-109	3	2021-12-07 00:00:00	2021-12-04 23:13:26.585333	2021-12-07 00:00:00	2021-12-07 00:00:00	Warim	E-1025-GH	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	585000.00	0.00	0.00	585000.00	\N	0
-106	3	2021-12-06 00:00:00	2021-12-04 23:13:35.145055	2021-12-04 01:29:00	2021-12-04 01:29:00	tttt	werwerwer	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	19500.00	0.00	19500.00	0.00	\N	0
-\.
-
-
---
--- Data for Name: special_payments; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.special_payments (customer_id, order_id, id, descriptions, payment_at, nominal, pay_num, lunas_id) FROM stdin;
-3	106	107	Angsuran piutang dagang #106	2021-12-06 00:00:00	19500.00	xc/2656/155464	0
-3	104	105	Angsuran piutang dagang #104	2021-12-05 00:00:00	200000.00	qweqwewqe qweqwe	0
-\.
-
-
---
--- Data for Name: stock_details; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.stock_details (stock_id, id, product_id, unit_id, qty, content, unit_name, real_qty, price, subtotal) FROM stdin;
-4	94	15	21	3.00	1.00	zak	3.00	250000.00	750000.00
-11	92	7	1	4.00	1.00	btl	4.00	10000.00	40000.00
-11	95	1	17	2.00	1.00	pcs	2.00	30000.00	60000.00
-29	96	7	1	3.00	1.00	btl	3.00	10000.00	30000.00
-4	97	1	17	50.00	1.00	pcs	50.00	30000.00	1500000.00
-12	91	7	2	1.00	10.00	pak	10.00	100000.00	100000.00
-12	90	15	21	10.00	1.00	zak	10.00	250000.00	2500000.00
-45	99	1	17	2.00	1.00	pcs	2.00	30000.00	60000.00
-33	98	1	17	3.00	1.00	pcs	3.00	30000.00	90000.00
-\.
-
-
---
--- Data for Name: stock_payments; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.stock_payments (id, stock_id, pay_num, pay_date, nominal, descriptions) FROM stdin;
-24	11	x-0001	2021-11-23 03:16:00	35000.00	Bayar Stock Pembelian #BG-562987
-23	11	x-0001	2021-11-23 03:08:00	50000.00	Bayar Stock Pembelian #BG-562987
-25	12	x-65000	2021-11-23 03:25:00	510000.00	Bayar Stock Pembelian #CV/3-985441
-26	4	cp-004	2021-11-23 03:27:00	50000.00	Bayar Stock Pembelian #x-10256559
-27	11	x63332	2021-11-23 03:32:00	10000.00	Bayar Stock Pembelian #BG-562987
-30	29	x9898	2021-11-23 03:39:00	10000.00	Bayar Stock Pembelian #ssssss
-31	29	x-695554	2021-11-23 13:40:00	15000.00	Bayar Stock Pembelian #ssssss
-32	4	c-6522	2021-11-23 14:38:00	1250000.00	Bayar Stock Pembelian #x-10256559
-46	33	ww	2021-11-25 11:54:00	25000.00	Bayar Stock Pembelian #dddd
-47	33	ewqewe	2021-11-25 11:56:00	5000.00	Bayar Stock Pembelian #dddd
-\.
-
-
---
--- Data for Name: stocks; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.stocks (id, supplier_id, stock_num, stock_date, total, cash, payments, remain_payment, descriptions) FROM stdin;
-29	6	ssssss	2021-11-23 03:38:00	30000.00	5000.00	25000.00	0.00	\N
-4	2	x-10256559	2021-11-22 20:49:00	2250000.00	700000.00	1300000.00	250000.00	test
-12	5	CV/3-985441	2021-11-22 21:14:00	2600000.00	300000.00	510000.00	1790000.00	\N
-11	4	BG-562987	2021-11-22 21:04:00	100000.00	5000.00	95000.00	0.00	Jatuh tempo tanggal 8-10-2021
-45	3	weqweq weqwe	2021-11-23 14:53:00	60000.00	0.00	0.00	60000.00	qwewe
-33	1	dddd	2021-11-23 14:41:00	90000.00	50000.00	30000.00	10000.00	\N
-\.
-
-
---
--- Data for Name: suppliers; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.suppliers (id, name, sales_name, street, city, phone, cell, email) FROM stdin;
-1	CV. Karya Baru	Mu'in	\N	Indramayu	qweqweqwe	\N	\N
-2	CV. Marga Mekar	Mastur	Jl. Jend. Sudirman No. 155	Indramayu qwewqe	0856232154	5646565	mastur.st12@gmail.com
-5	CV. Sejahtera	Sumarno, Sp.d	\N	qweqwe	\N	\N	\N
-4	Gudang Garam, PT	Dhoni	qweqwewe	Jakartra	\N	\N	\N
-6	Inti Persada, PT	qweqwe	eqweeeee	Indramayu	\N	\N	\N
-3	aaaa	Suwarjo, SH	Jl. Jend. Sudirman No. 11/A-4	Jatibarang	+62234572275	\N	mastur.st12@gmail.com
-\.
-
-
---
--- Data for Name: units; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.units (product_id, id, name, content, price, buy_price, margin) FROM stdin;
-15	21	zak	1.00	325000.00	250000.00	0.3000
-15	22	pak3	3.00	950025.00	750000.00	0.2667
-1	17	pcs	1.00	39000.00	30000.00	0.3000
-1	19	ls	12.00	468000.00	360000.00	0.3000
-1	20	pak	3.00	99999.00	90000.00	0.1111
-7	2	pak	10.00	130000.00	100000.00	0.3000
-7	1	btl	1.00	15000.00	10000.00	0.5000
-7	25	ls	12.00	150000.00	120000.00	0.2500
-16	23	pcs	1.00	1950.00	1500.00	0.3000
-16	24	kg	3.00	5850.00	4500.00	0.3000
-23	27	kg	1.00	5500.00	0.00	0.5714
-\.
-
-
---
--- Name: categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.categories_id_seq', 6, true);
-
-
---
--- Name: customer_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.customer_seq', 3, true);
-
-
---
--- Name: grass_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.grass_detail_seq', 9, true);
-
-
---
--- Name: lunas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.lunas_id_seq', 96, true);
-
-
---
--- Name: order_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.order_detail_seq', 159, true);
-
-
---
--- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.order_seq', 159, true);
-
-
---
--- Name: product_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.product_seq', 26, true);
-
-
---
--- Name: seq_stock; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.seq_stock', 47, true);
-
-
---
--- Name: seq_supplier; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.seq_supplier', 38, true);
-
-
---
--- Name: unit_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.unit_seq', 27, true);
 
 
 --

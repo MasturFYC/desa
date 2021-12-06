@@ -21,19 +21,23 @@ const CustomerTransaction = dynamic(() => import("./transaction"), {
   ssr: false,
 });
 
-
 type CustomerPiutangProps = {
   customerId: number;
 };
 
 const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
-//  let colWidth = { base: "33.3%", M: "33.3%" };
+  //  let colWidth = { base: "33.3%", M: "33.3%" };
   let [showDetail, setShowDetail] = useState<boolean>(false);
   let [showTransaction, setShowTransaction] = useState<boolean>(false);
 
   let payments = useAsyncList<iPiutang>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer/piutang/${customerId}`, { signal });
+      let res = await fetch(`/api/customer/piutang/${customerId}`, {
+        signal,
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      });
       let json = await res.json();
       return { items: json };
     },
@@ -53,9 +57,15 @@ const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
         >
           <View width={{ base: "auto", M: "40%" }}>KETERANGAN</View>
           <Flex flex direction={"row"} columnGap={"size-100"}>
-            <Span width={"33.3%"} isNumber>DEBIT</Span>
-            <Span isNumber width={"33.3%"}>CREDIT</Span>
-            <Span isNumber width={"33.3%"}>SALDO</Span>
+            <Span width={"33.3%"} isNumber>
+              DEBIT
+            </Span>
+            <Span isNumber width={"33.3%"}>
+              CREDIT
+            </Span>
+            <Span isNumber width={"33.3%"}>
+              SALDO
+            </Span>
           </Flex>
         </Flex>
       </Div>
@@ -66,9 +76,15 @@ const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
             <Flex direction={{ base: "column", M: "row" }} marginX={"size-100"}>
               <View width={{ base: "auto", M: "40%" }}>{x.descriptions}</View>
               <Flex flex direction={"row"} columnGap={"size-100"}>
-                <Span width={"33.3%"} isNumber>{FormatNumber(x.debt)}</Span>
-                <Span width={"33.3%"} isNumber>{FormatNumber(x.cred)}</Span>
-                <Span width={"33.3%"} isTotal isNumber>{FormatNumber(x.saldo)}</Span>
+                <Span width={"33.3%"} isNumber>
+                  {FormatNumber(x.debt)}
+                </Span>
+                <Span width={"33.3%"} isNumber>
+                  {FormatNumber(x.cred)}
+                </Span>
+                <Span width={"33.3%"} isTotal isNumber>
+                  {FormatNumber(x.saldo)}
+                </Span>
               </Flex>
             </Flex>
           </Div>
@@ -77,13 +93,26 @@ const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
         <Flex direction={{ base: "column", M: "row" }} marginX={"size-100"}>
           <View width={{ base: "auto", M: "40%" }}>GRAND TOTAL</View>
           <Flex flex direction={"row"} columnGap={"size-100"}>
-            <Span isNumber width={"33.3%"}>{FormatNumber(payments.items.reduce((a, b) => a + b.debt, 0))}</Span>
-            <Span isNumber width={"33.3%"}>{FormatNumber(payments.items.reduce((a, b) => a + b.cred, 0))}</Span>
-            <Span isNumber width={"33.3%"} isTotal>{FormatNumber(payments.items.reduce((a, b) => a + b.debt - b.cred, 0))}</Span>
+            <Span isNumber width={"33.3%"}>
+              {FormatNumber(payments.items.reduce((a, b) => a + b.debt, 0))}
+            </Span>
+            <Span isNumber width={"33.3%"}>
+              {FormatNumber(payments.items.reduce((a, b) => a + b.cred, 0))}
+            </Span>
+            <Span isNumber width={"33.3%"} isTotal>
+              {FormatNumber(
+                payments.items.reduce((a, b) => a + b.debt - b.cred, 0)
+              )}
+            </Span>
           </Flex>
         </Flex>
       </Div>
-      <View><i>Keterangan: *) <b>minus</b> berarti ada kelebihan pembayaran yang harus dikembalikan ke pelanggan</i></View>
+      <View>
+        <i>
+          Keterangan: *) <b>minus</b> berarti ada kelebihan pembayaran yang
+          harus dikembalikan ke pelanggan
+        </i>
+      </View>
       <Button
         isDisabled={showDetail}
         variant={"primary"}
@@ -93,9 +122,7 @@ const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
       >
         Balance Detail
       </Button>
-      {showDetail && (
-          <CustomerBalanceDetail customerId={customerId} />
-      )}
+      {showDetail && <CustomerBalanceDetail customerId={customerId} />}
       <Button
         isDisabled={showTransaction}
         variant={"primary"}
@@ -106,11 +133,12 @@ const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
       </Button>
       {showTransaction && (
         <View>
-          <p><strong>Rincian Transaksi</strong></p>
-        <CustomerTransaction customerId={customerId} />
+          <p>
+            <strong>Rincian Transaksi</strong>
+          </p>
+          <CustomerTransaction customerId={customerId} />
         </View>
       )}
-
     </>
   );
 };

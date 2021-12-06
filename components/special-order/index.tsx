@@ -36,6 +36,7 @@ const SpecialOrderForm = dynamic(() => import("./form"), {
 const initOrder: CustomerSpecialOrder = {
   id: 0,
   customerId: 0,
+  lunasId:0,
   createdAt: dateParam(null),
   packagedAt: dateParam(null),
   shippedAt: dateParam(null),
@@ -296,7 +297,7 @@ function RenderOrder(props: RenderOrderProps) {
         <View flex>
           <div style={{ marginBottom: "6px", fontWeight: 700 }}>Informasi Pembeli</div>
           <div>
-            <Link href={`/special-customer/${customer.id}`}><a>{customer.name}</a></Link><br/>
+            <Link href={'special-customer/[id]'} as={`/special-customer/${customer.id}`} passHref><a>{customer.name}</a></Link><br/>
             {customer.street} - {customer.city},
             <br />
             Telp. {customer.phone}

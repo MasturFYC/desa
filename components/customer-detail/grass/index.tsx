@@ -27,6 +27,7 @@ const GrassForm = dynamic(() => import("./form"), {
 const initGrass: iGrass = {
   id: 0,
   customerId: 0,
+  lunasId: 0,
   productId: 0,
   unitId: 0,
   unitName: '',

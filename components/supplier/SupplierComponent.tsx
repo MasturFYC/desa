@@ -270,7 +270,7 @@ const SupplierComponent: NextPage = () => {
                 {sup.phone} / {sup.cell}
               </Cell>
               <Cell>
-                <Link href={`/supplier/${sup.id}`} passHref>
+                <Link href={'/supplier/[id]'} as={`/supplier/${sup.id}`} passHref>
                 <a><InfoIcon size={"S"} /></a>
                 </Link>
               </Cell>
