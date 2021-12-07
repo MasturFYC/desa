@@ -149,14 +149,13 @@ const CustomerComponent: NextPage = () => {
           Data {siteTitle}
         </span>
       </View>
-      <Flex justifyContent={"center"} marginY={"size-250"}>
+      <Flex justifyContent={"center"} marginY={"size-250"} gap={"size-100"} direction={{base: "column", M:"row"}}>
         <View flex>
         <Picker
-        aria-label={"Customer type list"}
-            isRequired
+            aria-label={"Customer type list"}
+            flex={{ base: 1, M: "none" }}
             placeholder={"Tipe pelanggan"}
-            width={"auto"}
-            minWidth={"size-2000"}
+            width={{base:"100%", M:"size-2400"}}            
             defaultSelectedKey={custType}
             selectedKey={custType}
             onSelectionChange={(e) =>
@@ -165,15 +164,12 @@ const CustomerComponent: NextPage = () => {
           >
             {['All', ...Object.values(customerType)].map(item => <Item key={item}>{item}</Item>)}
           </Picker>
-
           </View>
         <SearchField
-          alignSelf="center"
-          justifySelf="center"
           aria-label="Search product"
           placeholder="e.g. kosim"
-          width="auto"
-          maxWidth="size-3600"
+          width={"auto"}
+          flex={{base: 1, M:"none"}}
           value={txtSearch}
           onClear={() => setCustomerSearch('')}
           onChange={(e) => setTxtSearch(e)}

@@ -159,7 +159,7 @@ const ProductList: NextPage<ProductListProps> = (props) => {
         )}
       </DialogContainer>
 
-      <Flex marginY={"size-250"} flex>
+      <Flex marginY={"size-250"} flex wrap={"wrap"} gap={"size-100"}>
         <Flex direction={"row"} flex gap={"size-50"}>
           <Picker
             aria-label="Product Categories"
@@ -192,6 +192,7 @@ const ProductList: NextPage<ProductListProps> = (props) => {
           </ActionButton>
         </Flex>
         <SearchField
+          flex={{base: "1", L:"none"}}
           aria-label="Search product"
           placeholder={`e.g. sp30`}
           width="auto"

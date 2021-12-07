@@ -69,12 +69,12 @@ export default function CustomerTransaction(props: TransactionProps) {
   useEffect(() => {
     let isLoaded = false;
 
-    if(!isLoaded && handlePiutang) {
+    if (!isLoaded && handlePiutang) {
       handlePiutang(payments.items.reduce((a, b) => a + b.debt - b.cred, 0));
     }
 
-    return () => {isLoaded = true;}
-  },[payments,handlePiutang])
+    return () => { isLoaded = true; }
+  }, [payments, handlePiutang])
 
   return (
     <>

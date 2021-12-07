@@ -57,6 +57,7 @@ export default function CategoryForm(props: CategoryFormProps) {
             Save
           </Button>
           <Button
+          isHidden={{base: true, L:false}}
             type={"button"}
             variant="secondary"
             marginStart={"size-100"}

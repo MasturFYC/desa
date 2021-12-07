@@ -32,28 +32,35 @@ const Layout: NextPage<LayoutProps> = ({
   activeMenu,
 }) => {
   const router = useRouter();
+  let titleStyle = {
+    fontSize: "120%",
+    fontWeight: 700,
+    lineHeight: "90%",
+    textDecoration: 'none',
+    color: "Highlight"
+  };
 
   return (
     <Grid
       areas={{
-        base: ["header header", "content content", "footer footer"],
-        M: ["header  header", "sidebar content", "footer  footer"],
+        base: ["header sidebar", "content content", "footer footer"],
+        M: ["header  sidebar", "content content", "footer  footer"],
         L: ["header  header", "sidebar content", "footer  footer"],
       }}
       columns={["1fr", "3fr"]}
-      rows={["size-1200", "auto", "size-1000"]}
+      rows={["size-1250", "auto", "size-1000"]}
       minHeight={"100vh"}
     >
       <View
         gridArea="header"
-        backgroundColor="gray-50"
-        paddingTop={"size-50"}
         borderBottomWidth={"thin"}
         borderBottomColor={"gray-200"}
-        paddingX={{ base: "size-100", M: "size-200" }}
+        paddingX={{ base: "size-50", M: "size-200" }}
+        backgroundColor={"gray-50"}
       >
-        <Flex direction={"row"} columnGap={"size-200"} alignItems={"center"}>
-          <View width={"100px"}>
+        <Flex flex direction={"row"} columnGap={{ base: "size-10", M: "size-50" }}>
+          <View width={{ base: 64, M: 90 }} alignSelf={"center"}
+          flex={{base: 1, M: 1, L:"none"}} marginTop={{base: "size-10", L:"size-25"}}>
             {home
               ? <Logo width={100} />
               : <Link href={'/'} passHref>
@@ -61,23 +68,15 @@ const Layout: NextPage<LayoutProps> = ({
               </Link>
             }
           </View>
-          <View flex>
+          <View flex isHidden={{base: true,L:false}} alignSelf={"center"}>
             <View>
               {home
-                ? <div style={{ 
-                  fontSize: "24px", 
-                  fontWeight: 700,
-                  color: "Highlight" }}
+                ? <div style={titleStyle}
                   >
                     Sumber Ikan Putri
                   </div>
                 : <Link href={'/'} passHref>
-                  <a style={{ 
-                    fontSize: "24px", 
-                    fontWeight: 700, 
-                    textDecoration: 'none', 
-                    color: "Highlight" 
-                  }}
+                  <a style={titleStyle}
                   >
                     Sumber Ikan Putri
                   </a>
@@ -89,9 +88,11 @@ const Layout: NextPage<LayoutProps> = ({
       </View>
       <View
         gridArea="sidebar"
-        isHidden={{ base: true, M: false, L: false }}
+//        isHidden={{ base: true, M: false, L: false }}
         backgroundColor={"gray-50"}
         padding={"size-100"}
+        borderBottomWidth={{base: "thin", L:undefined}}
+        borderBottomColor={"gray-200"}
       >
         <MainMenu activeMenu={home ? "Home" : activeMenu} />
       </View>

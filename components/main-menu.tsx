@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import React from "react";
 import { iUserLogin } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
+import { Flex } from "@react-spectrum/layout";
 
 export const siteTitle = "SPBU";
 
@@ -34,7 +35,7 @@ const menus: MenuType[] = [
     id: 5,
     name: "Supplier",
     link: "/supplier",
-  },  {
+  }, {
     id: 3,
     name: "Pembelian (Stock)",
     link: "/stock",
@@ -56,26 +57,30 @@ type LayoutProps = {
   user?: iUserLogin;
 };
 
-const MainMenu:NextPage<LayoutProps> = (props) => {
+const MainMenu: NextPage<LayoutProps> = (props) => {
   const { user, activeMenu } = props;
   const router = useRouter();
   return (
-    <>
-        {menus && menus.map((x,i)=> (
-          <View 
+    <Flex direction={{ base: "row", M: "row", L: "column" }} wrap={{base: "wrap", L:"nowrap"}} gap={{base: "size-25", L:"size-100"}}>
+      {menus && menus.map((x, i) => (
+        <View
+          isHidden={{base: i === 0 ? true : false, M:false }}
           key={x.id}
-          padding={"size-125"}
+          alignSelf={{base: "end", L:"self-start"}}
+          paddingStart={{base: 0, L:"size-100"}}
           // backgroundColor={activeMenu === x.name ? "indigo-600" : "transparent"}
-          borderStartColor={activeMenu === x.name ? "orange-500" : "transparent"}
-          borderStartWidth={"thicker"}
-          //borderRadius={"medium"}
-          ><Link href={x.link} passHref><a style={{
-            textDecoration: 'none',
-            //color: activeMenu === x.name ? "white" : "black",
-            fontWeight: activeMenu === x.name ? 700 : 400,
-          }}>{x.name}</a></Link></View>
-        ))}
-    </>
+          borderStartColor={{ base: "transparent", L: activeMenu === x.name ? "orange-500" : "transparent" }}
+          borderStartWidth={{ base: undefined, L: "thicker" }}
+          borderBottomColor={{ base: activeMenu === x.name ? "orange-500" : "transparent",  L: "transparent" }}
+          borderBottomWidth={{ base: "thick", L: undefined }}
+        //borderRadius={"medium"}
+        ><Link href={x.link} passHref><a style={{
+          textDecoration: 'none',
+          //color: activeMenu === x.name ? "white" : "black",
+          // fontWeight: activeMenu === x.name ? 700 : 400,
+        }}>{x.name}</a></Link></View>
+      ))}
+    </Flex>
   );
 };
 

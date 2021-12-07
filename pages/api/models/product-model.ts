@@ -7,6 +7,7 @@ type apiReturn = Promise<any[] | (readonly iProduct[] | undefined)[]>;
 
 interface apiFunction {
   list: () => apiReturn;
+  getTransactionByProduct: (id: number) => apiReturn;
   listWithUnit: () => apiReturn;
   find: (name: string | string[]) => apiReturn;
   getProduct: (id: number) => apiReturn;
@@ -39,15 +40,17 @@ const apiProduct: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  list: async () => {
+  getTransactionByProduct: async (id: number) => {
+    const query = sql`select * from product_get_transaction_detail(${id})`;
 
-    // const queryUnit = sql`select
-    //   u.product_id as "productId", u.id, u.name, u.content, u.price
-    //   from units as u
-    //   where u.product_id = c.id
-    //   order by u.content`
-//,
-  // ${ nestQuery(queryUnit)} as "units"
+    return await db
+      .query(query)
+      .then((data) => [data.rows, undefined])
+      .catch((error) => [undefined, error]);
+
+  },
+
+  list: async () => {
     const query = sql`SELECT 
       c.category_id, c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit
     FROM products AS c

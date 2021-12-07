@@ -117,12 +117,12 @@ const ProductForm: NextPage<ProductFormProps> = ({
             value={product.price}
             onChange={(e) => setProduct((o) => ({ ...o, price: e }))}
           />
-          <Flex flex direction={"row"} gap={"size-100"}>
+          <Flex flex direction={{base:"row"}} gap={"size-100"}>
             <NumberField
               hideStepper={true}
               isRequired
+              flex
               width={"auto"}
-              minWidth={"size-2400"}
               label={"Stock Awal"}
               validationState={product.firstStock >= 0 ? "valid" : "invalid"}
               value={product.firstStock}
@@ -132,7 +132,6 @@ const ProductForm: NextPage<ProductFormProps> = ({
               placeholder={"e.g. EM4"}
               flex
               isRequired
-              minWidth={"size-2400"}
               width={"auto"}
               label={"Unit terkecil"}
               validationState={isUnitValid ? "valid" : "invalid"}
