@@ -44,6 +44,148 @@ CREATE TYPE public.cust_type AS ENUM (
 ALTER TYPE public.cust_type OWNER TO postgres;
 
 --
+-- Name: customer_get_special_transaction(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.customer_get_special_transaction(cust_id integer, lunasid integer) RETURNS TABLE(id integer, idx integer, trx_date timestamp without time zone, descriptions character varying, qty numeric, unit character varying, price numeric, debt numeric, cred numeric, saldo numeric)
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    return query with recursive trx as (
+
+        select 1 idx, d.order_id id, o.created_at trx_date,
+          concat('Order #', d.order_id, ', ', p.name)::character varying descriptions,
+          d.qty qty, d.unit_name unit, d.price,
+          d.subtotal debt, 0 cred
+        from special_details d
+        inner join products p on p.id = d.product_id
+        inner join special_orders o on o.id = d.order_id
+        where o.customer_id = cust_id
+        and o.lunas_id = lunasid
+
+        union all
+
+        select 2 idx, s.id, s.created_at trx_date,
+          coalesce(s.descriptions, concat('DP ORDER ID: #', s.id)) descriptions,
+          0 qty, '-'::varchar(6) unit, 0 price,
+          0::numeric debt, s.cash cred
+        from special_orders s
+        where s.customer_id = cust_id and s.cash > 0
+        and s.lunas_id = lunasid
+
+        union all
+
+        select 3 idx, k.order_id id, k.payment_at trx_date,
+          concat('Angsuran #', order_id,', ', k.pay_num) descriptions,
+          0 qty, '-'::varchar(6) unit, 0 price,
+          0::numeric debt, k.nominal cred
+        from special_payments k
+        where k.customer_id = cust_id
+        and k.lunas_id = lunasid
+
+    )
+
+    select t.id, t.idx, t.trx_date,
+        t.descriptions, t.qty, t.unit, t.price,
+        t.debt,
+        t.cred,
+        sum(t.debt - t.cred)
+        over (order by t.id, t.idx rows between unbounded preceding and current row) as saldo
+    from trx t
+    order by t.id, t.idx;
+
+end;
+
+$$;
+
+
+ALTER FUNCTION public.customer_get_special_transaction(cust_id integer, lunasid integer) OWNER TO postgres;
+
+--
+-- Name: customer_get_transaction_detail(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.customer_get_transaction_detail(cust_id integer, lunasid integer) RETURNS TABLE(id integer, idx integer, trx_date timestamp without time zone, descriptions character varying, title character varying, qty numeric, unit character varying, price numeric, debt numeric, cred numeric, saldo numeric)
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    return query with recursive trx as (
+
+        select k.id, 1 idx, k.kasbon_date trx_date,
+        k.descriptions, concat('Kasbon #', k.id)::character varying title,
+        0 qty, '-'::varchar(6) unit, 0 price,
+        k.total debt, 0 cred
+        from kasbons k
+        where k.customer_id = cust_id
+        AND k.lunas_id = lunasid
+
+        union all
+
+        select d.order_id id, 2 idx, od.order_date trx_date,
+          pr.name descriptions, concat('Piutang Barang #', d.order_id) title,
+          d.qty, d.unit_name unit, d.price,
+          d.subtotal debt, 0 cred
+        from order_details d
+        inner join products pr on pr.id = d.product_id
+        inner join orders od on od.id = d.order_id
+        where od.customer_id = cust_id
+        AND od.lunas_id = lunasid
+
+        union all
+
+        select s.id, 3 idx, s.order_date trx_date,
+          s.descriptions, concat('DP Piutang Barang: #', s.id) title,
+          0 qty, '-'::varchar(6) unit, 0 price,
+          0 debt, s.payment cred
+        from orders s
+        where s.customer_id = cust_id and s.payment > 0
+        AND s.lunas_id = lunasid
+
+        union all
+
+      select g.id, 4 idx, g.order_date trx_date,
+        g.descriptions, concat('Pembelian: #', g.id ) title,
+        g.qty, g.unit_name unit, g.price price,
+        0::numeric debt,
+        g.total cred
+        from grass g
+        where g.customer_id = cust_id
+        AND g.lunas_id = lunasid
+
+      union all
+
+      select pmt.id, 5 idx, pmt.payment_date trx_date,
+        pmt.descriptions, concat('Angsuran: #', pmt.id) title,
+        0 qty, '-'::varchar(6) unit, 0 price,
+        0::numeric debt,
+        pmt.total cred
+        from payments pmt
+        where pmt.customer_id = cust_id
+        AND pmt.lunas_id = lunasid
+
+    )
+
+    select t.id, t.idx, t.trx_date,
+        t.descriptions, t.title, t.qty, t.unit, t.price,
+        t.debt,
+        t.cred,
+        sum(t.debt - t.cred)
+        over (order by t.id, t.idx rows between unbounded preceding and current row) as saldo
+    from trx t
+    order by t.id, t.idx;
+
+end;
+
+$$;
+
+
+ALTER FUNCTION public.customer_get_transaction_detail(cust_id integer, lunasid integer) OWNER TO postgres;
+
+--
 -- Name: get_customer_div(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -300,6 +442,155 @@ end; $$;
 ALTER FUNCTION public.grass_detail_after_update_func() OWNER TO postgres;
 
 --
+-- Name: lunas_delete_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.lunas_delete_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+BEGIN
+
+    update orders set
+      lunas_id = 0
+      where customer_id = OLD.customer_id
+      and lunas_id = OLD.id;
+
+    update special_orders set
+      lunas_id = 0
+      where customer_id = OLD.customer_id
+      and lunas_id = OLD.id;
+
+    update payments set
+      lunas_id = 0
+      where customer_id = OLD.customer_id
+      and lunas_id = OLD.id;
+
+    update special_payments set
+      lunas_id = 0
+      where customer_id = OLD.customer_id
+      and lunas_id = OLD.id;
+
+    update kasbons set
+      lunas_id = 0
+      where customer_id = OLD.customer_id
+      and lunas_id = OLD.id;
+
+    update grass set
+      lunas_id = 0
+      where customer_id = OLD.customer_id
+      and lunas_id = OLD.id;
+
+    delete from kasbons
+      where ref_lunas_id = OLD.id AND customer_id = OLD.customer_id;
+
+    RETURN OLD;
+
+END; 
+$$;
+
+
+ALTER FUNCTION public.lunas_delete_func() OWNER TO postgres;
+
+--
+-- Name: lunas_insert_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.lunas_insert_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+BEGIN
+
+    update orders set
+      lunas_id = NEW.id
+      where customer_id = NEW.customer_id
+      and lunas_id = 0;
+
+    update special_orders set
+      lunas_id = NEW.id
+      where customer_id = NEW.customer_id
+      and lunas_id = 0;
+
+    update payments set
+      lunas_id = NEW.id
+      where customer_id = NEW.customer_id
+      and lunas_id = 0;
+
+    update special_payments set
+      lunas_id = NEW.id
+      where customer_id = NEW.customer_id
+      and lunas_id = 0;
+
+    update kasbons set
+      lunas_id = NEW.id
+      where customer_id = NEW.customer_id
+      and lunas_id = 0;
+
+    update grass set
+      lunas_id = NEW.id
+      where customer_id = NEW.customer_id
+      and lunas_id = 0;
+
+    if NEW.remain_payment > 0 then
+      insert into kasbons (customer_id, descriptions, kasbon_date, jatuh_tempo, total, ref_lunas_id) values (
+        NEW.customer_id, concat('Saldo piutang pelunasan ID #'::character varying, NEW.id),
+        NEW.created_at, NEW.created_at + INTERVAL '7 days',
+        NEW.remain_payment, NEW.id
+      );
+    end if;
+
+    RETURN NEW;
+
+END; 
+$$;
+
+
+ALTER FUNCTION public.lunas_insert_func() OWNER TO postgres;
+
+--
+-- Name: lunas_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.lunas_update_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+BEGIN
+
+    if NEW.remain_payment > 0 then
+      update kasbons set 
+      total = NEW.remain_payment,
+      kasbon_date = NEW.created_at,
+      jatuh_tempo = NEW.created_at + INTERVAL '7 days'
+      where ref_lunas_id = NEW.id;
+
+      if NOT FOUND then
+
+        if NEW.remain_payment > 0 then
+          insert into kasbons (customer_id, descriptions, kasbon_date, jatuh_tempo, total, ref_lunas_id) values (
+            NEW.customer_id, concat('Saldo piutang pelunasan ID #'::character varying, NEW.id),
+            NEW.created_at, NEW.created_at + INTERVAL '7 days',
+            NEW.remain_payment, NEW.id
+          );
+        end if;
+
+      end if;
+    else
+      DELETE FROM kasbons
+        WHERE ref_lunas_id = NEW.id 
+        AND customer_id = NEW.customer_id;
+    end if;
+    
+    RETURN NEW;
+
+END; 
+$$;
+
+
+ALTER FUNCTION public.lunas_update_func() OWNER TO postgres;
+
+--
 -- Name: od_before_insert_func(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -426,10 +717,10 @@ $$;
 ALTER FUNCTION public.order_update_func() OWNER TO postgres;
 
 --
--- Name: piutang_balance_func(integer); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: piutang_balance_func(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.piutang_balance_func(cust_id integer) RETURNS TABLE(id integer, descriptions character varying, debt numeric, cred numeric, saldo numeric)
+CREATE FUNCTION public.piutang_balance_func(cust_id integer, lunasid integer) RETURNS TABLE(id integer, descriptions character varying, debt numeric, cred numeric, saldo numeric)
     LANGUAGE plpgsql
     AS $$
 
@@ -447,29 +738,29 @@ begin
      insert into temp_table (id, descriptions, debt, cred)
      select 1, 'Piutang Barang', coalesce(sum(c.total),0), coalesce(sum(c.payment),0)
      from orders c
-     where c.customer_id = cust_id;
+     where c.customer_id = cust_id and c.lunas_id = lunasid;
 
      insert into temp_table (id, descriptions, debt, cred)
      select 2, 'Kasbon', coalesce(sum(c.total),0), 0
      from kasbons c
-     where c.customer_id = cust_id;
+     where c.customer_id = cust_id and c.lunas_id = lunasid;
 
      insert into temp_table (id, descriptions, debt, cred)
      select 3, 'Pembelian', 0, coalesce(sum(c.total),0)
      from grass c
-     where c.customer_id = cust_id;
+     where c.customer_id = cust_id and c.lunas_id = lunasid;
 
      insert into temp_table (id, descriptions, debt, cred)
      select 4, 'Cicilan', 0, coalesce(sum(c.total),0)
      from payments c
-     where c.customer_id = cust_id;
+     where c.customer_id = cust_id and c.lunas_id = lunasid;
 
      return query select
          c.id, c.descriptions, c.debt, c.cred, sum(c.debt - c.cred)
          over (order by c.id
          rows between unbounded preceding and current row) as saldo
          from temp_table as c
-	where c.debt > 0 or c.cred > 0;
+    where c.debt > 0 or c.cred > 0;
 
 
  end;
@@ -477,7 +768,62 @@ begin
  $$;
 
 
-ALTER FUNCTION public.piutang_balance_func(cust_id integer) OWNER TO postgres;
+ALTER FUNCTION public.piutang_balance_func(cust_id integer, lunasid integer) OWNER TO postgres;
+
+--
+-- Name: product_get_transaction_detail(integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.product_get_transaction_detail(prod_id integer) RETURNS TABLE(id integer, trx_date character varying, faktur character varying, name character varying, real_qty numeric, unit_name character varying, debt numeric, cred numeric, saldo numeric)
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    return query with recursive trx as (
+
+        select 0 id, '-'::character varying(10) trx_date,
+          '-'::character varying(60) faktur, 'Stock Awal'::character varying(50) as name,
+          p.first_stock real_qty, p.unit unit_name, p.first_stock debt, 0 cred
+        from products p
+        where p.id = prod_id
+
+      union all
+
+        select ds.id, to_char(s.stock_date, 'DD-MM-YYYY')::character varying(10) trx_date,
+          s.stock_num faktur, sp.name,
+          ds.real_qty, ds.unit_name, ds.qty debt, 0 cred
+        from stock_details ds
+        inner join stocks s on s.id = ds.stock_id
+        inner join suppliers sp on sp.id = s.supplier_id
+        where ds.product_id = prod_id
+
+        union all
+
+        select d.id, to_char(o.order_date, 'DD-MM-YYYY')::character varying(10) trx_date,
+          concat('ORDER #', o.id)::character varying (60) faktur, c.name,
+         -d.real_qty, d.unit_name, 0 debt, d.qty cred
+        from order_details d
+        inner join orders o on o.id = d.order_id
+        inner join customers c on c.id = o.customer_id
+        where d.product_id = prod_id
+
+    )
+
+    select t.id, t.trx_date, t.faktur, t.name, t.real_qty, t.unit_name,
+        t.debt,
+        t.cred,
+        sum(t.real_qty)
+        over (order by t.id rows between unbounded preceding and current row) as saldo
+    from trx t
+    order by t.id;
+
+end;
+
+$$;
+
+
+ALTER FUNCTION public.product_get_transaction_detail(prod_id integer) OWNER TO postgres;
 
 --
 -- Name: product_stock_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -629,11 +975,10 @@ $$;
 ALTER FUNCTION public.sd_update_func() OWNER TO postgres;
 
 --
--- Name: sip_cust_balance_detail(integer); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: sip_cust_balance_detail(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.sip_cust_balance_detail(cust_id integer, lunasid integer)
-RETURNS TABLE(id integer, customer_id integer, descriptions character varying, trx_date timestamp without time zone, debt numeric, cred numeric, saldo numeric)
+CREATE FUNCTION public.sip_cust_balance_detail(cust_id integer, lunasid integer) RETURNS TABLE(id integer, customer_id integer, descriptions character varying, trx_date timestamp without time zone, debt numeric, cred numeric, saldo numeric)
     LANGUAGE plpgsql
     AS $$
 
@@ -689,7 +1034,7 @@ end;
 $$;
 
 
-ALTER FUNCTION public.sip_cust_balance_detail(cust_id integer) OWNER TO postgres;
+ALTER FUNCTION public.sip_cust_balance_detail(cust_id integer, lunasid integer) OWNER TO postgres;
 
 --
 -- Name: sip_sup_balance_detail(integer); Type: FUNCTION; Schema: public; Owner: postgres
@@ -848,6 +1193,96 @@ end; $$;
 ALTER FUNCTION public.spd_bef_insert_func() OWNER TO postgres;
 
 --
+-- Name: special_customer_get_balance(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.special_customer_get_balance(cust_id integer, lunasid integer) RETURNS TABLE(id integer, customer_id integer, descriptions character varying, trx_date timestamp without time zone, debt numeric, cred numeric, saldo numeric)
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    return query with recursive trx as (
+
+        select o.id, o.customer_id,
+          coalesce(o.descriptions, concat('ORDER ID#: '::VARCHAR(50), o.id)) descriptions,
+          o.created_at trx_date,
+          o.total debt,
+          o.cash cred
+        from special_orders o
+        where o.customer_id = cust_id
+        and o.lunas_id = lunasid
+
+        union all
+
+        select k.id, k.customer_id,
+          k.pay_num,
+          k.payment_at trx_date,
+          0::numeric debt,
+          k.nominal cred
+        from special_payments k
+        where k.customer_id = cust_id
+        and k.lunas_id = lunasid
+    )
+
+    select t.id, t.customer_id, t.descriptions, t.trx_date,
+        t.debt,
+        t.cred,
+        sum(t.debt - t.cred)
+        over (order by t.id rows between unbounded preceding and current row) as saldo
+    from trx t
+    order by t.id;
+
+end;
+
+$$;
+
+
+ALTER FUNCTION public.special_customer_get_balance(cust_id integer, lunasid integer) OWNER TO postgres;
+
+--
+-- Name: special_piutang_balance_func(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.special_piutang_balance_func(cust_id integer, lunasid integer) RETURNS TABLE(id smallint, descriptions character varying, debt numeric, cred numeric, saldo numeric)
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+  return query with recursive trx as (
+
+    select 1::smallint id,
+      'Piutang Dagang'::varchar(128) descriptions,
+      coalesce(sum(p.total),0) debt,
+      coalesce(sum(p.cash),0) cred
+    from special_orders p
+    where p.customer_id = cust_id
+    and p.lunas_id = lunasid
+
+    union all
+
+    select 2::smallint id,
+      'Angsuran'::varchar(128) descriptions,
+      0::numeric debt, coalesce(sum(a.nominal),0) cred
+    from special_payments a
+    where a.customer_id = cust_id
+    and a.lunas_id = lunasid
+
+  )
+  select t.id, t.descriptions, t.debt, t.cred,
+    sum(t.debt - t.cred) over (order by t.id
+    rows between unbounded preceding and current row) as saldo
+  from trx as t;
+
+end;
+
+$$;
+
+
+ALTER FUNCTION public.special_piutang_balance_func(cust_id integer, lunasid integer) OWNER TO postgres;
+
+--
 -- Name: spo_bef_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -867,6 +1302,72 @@ $$;
 
 
 ALTER FUNCTION public.spo_bef_update_func() OWNER TO postgres;
+
+--
+-- Name: spo_payment_aft_insert_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.spo_payment_aft_insert_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    UPDATE special_orders SET
+      payments = payments + NEW.nominal
+      WHERE id = NEW.order_id;
+
+    RETURN NEW;
+
+end;
+$$;
+
+
+ALTER FUNCTION public.spo_payment_aft_insert_func() OWNER TO postgres;
+
+--
+-- Name: spo_payment_aft_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.spo_payment_aft_update_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    UPDATE special_orders SET
+      payments = payments + NEW.nominal - OLD.nominal
+      WHERE id = NEW.order_id;
+
+    RETURN NEW;
+
+end;
+$$;
+
+
+ALTER FUNCTION public.spo_payment_aft_update_func() OWNER TO postgres;
+
+--
+-- Name: spo_payment_delete_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.spo_payment_delete_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    UPDATE special_orders SET
+    payments = payments - OLD.nominal
+    where id = OLD.order_id;
+
+    RETURN OLD;
+
+end;
+$$;
+
+
+ALTER FUNCTION public.spo_payment_delete_func() OWNER TO postgres;
 
 --
 -- Name: stc_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -1115,7 +1616,8 @@ CREATE TABLE public.grass (
     buy_price numeric(12,2) DEFAULT 0 NOT NULL,
     content numeric(8,2) DEFAULT 0 NOT NULL,
     unit_name character varying(6) NOT NULL,
-    real_qty numeric(12,2) DEFAULT 0 NOT NULL
+    real_qty numeric(12,2) DEFAULT 0 NOT NULL,
+    lunas_id integer DEFAULT 0 NOT NULL
 );
 
 
@@ -1159,11 +1661,51 @@ CREATE TABLE public.kasbons (
     descriptions character varying(128) NOT NULL,
     kasbon_date timestamp without time zone NOT NULL,
     jatuh_tempo timestamp without time zone NOT NULL,
-    total numeric(12,2) DEFAULT 0 NOT NULL
+    total numeric(12,2) DEFAULT 0 NOT NULL,
+    lunas_id integer DEFAULT 0 NOT NULL,
+    ref_lunas_id integer DEFAULT 0 NOT NULL
 );
 
 
 ALTER TABLE public.kasbons OWNER TO postgres;
+
+--
+-- Name: lunas; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.lunas (
+    id integer NOT NULL,
+    customer_id integer NOT NULL,
+    remain_payment numeric(12,2) DEFAULT 0 NOT NULL,
+    descriptions character varying(128),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.lunas OWNER TO postgres;
+
+--
+-- Name: lunas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.lunas_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.lunas_id_seq OWNER TO postgres;
+
+--
+-- Name: lunas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.lunas_id_seq OWNED BY public.lunas.id;
+
 
 --
 -- Name: order_detail_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1212,7 +1754,8 @@ CREATE TABLE public.orders (
     total numeric(12,2) DEFAULT 0 NOT NULL,
     payment numeric(12,2) DEFAULT 0 NOT NULL,
     remain_payment numeric(12,2) DEFAULT 0 NOT NULL,
-    descriptions character varying(128) NOT NULL
+    descriptions character varying(128) NOT NULL,
+    lunas_id integer DEFAULT 0 NOT NULL
 );
 
 
@@ -1222,13 +1765,14 @@ ALTER TABLE public.orders OWNER TO postgres;
 -- Name: payments; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE special_payments (
+CREATE TABLE public.payments (
     id integer DEFAULT nextval('public.order_seq'::regclass) NOT NULL,
     customer_id integer NOT NULL,
     descriptions character varying(50) NOT NULL,
     ref_id integer DEFAULT 0 NOT NULL,
-    payment_at timestamp without time zone NOT NULL,
-    total numeric(12,2) DEFAULT 0 NOT NULL
+    payment_date timestamp without time zone NOT NULL,
+    total numeric(12,2) DEFAULT 0 NOT NULL,
+    lunas_id integer DEFAULT 0 NOT NULL
 );
 
 
@@ -1339,11 +1883,30 @@ CREATE TABLE public.special_orders (
     cash numeric(12,2) DEFAULT 0 NOT NULL,
     payments numeric(12,2) DEFAULT 0 NOT NULL,
     remain_payment numeric(12,2) DEFAULT 0 NOT NULL,
-    descriptions character varying(128)
+    descriptions character varying(128),
+    lunas_id integer DEFAULT 0 NOT NULL
 );
 
 
 ALTER TABLE public.special_orders OWNER TO postgres;
+
+--
+-- Name: special_payments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.special_payments (
+    customer_id integer NOT NULL,
+    order_id integer DEFAULT 0 NOT NULL,
+    id integer DEFAULT nextval('public.order_seq'::regclass) NOT NULL,
+    descriptions character varying(128),
+    payment_at timestamp without time zone NOT NULL,
+    nominal numeric(12,2) DEFAULT 0 NOT NULL,
+    pay_num character varying(50) NOT NULL,
+    lunas_id integer DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.special_payments OWNER TO postgres;
 
 --
 -- Name: stock_details; Type: TABLE; Schema: public; Owner: postgres
@@ -1458,6 +2021,13 @@ ALTER TABLE ONLY public.categories ALTER COLUMN id SET DEFAULT nextval('public.c
 
 
 --
+-- Name: lunas id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.lunas ALTER COLUMN id SET DEFAULT nextval('public.lunas_id_seq'::regclass);
+
+
+--
 -- Data for Name: categories; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -1475,6 +2045,7 @@ COPY public.customers (id, name, street, city, phone, customer_type, customer_di
 1	Dhoni Armadi	Ds. Telukagung	Indramayu	085-5556-65656	Rumput Laut	0
 2	Agung Priatna	RT. 14 / 06	Ds. Plumbon	085-5556-65656	Bandeng	1
 3	CV. PURNAMA SEJAHTERA	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	Pabrik	0
+4	Joni Armadi	Ds. Telukagung	Indramayu	085-5556-65656	Rumput Laut	0
 \.
 
 
@@ -1482,12 +2053,10 @@ COPY public.customers (id, name, street, city, phone, customer_type, customer_di
 -- Data for Name: grass; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.grass (customer_id, id, descriptions, order_date, price, total, qty, total_div, product_id, unit_id, buy_price, content, unit_name, real_qty) FROM stdin;
-2	35	Pembelian Rumput Laut	2021-11-19 00:15:00	20000.00	565000.00	57.00	575000.00	16	1	0.00	0.00	-	0.00
-2	51	Pembelian Rumput Laut	2021-12-01 18:50:00	2500.00	1015000.00	406.00	0.00	16	1	0.00	0.00	-	0.00
-2	56	Rumput Laut	2021-12-02 22:22:00	5500.00	1116500.00	403.00	1100000.00	16	24	4500.00	3.00	kg	1209.00
-2	50	Pembelian Rumput Laut	2021-11-28 08:16:00	5500.00	137500.00	25.00	0.00	16	24	4500.00	3.00	kg	75.00
-2	58	Rumput Laut	2021-12-02 23:05:00	5850.00	2047500.00	350.00	0.00	16	24	4500.00	3.00	kg	1050.00
+COPY public.grass (customer_id, id, descriptions, order_date, price, total, qty, total_div, product_id, unit_id, buy_price, content, unit_name, real_qty, lunas_id) FROM stdin;
+2	50	Pembelian Rumput Laut	2021-11-28 08:16:00	5500.00	137500.00	25.00	0.00	16	24	4500.00	3.00	kg	75.00	98
+2	56	Rumput Laut	2021-12-02 22:22:00	5500.00	550000.00	200.00	550000.00	16	24	4500.00	3.00	kg	600.00	98
+2	164	Rumput Laut	2021-12-06 10:55:00	1500.00	375000.00	250.00	0.00	16	23	1500.00	1.00	pcs	250.00	100
 \.
 
 
@@ -1506,9 +2075,21 @@ COPY public.grass_details (grass_id, id, qty) FROM stdin;
 -- Data for Name: kasbons; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, total) FROM stdin;
-31	2	Kasbon Beli Terpal	2021-12-17 00:00:00	2021-12-24 00:00:00	1500000.00
-37	2	Kasbon ewe	2021-11-25 13:01:00	2021-12-02 13:01:00	25000.00
+COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, total, lunas_id, ref_lunas_id) FROM stdin;
+31	2	Kasbon Beli Terpal	2021-12-17 00:00:00	2021-12-24 00:00:00	1500000.00	98	0
+37	2	Kasbon ewe	2021-11-25 13:01:00	2021-12-02 13:01:00	25000.00	98	0
+161	2	Saldo piutang pelunasan ID #98	2021-12-06 10:43:00	2021-12-13 10:43:00	661500.00	100	98
+163	2	Kasbon	2021-12-06 10:54:00	2021-12-13 10:54:00	100000.00	100	0
+\.
+
+
+--
+-- Data for Name: lunas; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.lunas (id, customer_id, remain_payment, descriptions, created_at, updated_at) FROM stdin;
+98	2	661500.00	eq21323	2021-12-06 10:43:00+07	2021-12-06 10:54:54.290247+07
+100	2	-13500.00	Pelunasan bulan desember	2021-12-08 14:56:00+07	2021-12-08 14:59:40.092246+07
 \.
 
 
@@ -1523,6 +2104,10 @@ COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_
 46	112	1	1.00	1.00	btl	1.00	15000.00	15000.00	10000.00	7
 46	114	17	1.00	1.00	pcs	1.00	39000.00	39000.00	30000.00	1
 49	115	17	1.00	1.00	pcs	1.00	39000.00	39000.00	30000.00	1
+49	157	1	1.00	1.00	btl	1.00	15000.00	15000.00	10000.00	7
+36	159	21	2.00	1.00	zak	2.00	325000.00	650000.00	250000.00	15
+162	160	1	2.00	1.00	btl	2.00	15000.00	30000.00	10000.00	7
+162	161	21	1.00	1.00	zak	1.00	325000.00	325000.00	250000.00	15
 \.
 
 
@@ -1530,11 +2115,12 @@ COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_
 -- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.orders (id, customer_id, order_date, total, payment, remain_payment, descriptions) FROM stdin;
-32	2	2021-11-17 15:38:00	325000.00	30000.00	295000.00	Utang Obat
-36	1	2021-11-25 12:15:00	78000.00	70000.00	8000.00	Utang Pupuk dan Obat
-46	1	2021-11-28 02:56:00	379000.00	0.00	379000.00	Penjualan Umum
-49	2	2021-11-28 08:04:00	39000.00	0.00	39000.00	Pembelian Barang
+COPY public.orders (id, customer_id, order_date, total, payment, remain_payment, descriptions, lunas_id) FROM stdin;
+32	2	2021-11-17 15:38:00	325000.00	30000.00	295000.00	Utang Obat	98
+49	2	2021-11-28 08:04:00	54000.00	0.00	54000.00	Pembelian Barang	98
+162	2	2021-12-06 10:55:00	355000.00	55000.00	300000.00	Pembelian Barang	100
+36	1	2021-11-25 12:15:00	728000.00	70000.00	658000.00	Utang Pupuk dan Obat	0
+46	1	2021-11-28 02:56:00	379000.00	0.00	379000.00	Penjualan Umum	0
 \.
 
 
@@ -1542,10 +2128,11 @@ COPY public.orders (id, customer_id, order_date, total, payment, remain_payment,
 -- Data for Name: payments; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total) FROM stdin;
-33	2	Cicilan Bayar Obat	0	2021-11-18 11:55:00	25000.00
-54	1	Bagi hasil dengan Agung Priatna	35	2021-12-02 01:55:50.968715	575000.00
-57	1	Bagi hasil dengan Agung Priatna	56	2021-12-02 22:53:49.203045	1100000.00
+COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total, lunas_id) FROM stdin;
+33	2	Cicilan Bayar Obat	0	2021-11-18 11:55:00	25000.00	98
+125	2	Cicilan	0	2021-12-06 01:13:00	500000.00	98
+165	2	Cicilan	0	2021-12-06 10:55:00	700000.00	100
+57	1	Bagi hasil dengan Agung Priatna	56	2021-12-02 22:53:49.203045	550000.00	0
 \.
 
 
@@ -1554,11 +2141,11 @@ COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total
 --
 
 COPY public.products (id, name, spec, price, stock, first_stock, unit, update_notif, category_id) FROM stdin;
-15	Pakan Bandeng	Pelet KW1	250000.00	111.00	110.00	zak	t	1
-1	EM 4 Perikanan	1 ltr	30000.00	143.00	100.00	pcs	t	2
-7	Abachel	250cc	10000.00	104.00	90.00	btl	t	1
 23	Rumput Laut KW-2	\N	3500.00	0.00	0.00	kg	t	2
-16	Rumput Laut	KW-1	1500.00	-2614.00	20.00	kg	t	2
+7	Abachel	250cc	10000.00	101.00	90.00	btl	t	1
+15	Pakan Bandeng	Pelet KW1	250000.00	108.00	110.00	zak	t	1
+1	EM 4 Perikanan	1 ltr	30000.00	143.00	100.00	pcs	t	2
+16	Rumput Laut	KW-1	1500.00	-1640.00	20.00	kg	t	2
 \.
 
 
@@ -1567,7 +2154,10 @@ COPY public.products (id, name, spec, price, stock, first_stock, unit, update_no
 --
 
 COPY public.special_details (order_id, id, product_id, unit_id, qty, unit_name, price, subtotal, content, real_qty, buy_price) FROM stdin;
-65	120	16	24	100.00	kg	5850.00	585000.00	3.00	300.00	4500.00
+104	153	16	23	25.00	pcs	1950.00	48750.00	1.00	25.00	1500.00
+104	154	16	23	100.00	pcs	1950.00	195000.00	1.00	100.00	1500.00
+106	155	16	23	10.00	pcs	1950.00	19500.00	1.00	10.00	1500.00
+109	156	16	24	100.00	kg	5850.00	585000.00	3.00	300.00	4500.00
 \.
 
 
@@ -1575,8 +2165,20 @@ COPY public.special_details (order_id, id, product_id, unit_id, qty, unit_name, 
 -- Data for Name: special_orders; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.special_orders (id, customer_id, created_at, updated_at, packaged_at, shipped_at, driver_name, police_number, street, city, phone, total, cash, payments, remain_payment, descriptions) FROM stdin;
-65	3	2021-12-03 08:31:00	2021-12-03 08:33:13.442166	2021-12-03 08:31:00	2021-12-03 08:31:00	Johni	E-25641-FGH	Jl, Jend. Sudirman No. 155,\nTanjung Priuk - Jakarta Timur	Jakarta	085652145	585000.00	0.00	0.00	585000.00	\N
+COPY public.special_orders (id, customer_id, created_at, updated_at, packaged_at, shipped_at, driver_name, police_number, street, city, phone, total, cash, payments, remain_payment, descriptions, lunas_id) FROM stdin;
+104	3	2021-12-04 01:29:00	2021-12-04 23:12:28.012161	2021-12-04 01:29:00	2021-12-04 01:29:00	Udin	-5665656	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	243750.00	43750.00	200000.00	0.00	\N	0
+109	3	2021-12-07 00:00:00	2021-12-04 23:13:26.585333	2021-12-07 00:00:00	2021-12-07 00:00:00	Warim	E-1025-GH	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	585000.00	0.00	0.00	585000.00	\N	0
+106	3	2021-12-06 00:00:00	2021-12-04 23:13:35.145055	2021-12-04 01:29:00	2021-12-04 01:29:00	tttt	werwerwer	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	19500.00	0.00	19500.00	0.00	\N	0
+\.
+
+
+--
+-- Data for Name: special_payments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.special_payments (customer_id, order_id, id, descriptions, payment_at, nominal, pay_num, lunas_id) FROM stdin;
+3	106	107	Angsuran piutang dagang #106	2021-12-06 00:00:00	19500.00	xc/2656/155464	0
+3	104	105	Angsuran piutang dagang #104	2021-12-05 00:00:00	200000.00	qweqwewqe qweqwe	0
 \.
 
 
@@ -1649,16 +2251,16 @@ COPY public.suppliers (id, name, sales_name, street, city, phone, cell, email) F
 
 COPY public.units (product_id, id, name, content, price, buy_price, margin) FROM stdin;
 15	21	zak	1.00	325000.00	250000.00	0.3000
-15	22	pak3	3.00	950025.00	750000.00	0.2667
-1	17	pcs	1.00	39000.00	30000.00	0.3000
-1	19	ls	12.00	468000.00	360000.00	0.3000
-1	20	pak	3.00	99999.00	90000.00	0.1111
 7	2	pak	10.00	130000.00	100000.00	0.3000
 7	1	btl	1.00	15000.00	10000.00	0.5000
 7	25	ls	12.00	150000.00	120000.00	0.2500
 16	23	pcs	1.00	1950.00	1500.00	0.3000
 16	24	kg	3.00	5850.00	4500.00	0.3000
 23	27	kg	1.00	5500.00	0.00	0.5714
+15	22	pak	3.00	950025.00	750000.00	0.2667
+1	17	pcs	1.00	39000.00	30000.00	0.3000
+1	19	ls	12.00	468000.00	360000.00	0.3000
+1	20	pak	3.00	99999.00	90000.00	0.1111
 \.
 
 
@@ -1673,7 +2275,7 @@ SELECT pg_catalog.setval('public.categories_id_seq', 6, true);
 -- Name: customer_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.customer_seq', 3, true);
+SELECT pg_catalog.setval('public.customer_seq', 4, true);
 
 
 --
@@ -1684,17 +2286,24 @@ SELECT pg_catalog.setval('public.grass_detail_seq', 9, true);
 
 
 --
+-- Name: lunas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.lunas_id_seq', 103, true);
+
+
+--
 -- Name: order_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_detail_seq', 152, true);
+SELECT pg_catalog.setval('public.order_detail_seq', 161, true);
 
 
 --
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 97, true);
+SELECT pg_catalog.setval('public.order_seq', 168, true);
 
 
 --
@@ -1766,6 +2375,14 @@ ALTER TABLE ONLY public.kasbons
 
 
 --
+-- Name: lunas lunas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.lunas
+    ADD CONSTRAINT lunas_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: order_details order_details_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1811,6 +2428,14 @@ ALTER TABLE ONLY public.special_details
 
 ALTER TABLE ONLY public.special_orders
     ADD CONSTRAINT special_orders_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: special_payments special_payments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.special_payments
+    ADD CONSTRAINT special_payments_pkey PRIMARY KEY (id);
 
 
 --
@@ -1952,6 +2577,20 @@ CREATE INDEX ix_special_order_id ON public.special_details USING btree (order_id
 
 
 --
+-- Name: ix_special_payments_customer_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_special_payments_customer_id ON public.special_payments USING btree (customer_id);
+
+
+--
+-- Name: ix_special_payments_order; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_special_payments_order ON public.special_payments USING btree (order_id);
+
+
+--
 -- Name: ix_special_product_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -2078,6 +2717,27 @@ CREATE TRIGGER grass_detail_after_update_trig AFTER UPDATE ON public.grass_detai
 
 
 --
+-- Name: lunas lunas_aft_delete_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER lunas_aft_delete_trig AFTER DELETE ON public.lunas FOR EACH ROW EXECUTE FUNCTION public.lunas_delete_func();
+
+
+--
+-- Name: lunas lunas_aft_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER lunas_aft_insert_trig AFTER INSERT ON public.lunas FOR EACH ROW EXECUTE FUNCTION public.lunas_insert_func();
+
+
+--
+-- Name: lunas lunas_aft_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER lunas_aft_update_trig AFTER UPDATE ON public.lunas FOR EACH ROW EXECUTE FUNCTION public.lunas_update_func();
+
+
+--
 -- Name: order_details od_before_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -2194,6 +2854,27 @@ CREATE TRIGGER spo_bef_insert_trig BEFORE INSERT ON public.special_orders FOR EA
 --
 
 CREATE TRIGGER spo_bef_update_trig BEFORE UPDATE OF total, cash, payments ON public.special_orders FOR EACH ROW EXECUTE FUNCTION public.spo_bef_update_func();
+
+
+--
+-- Name: special_payments spo_payment_aft_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER spo_payment_aft_insert_trig AFTER INSERT ON public.special_payments FOR EACH ROW EXECUTE FUNCTION public.spo_payment_aft_insert_func();
+
+
+--
+-- Name: special_payments spo_payment_aft_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER spo_payment_aft_update_trig AFTER UPDATE OF nominal ON public.special_payments FOR EACH ROW EXECUTE FUNCTION public.spo_payment_aft_update_func();
+
+
+--
+-- Name: special_payments spo_payment_delete_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER spo_payment_delete_trig AFTER DELETE ON public.special_payments FOR EACH ROW EXECUTE FUNCTION public.spo_payment_delete_func();
 
 
 --
@@ -2329,6 +3010,22 @@ ALTER TABLE ONLY public.stock_details
 
 
 --
+-- Name: special_payments fk_special_payments_customer; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.special_payments
+    ADD CONSTRAINT fk_special_payments_customer FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: special_payments fk_special_payments_order; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.special_payments
+    ADD CONSTRAINT fk_special_payments_order FOREIGN KEY (order_id) REFERENCES public.special_orders(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
 -- Name: stock_details fk_stock_detail; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2350,6 +3047,14 @@ ALTER TABLE ONLY public.stock_payments
 
 ALTER TABLE ONLY public.stocks
     ADD CONSTRAINT fk_supplier_stocks FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: lunas fx_customer_lunas; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.lunas
+    ADD CONSTRAINT fx_customer_lunas FOREIGN KEY (customer_id) REFERENCES public.customers(id);
 
 
 --

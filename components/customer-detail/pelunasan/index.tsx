@@ -142,7 +142,6 @@ const PaymentPage: NextPage<paymentProps> = (props) => {
       <View>
         <Button
           variant={"cta"}
-          isDisabled={remainPayment === 0}
           onPress={() => {
             setIsOpen(o => true);
             setSelectedData({ ...initLunas, customerId: customerId, remainPayment: remainPayment });

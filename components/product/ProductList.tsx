@@ -12,7 +12,7 @@ import { FormatNumber } from "@lib/format";
 import Pin from "@spectrum-icons/workflow/PinOff";
 import EditIcon from "@spectrum-icons/workflow/Edit";
 import AddIcon from "@spectrum-icons/workflow/NewItem";
-import { ActionButton, ToggleButton } from "@react-spectrum/button";
+import { ActionButton, Button, ToggleButton } from "@react-spectrum/button";
 import { Text } from "@react-spectrum/text";
 import { initProduct } from "./form";
 import SpanLink from "@components/ui/span-link";
@@ -20,6 +20,7 @@ import { Picker, Item } from "@react-spectrum/picker";
 import { DialogContainer, Dialog } from "@react-spectrum/dialog";
 import { Heading } from "@react-spectrum/text";
 import InfoIcon from "@spectrum-icons/workflow/Info";
+import { SisaStock } from "./SisaStock";
 
 const UnitComponent = dynamic(() => import("@components/unit/UnitComponent"), {
   ssr: false,
@@ -131,7 +132,8 @@ const ProductList: NextPage<ProductListProps> = (props) => {
     }
     return [
       initProduct,
-      ...products.items.filter((x) => x.name.toLocaleLowerCase().includes(txtSearch.toLocaleLowerCase())
+      ...products.items.filter((x) =>
+        x.name.toLocaleLowerCase().includes(txtSearch.toLocaleLowerCase())
       ),
     ];
   }
@@ -150,10 +152,13 @@ const ProductList: NextPage<ProductListProps> = (props) => {
             <Content>
               <CategoryForm
                 closeForm={setIsOpen}
-                category={editedCategoryId === 0
-                  ? { id: 0, name: "" }
-                  : categories.getItem(editedCategoryId)}
-                updateCategory={updateCategory} />
+                category={
+                  editedCategoryId === 0
+                    ? { id: 0, name: "" }
+                    : categories.getItem(editedCategoryId)
+                }
+                updateCategory={updateCategory}
+              />
             </Content>
           </Dialog>
         )}
@@ -192,7 +197,7 @@ const ProductList: NextPage<ProductListProps> = (props) => {
           </ActionButton>
         </Flex>
         <SearchField
-          flex={{base: "1", L:"none"}}
+          flex={{ base: "1", L: "none" }}
           aria-label="Search product"
           placeholder={`e.g. sp30`}
           width="auto"
@@ -245,24 +250,14 @@ const ProductList: NextPage<ProductListProps> = (props) => {
                       {FormatNumber(x.firstStock)} {x.unit}
                     </strong>
                     {", "}
-                    Sisa Stock:{" "}
-                    <strong>
-                      {FormatNumber(x.stock)} {x.unit}
-                    </strong>
+                    <SisaStock product={x} />
                     <br />
                     Kategori:{" "}
-                    <SpanLink
-                      onClick={() => {
-                        setEditedCategoryId(x.categoryId);
-                        setIsOpen(true);
-                      }}
-                    >
                       <strong>
                         {categories &&
                           categories.getItem(x.categoryId) &&
                           categories.getItem(x.categoryId).name}
                       </strong>
-                    </SpanLink>
                   </View>
                 )}
                 {x.id > 0 && (
@@ -289,7 +284,8 @@ const ProductList: NextPage<ProductListProps> = (props) => {
                     data={x}
                     categories={categories.items.filter((o) => o.id !== 0)}
                     updateProduct={postProduct}
-                    closeForm={closeForm} />
+                    closeForm={closeForm}
+                  />
                   <View marginY={"size-100"}>
                     <span style={{ color: "red" }}>{message}</span>
                   </View>
@@ -396,14 +392,15 @@ type ToggleUnitProps = {
 };
 function ToggleUnit({ data }: ToggleUnitProps) {
   let [isShow, setIsShow] = useState<boolean>(false);
+
   return (
     <View flex marginTop={{ base: 18, M: -18 }}>
       <ToggleButton
         flex
-        height={"auto"}
+        height={"auto"}        
         isEmphasized
         isSelected={isShow}
-        onChange={setIsShow}
+        onPress={() => setIsShow(!isShow)}
         isQuiet
         marginBottom={"size-100"}
       >
@@ -415,7 +412,8 @@ function ToggleUnit({ data }: ToggleUnitProps) {
         <UnitComponent
           productId={data.id}
           price={data.price}
-          unit={data.unit} />
+          unit={data.unit}
+        />
       )}
     </View>
   );

@@ -19,11 +19,10 @@ begin
     return query with recursive trx as (
 
         select 0 id, '-'::character varying(10) trx_date,
-          'Stock Awal'::character varying(60) faktur, p.name,
+          '-'::character varying(60) faktur, 'Stock Awal'::character varying(50) as name,
           p.first_stock real_qty, p.unit unit_name, p.first_stock debt, 0 cred
         from products p
         where p.id = prod_id
-
 
       union all
 

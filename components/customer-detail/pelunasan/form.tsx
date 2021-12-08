@@ -66,8 +66,8 @@ const PelunasanForm: NextPage<PelunasanFormProps> = (props) => {
             isReadOnly
             flex
             hideStepper
-            label={"Sisa Piutang"}
-            value={lunas.remainPayment}
+            label={lunas.remainPayment > 0 ?  "Sisa piutang" : "Masih ada kembalian sebesar"}
+            value={lunas.remainPayment < 0 ? (-1 * lunas.remainPayment) : lunas.remainPayment}
             onChange={(e) => setLunas((o) => ({ ...o, remainPayment: e }))}
           />
         </Flex>

@@ -70,7 +70,7 @@ const apiProduct: apiFunction = {
       u.product_id as "productId", u.id, u.name, u.content, u.price, u.buy_price as "buyPrice"
       from units as u
       where u.product_id = c.id
-      order by u.content`
+      order by u.content DESC`
 //,
     const query = sql`SELECT
       c.category_id, c.id, c.name, c.spec, c.price, c.stock, c.first_stock, c.unit,

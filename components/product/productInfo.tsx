@@ -5,6 +5,7 @@ import { View } from "@react-spectrum/view";
 import { useAsyncList, AsyncListData } from "@react-stately/data";
 import { FormatNumber } from "@lib/format";
 import { Flex } from "@react-spectrum/layout";
+import { calculateStock } from "./calculateStock";
 
 type productInfoProps = {
   product: iProduct;
@@ -81,6 +82,7 @@ function ShowInfo(props: productInfoProps) {
             , {product.spec}
           </div>
           <table style={{ borderCollapse: 'collapse' }}>
+            <tbody>
             <tr>
               <td><strong>Kategori: </strong></td>
               <td>{category.name}</td>
@@ -97,6 +99,7 @@ function ShowInfo(props: productInfoProps) {
               <td><strong>Sisa stock: </strong></td>
               <td>{calculateStock({ stock: product.stock, units: units.items })}</td>
             </tr>
+            </tbody>
           </table>
         </View>
         <View>
@@ -112,6 +115,7 @@ type ShowUnitProps = {
   units: iUnit[];
   unit: string;
 }
+
 function ShowUnit(props: ShowUnitProps) {
   let { units, unit } = props;
   let [hover, setHover] = useState<boolean>(false);
@@ -240,57 +244,4 @@ function ShowStock(props: ShowStockProps) {
       `}</style>
     </table>
   )
-}
-
-type calculateProps = {
-  stock: number;
-  units: iUnit[];
-};
-
-function calculateStock(props: calculateProps) {
-  let { stock, units } = props;
-  let remainStock = 0.0;
-  let bstock = stock;
-  let astock;
-  let strRet = "";
-  let min = "";
-
-  if (stock < 0) {
-    bstock = Math.abs(stock);
-    min = "-";
-  }
-
-  if (bstock < 1) {
-    strRet += bstock;
-    strRet += " ";
-    strRet +=
-      units.length > 0
-        ? (units[units.length - 1] ? units[units.length - 1].name : '')
-        : "";
-    //strRet.Append(", ");
-    return strRet;
-  }
-
-  for (let c = 0; c < units.length; c++) {
-    let r = units[c];
-
-    remainStock = bstock % r.content;
-    astock = (bstock - remainStock) / r.content;
-    //astock = Math.Truncate(bstock); // Convert.ToDouble(bstock.ToString().Split('.')[0]);
-    if (astock > 0) {
-      strRet += min;
-      strRet += astock;
-      strRet += " ";
-      strRet += r.name;
-      if (remainStock > 0) {
-        strRet += ", ";
-      }
-    }
-
-    if (remainStock <= 0) break;
-    bstock = remainStock;
-  }
-  //string[] splitter = new string[] { ", " };
-  //strRet = string.Join(", ", strRet.Split(splitter, StringSplitOptions.RemoveEmptyEntries));
-  return strRet.length == 0 ? "Habis" : strRet.toString();
 }

@@ -59,7 +59,7 @@ const SupplierForm: NextPage<SupplierFormProps> = ({
             flex
             width={"auto"}
             label={"Nama Sales"}
-            value={supplier.salesName}
+            value={supplier.salesName || ''}
             onChange={(e) => handleChange("salesName", e)}
           />
         </Flex>
@@ -69,7 +69,7 @@ const SupplierForm: NextPage<SupplierFormProps> = ({
             placeholder={"e.g. Jl. Jend. Sudirman No. 155 Kel. Lemahmekar"}
             flex
             label={"Alamat"}
-            value={supplier.street}
+            value={supplier.street || ''}
             onChange={(e) => handleChange("street", e)}
           />
           <TextField
@@ -77,7 +77,7 @@ const SupplierForm: NextPage<SupplierFormProps> = ({
             placeholder={"e.g. Indramayu"}
             flex
             label={"Kota"}
-            value={supplier.city}
+            value={supplier.city || ''}
             onChange={(e) => handleChange("city", e)}
           />
         </Flex>
@@ -87,7 +87,7 @@ const SupplierForm: NextPage<SupplierFormProps> = ({
           placeholder={"e.g. 0856321659877"}
           width={"auto"}
           label={"Phone"}
-          value={supplier.phone}
+          value={supplier.phone || ''}
           onChange={(e) => handleChange("phone", e)}
         />
         <TextField
@@ -95,7 +95,7 @@ const SupplierForm: NextPage<SupplierFormProps> = ({
           placeholder={"e.g. 0856321659877"}
           width={"auto"}
           label={"Cellular"}
-          value={supplier.cell}
+          value={supplier.cell || ''}
           onChange={(e) => handleChange("cell", e)}
         />
         </Flex>
@@ -104,7 +104,7 @@ const SupplierForm: NextPage<SupplierFormProps> = ({
         placeholder={"e.g. 0856321659877"}
         width={"auto"}
         label={"e-mail"}
-        value={supplier.email}
+        value={supplier.email || ''}
         onChange={(e) => handleChange("email", e)}
       />
         <Flex marginTop={"size-200"} direction="row" gap="size-100">
