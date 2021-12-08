@@ -27,31 +27,22 @@ const GrassForm = dynamic(() => import("./form"), {
 const initGrass: iGrass = {
   id: 0,
   customerId: 0,
+  partnerId: 0,
   lunasId: 0,
-  productId: 0,
-  unitId: 0,
-  unitName: '',
-  content: 0,
-  realQty: 0,
-  buyPrice: 0,
   totalDiv: 0,
   orderDate: dateParam(null),
   descriptions: "Pembelian Rumput Laut",
   qty: 0,
-  price: 0,
   total: 0,
 };
 
 type GrassProps = {
   customerId: number;
-  customerDiv: number;
 };
 
-const Grass: NextPage<GrassProps> = ({ customerId, customerDiv }) => {
-  //  let [showDetail, setShowDetail] = useState<boolean>(false);
+const Grass: NextPage<GrassProps> = (props: GrassProps) => {
+  let { customerId } = props;
   let [selectedGrassId, setSelectedGrassId] = useState<number>(-1);
-  let [custDiv, setCustDiv] = useState<iCustomer>({} as iCustomer);
-  // let [detailId, setDetailId] = useState<number>(0);
 
   let grasses = useAsyncList<iGrass>({
     async load({ signal }) {
@@ -75,29 +66,6 @@ const Grass: NextPage<GrassProps> = ({ customerId, customerDiv }) => {
     },
     getKey: (item: iProduct) => item.id,
   });
-
-  useEffect(() => {
-    let isLoaded = false;
-
-    const loadCustomerDiv = async () => {
-      let res = await fetch(`/api/customer/${customerDiv}`, {
-        headers: {
-          "Content-type": "application/json; charset=UTF-8",
-        },
-      });
-      let json = await res.json();
-      if(res.status === 200) {
-        setCustDiv(json);
-      }
-    };
-
-    if (!isLoaded && customerDiv > 0) {
-      loadCustomerDiv();
-    }
-    return () => {
-      isLoaded = true;
-    };
-  }, [customerDiv]);
 
   const closeForm = () => {
     if (selectedGrassId === 0) {
@@ -124,14 +92,6 @@ const Grass: NextPage<GrassProps> = ({ customerId, customerDiv }) => {
         }
         break;
     }
-  };
-
-  const updateTotal = (grassId: number, qty: number) => {
-    let o = grasses.getItem(grassId);
-    let totalQty = o.qty + qty;
-    let totalPrice = totalQty * o.price;
-
-    grasses.update(grassId, { ...o, qty: totalQty, total: totalPrice });
   };
 
   return (
@@ -193,7 +153,6 @@ const Grass: NextPage<GrassProps> = ({ customerId, customerDiv }) => {
               <GrassForm
                 data={x}
                 products={products}
-                customerDiv={custDiv}
                 updateGrass={updateData}
                 closeForm={closeForm}
               />
@@ -274,11 +233,6 @@ const Grass: NextPage<GrassProps> = ({ customerId, customerDiv }) => {
             {FormatNumber(x.qty)}
           </span>
         </View>
-        <View width={"9%"} isHidden={{ base: true, M: false }}>
-          <span style={{ textAlign: "right", display: "block" }}>
-            {FormatNumber(x.price)}
-          </span>
-        </View>
         <View width={{ base: "47%", M: "10%" }}>
           <span
             style={{ textAlign: "right", display: "block", fontWeight: 700 }}
@@ -306,30 +260,3 @@ const Grass: NextPage<GrassProps> = ({ customerId, customerDiv }) => {
 };
 
 export default Grass;
-
-// type ToggleDetailProps = {
-//   isSelected: boolean;
-//   showGrassDetail: (isShow: boolean) => void;
-// };
-
-// function ToggleDetail({ isSelected, showGrassDetail }: ToggleDetailProps) {
-//   // let [isShow, setIsShow] = useState<boolean>(isSelected);
-
-//   return (
-//     <ToggleButton
-//       flex
-//       height={"auto"}
-//       marginStart={"size-200"}
-//       isEmphasized
-//       isSelected={isSelected}
-//       onChange={(e) => {
-//         //        setIsShow(e);
-//         showGrassDetail(e);
-//       }}
-//       isQuiet
-//     >
-//       <Pin aria-label="Pin" />
-//       <Text>Details</Text>
-//     </ToggleButton>
-//   );
-// }

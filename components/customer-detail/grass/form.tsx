@@ -16,37 +16,16 @@ type GrassFormProps = {
   products: AsyncListData<iProduct>;
   updateGrass: (method: string, data: iGrass) => void;
   closeForm: () => void;
-  customerDiv: iCustomer;
 };
 
 const GrassForm: NextPage<GrassFormProps> = ({
   data,
   products,
   updateGrass,
-  closeForm,
-  customerDiv,
+  closeForm
 }) => {
   let [grass, setGrass] = React.useState<iGrass>({} as iGrass);
   let [message, setMessage] = useState<string>("");
-
-  const isProductValid = React.useMemo(
-    () => grass && grass.productId && grass.productId > 0,
-    [grass]
-  )
-
-  const isUnitValid = React.useMemo(
-    () => grass && grass.unitId && grass.unitId > 0,
-    [grass]
-  )
-
-  const isQtyValid = React.useMemo(
-    () => grass && grass.qty && grass.qty > 0,
-    [grass]
-  );
-  const isPriceValid = React.useMemo(
-    () => grass && grass.price && grass.price > 0,
-    [grass]
-  );
 
   const isDescriptionValid = React.useMemo(
     () => grass && grass.descriptions && grass.descriptions.length > 0,
@@ -122,50 +101,6 @@ const GrassForm: NextPage<GrassFormProps> = ({
     <View paddingY={"size-100"} paddingX={{ base: "size-100", M: "size-1000" }}>
       <Form onSubmit={handleSubmit}>
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
-          <ComboBox autoFocus flex
-            validationState={isProductValid ? "valid" : "invalid"}
-            label={"Nama produk"}
-            selectedKey={grass.productId}
-            defaultItems={products.items.filter(o=>o.categoryId===2 && o.units)}
-            onSelectionChange={(e) => {
-              let p = products.getItem(+e);
-              if (p && p.units) {
-                let u = p.units[0];
-
-                //if (grass.id === 0) {
-                  if(u) {
-                  setGrass((o) => ({
-                    ...o,
-                    productId: +e,
-                    descriptions: products.getItem(+e).name,
-                    unitId: u.id,
-                    price: u.buyPrice,
-                    content: u.content,
-                    buyPrice: u.buyPrice,
-                    total: (u.price * o.qty) - o.totalDiv,
-                    realQty: o.qty * u.content,
-                    unitName: u.name
-                  }));
-                } else {
-                  alert("Produk ini belum punya data unit.")
-                }
-                // } else {
-                //   setGrass((o) => ({
-                //     ...o,
-                //     productId: +e,
-                //     descriptions: products.getItem(+e).name,
-                //     unitId: u.id,
-                //     content: u.content,
-                //     buyPrice: u.buyPrice,
-                //     realQty: o.qty * u.content,
-                //     unitName: u.name
-                //   }));
-                // }
-              }
-            }}
-          >
-            {(item) => <Item>{item.name}</Item>}
-          </ComboBox>
           <TextField
             type={"date"}
             width={{ base: "auto", M: "35%" }}
@@ -176,11 +111,9 @@ const GrassForm: NextPage<GrassFormProps> = ({
             onChange={(e) => setGrass((o) => ({ ...o, orderDate: e }))}
           />
         </Flex>
-
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <NumberField
-            validationState={isQtyValid ? "valid" : "invalid"}
-            isRequired
+            isReadOnly
             hideStepper={true}
             width={{ base: "auto", M: "25%" }}
             label={"Qty (kg)"}
@@ -188,70 +121,9 @@ const GrassForm: NextPage<GrassFormProps> = ({
               setGrass((o) => ({
                 ...o,
                 qty: e,
-                total: o.price * e - o.totalDiv,
               }))
             }
             value={grass.qty}
-          />
-          <ComboBox
-            validationState={isUnitValid ? "valid" : "invalid"}
-            label={"Unit"}
-            defaultItems={
-              products.getItem(grass.productId)
-                ? products.getItem(grass.productId).units
-                : []
-            }
-            selectedKey={grass.unitId}
-            onSelectionChange={(e) => {
-              let us = products.getItem(grass.productId).units;
-              if (us) {
-                let s = us.filter((o) => o.id === +e);
-                if (s) {
-                  let u = s[0];
-                  if (u) {
-                    // if (grass.id === 0) {
-                      setGrass((o) => ({
-                        ...o,
-                        unitId: u.id,
-                        price: u.buyPrice,
-                        content: u.content,
-                        buyPrice: u.buyPrice,
-                        total: (u.price * o.qty) - o.totalDiv,
-                        realQty: u.content * o.qty,
-                        unitName: u.name,
-                      }));
-                    // } else {
-                    //   setGrass((o) => ({
-                    //     ...o,
-                    //     unitId: u.id,
-                    //     content: u.content,
-                    //     buyPrice: u.buyPrice,
-                    //     realQty: u.content * o.qty,
-                    //     unitName: u.name,
-                    //   }));
-                    // }
-                  }
-                }
-              }
-            }}
-          >
-            {(item) => <Item>{item.name}</Item>}
-          </ComboBox>
-          <NumberField
-            flex
-            isRequired
-            validationState={isPriceValid ? "valid" : "invalid"}
-            width={"auto"}
-            hideStepper={true}
-            label={"Harga"}
-            value={grass.price}
-            onChange={(e) =>
-              setGrass((o) => ({
-                ...o,
-                price: e,
-                total: o.qty * e - o.totalDiv,
-              }))
-            }
           />
           <View flex alignSelf="flex-end" marginBottom={"size-100"}>
             Total sebelum dibagi: <strong>{FormatNumber(grass.total + grass.totalDiv)}</strong>
@@ -261,33 +133,30 @@ const GrassForm: NextPage<GrassFormProps> = ({
         <View flex backgroundColor={"static-chartreuse-300"} borderRadius={"medium"}>
           <View padding={"size-300"}>
             <Flex flex direction={"row"} gap={"size-300"}>
-              {customerDiv && (
-                <View flex>
-                  <View>
-                    Bagi hasil dengan <strong>{customerDiv.name}</strong>
-                  </View>
-                  <View>
-                    <NumberField
-                      flex
-                      isRequired
-                      validationState={
-                        grass.totalDiv >= 0 ? "valid" : "invalid"
-                      }
-                      width={"auto"}
-                      hideStepper={true}
-                      label={"Nominal bagian"}
-                      value={grass.totalDiv}
-                      onChange={(e) =>
-                        setGrass((o) => ({
-                          ...o,
-                          totalDiv: e,
-                          total: o.qty * o.price - e,
-                        }))
-                      }
-                    />
-                  </View>
+              <View flex>
+                <View>
+                  Bagi hasil dengan <strong> .... </strong>
                 </View>
-              )}
+                <View>
+                  <NumberField
+                    flex
+                    isRequired
+                    validationState={
+                      grass.totalDiv >= 0 ? "valid" : "invalid"
+                    }
+                    width={"auto"}
+                    hideStepper={true}
+                    label={"Nominal bagian"}
+                    value={grass.totalDiv}
+                    onChange={(e) =>
+                      setGrass((o) => ({
+                        ...o,
+                        totalDiv: e
+                      }))
+                    }
+                  />
+                </View>
+              </View>
               <View>
                 <View>
                   Bagian <b>{grass.customer?.name} </b>setelah dibagi
@@ -316,11 +185,7 @@ const GrassForm: NextPage<GrassFormProps> = ({
             <Button
               type={"submit"}
               variant="cta"
-              isDisabled={
-                isPriceValid <= 0 ||
-                isDescriptionValid === "" ||
-                isQtyValid <= 0
-              }
+              isDisabled={isDescriptionValid === ""}
             >
               Save
             </Button>

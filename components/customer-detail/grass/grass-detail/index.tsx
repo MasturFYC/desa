@@ -20,7 +20,15 @@ const GrassDetailForm = dynamic(() => import("./form"), {
 const initGrassDetail: iGrassDetail = {
   grassId: 0,
   id: 0,
+  unitId: 0,
   qty: 0,
+  content: 0,
+  unitName: '',
+  realQty: 0,
+  price: 0,
+  subtotal: 0,
+  buyPrice: 0,
+  productId: 0,
 };
 
 type GrassDetailProps = {

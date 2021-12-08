@@ -195,7 +195,7 @@ CREATE FUNCTION public.get_customer_div(customer_id integer) RETURNS record
         DECLARE ret RECORD;
 BEGIN
 
-        SELECT c.customer_div, c.name INTO ret
+        SELECT c.name INTO ret
         FROM customers c
         WHERE c.id = customer_id;
 
@@ -217,12 +217,8 @@ CREATE FUNCTION public.grass_after_delete_func() RETURNS trigger
 
 BEGIN
 
-  DELETE FROM payments
-    WHERE ref_id = OLD.id;
-
-  UPDATE products SET
-    stock = stock + OLD.real_qty
-    WHERE id = OLD.product_id;
+    DELETE FROM payments WHERE
+        ref_id = OLD.id;
 
   RETURN OLD;
 
@@ -239,38 +235,38 @@ CREATE FUNCTION public.grass_after_insert_func() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 
-    declare cid integer;
     declare cname varchar(50);
-    declare total decimal(12,2);
+    declare total_div decimal(12,2);
+    declare qty decimal(10,2);
     declare grass_id integer;
     declare cust_id integer;
+    declare part_id integer;
+    declare pay_date timestamp with time zone;
 
 BEGIN
 
-    total := NEW.total_div;
+    total_div := NEW.total_div;
+    grass_id := NEW.id;
+    cust_id := NEW.customer_id;
+    qty := NEW.qty;
+    pay_date := NEW.order_date;
+    part_id := NEW.partner_id;
 
-    if total > 0 then
-      
-        grass_id := NEW.id;
-        cust_id := NEW.customer_id;
+    if total_div > 0 then
 
-        SELECT a, b into cid, cname 
-            from get_customer_div(cust_id) 
-            as (a integer, b varchar(50));
+        SELECT a into cname 
+            from get_customer_div(customer_id) 
+            as (a varchar(50));
 
         INSERT INTO payments (
-            customer_id, descriptions,
+            customer_id, descriptions, 
             ref_id, payment_date, total
         ) VALUES (
-            cid, concat('Bagi hasil dengan ', cname),
-            grass_id, now(), total
+            part_id, concat('Bagi hasil dengan ', cname, ' (', qty, ' kg)'),
+            grass_id, pay_date, total_div
         );
 
     end if;
-
-    UPDATE products SET
-        stock = stock - NEW.real_qty
-        WHERE id = NEW.product_id;
 
     RETURN NEW;
 
@@ -288,37 +284,43 @@ CREATE FUNCTION public.grass_after_update_func() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 
-    declare cid integer;
     declare cname varchar(50);
-    declare total decimal(12,2);
+    declare total_div decimal(12,2);
+    declare qty decimal(10,2);
     declare grass_id integer;
     declare cust_id integer;
+    declare part_id integer;
+    declare pay_date timestamp with time zone;
 
 BEGIN
 
-    total := NEW.total_div;
+    total_div := NEW.total_div;
+    qty := NEW.qty;
+    pay_date := NEW.order_date;
+    grass_id := NEW.id;
+    part_id := NEW.partner_id;
 
     IF total > 0 THEN
 
+        SELECT a into cname 
+        from get_customer_div(customer_id) 
+        as (a varchar(50));
+
         UPDATE payments SET
-            total = NEW.total_div
-            WHERE ref_id = NEW.id;
+            total = total_div,
+            descriptions = concat('Bagi hasil dengan ', cname, ' (', qty, ' kg)'),
+            payment_date = pay_date,
+            customer_id = part_id
+        WHERE ref_id = grass_id;
 
         IF NOT FOUND THEN
-
-            grass_id := NEW.id;
-                cust_id := NEW.customer_id;
-
-            SELECT a, b INTO cid, cname
-                FROM get_customer_div(cust_id)
-                AS (a integer, b varchar(50));
             
             INSERT INTO payments (
-              customer_id, descriptions,
-              ref_id, payment_date, total
+                customer_id, descriptions, 
+                ref_id, payment_date, total
             ) VALUES (
-              cid, concat('Bagi hasil dengan ', cname),
-              grass_id, now(), total
+                part_id, concat('Bagi hasil dengan ', cname, ' (', qty, ' kg)'),
+                grass_id, pay_date, total_div
             );
 
         END IF;
@@ -330,50 +332,12 @@ BEGIN
 
     END IF;
 
-    IF (OLD.product_id = NEW.product_id) THEN
-      
-        UPDATE products SET
-            stock = stock - NEW.real_qty + OLD.real_qty
-            WHERE id = NEW.product_id;
-
-    ELSE
-
-        UPDATE products SET
-            stock = stock - NEW.real_qty
-            WHERE id = NEW.product_id;
-
-        UPDATE products SET
-            stock = stock + OLD.real_qty
-            WHERE id = OLD.product_id;
-
-    END IF;
-
     RETURN NEW;
 
 END; $$;
 
 
 ALTER FUNCTION public.grass_after_update_func() OWNER TO postgres;
-
---
--- Name: grass_before_insert_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION public.grass_before_insert_update_func() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-
-BEGIN
-
-    NEW.total = (NEW.qty * NEW.price) - NEW.total_div;
-    NEW.real_qty = (NEW.qty * NEW.content);
-
-    RETURN NEW;
-
-END; $$;
-
-
-ALTER FUNCTION public.grass_before_insert_update_func() OWNER TO postgres;
 
 --
 -- Name: grass_detail_after_delete_func(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -385,12 +349,17 @@ CREATE FUNCTION public.grass_detail_after_delete_func() RETURNS trigger
 
 begin
 
---raise notice 'value: %', NEW.subtotal;
-update grass set
-qty = qty - OLD.qty
-where id = OLD.grass_id;
+    update products set
+        stock = stock - OLD.real_qty
+        where id = OLD.product_id;
 
-RETURN OLD;
+    update grass set
+        qty = qty - OLD.real_qty,
+        total = total - OLD.subtotal
+    WHERE id = NEW.grass_id;
+
+
+    RETURN OLD;
 
 end; $$;
 
@@ -407,12 +376,16 @@ CREATE FUNCTION public.grass_detail_after_insert_func() RETURNS trigger
 
 begin
 
---raise notice 'value: %', NEW.subtotal;
-update grass set
-qty = qty + NEW.qty
-where id = NEW.grass_id;
+    update products set
+        stock = stock + NEW.real_qty
+        where id = NEW.product_id;
 
-RETURN NEW;
+    update grass set
+        qty = qty + NEW.real_qty,
+        total = total + NEW.subtotal 
+    WHERE id = NEW.grass_id;
+
+    RETURN NEW;
 
 end; $$;
 
@@ -429,17 +402,52 @@ CREATE FUNCTION public.grass_detail_after_update_func() RETURNS trigger
 
 begin
 
---raise notice 'value: %', NEW.subtotal;
-update grass set
-qty = qty + NEW.qty - OLD.qty
-where id = NEW.grass_id;
+    if NEW.product_id = OLD.product_id then
+        update products set
+            stock = stock + NEW.real_qty - OLD.real_qty
+            where id = NEW.product_id;
+    else
+        update products set
+            stock = stock + NEW.real_qty
+            where id = NEW.product_id;
 
-RETURN NEW;
+        update products set
+            stock = stock - OLD.real_qty
+            where id = OLD.product_id;
+
+    end if;
+
+    update grass set
+        qty = qty + NEW.real_qty - OLD.real_qty,
+        total = total + NEW.subtotal - OLD.subtotal
+    WHERE id = NEW.grass_id;
+
+    RETURN NEW;
 
 end; $$;
 
 
 ALTER FUNCTION public.grass_detail_after_update_func() OWNER TO postgres;
+
+--
+-- Name: grass_detail_before_insert_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.grass_detail_before_insert_update_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+BEGIN
+
+    NEW.real_qty = NEW.qty * NEW.content;
+    NEW.subtotal = NEW.qty * NEW.price;
+
+    RETURN NEW;
+
+END; $$;
+
+
+ALTER FUNCTION public.grass_detail_before_insert_update_func() OWNER TO postgres;
 
 --
 -- Name: lunas_delete_func(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -547,48 +555,6 @@ $$;
 
 
 ALTER FUNCTION public.lunas_insert_func() OWNER TO postgres;
-
---
--- Name: lunas_update_func(); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION public.lunas_update_func() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-
-BEGIN
-
-    if NEW.remain_payment > 0 then
-      update kasbons set 
-      total = NEW.remain_payment,
-      kasbon_date = NEW.created_at,
-      jatuh_tempo = NEW.created_at + INTERVAL '7 days'
-      where ref_lunas_id = NEW.id;
-
-      if NOT FOUND then
-
-        if NEW.remain_payment > 0 then
-          insert into kasbons (customer_id, descriptions, kasbon_date, jatuh_tempo, total, ref_lunas_id) values (
-            NEW.customer_id, concat('Saldo piutang pelunasan ID #'::character varying, NEW.id),
-            NEW.created_at, NEW.created_at + INTERVAL '7 days',
-            NEW.remain_payment, NEW.id
-          );
-        end if;
-
-      end if;
-    else
-      DELETE FROM kasbons
-        WHERE ref_lunas_id = NEW.id 
-        AND customer_id = NEW.customer_id;
-    end if;
-    
-    RETURN NEW;
-
-END; 
-$$;
-
-
-ALTER FUNCTION public.lunas_update_func() OWNER TO postgres;
 
 --
 -- Name: od_before_insert_func(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -783,10 +749,11 @@ begin
     return query with recursive trx as (
 
         select 0 id, '-'::character varying(10) trx_date,
-          '-'::character varying(60) faktur, 'Stock Awal'::character varying(50) as name,
+          'Stock Awal'::character varying(60) faktur, p.name,
           p.first_stock real_qty, p.unit unit_name, p.first_stock debt, 0 cred
         from products p
         where p.id = prod_id
+
 
       union all
 
@@ -1576,8 +1543,7 @@ CREATE TABLE public.customers (
     street character varying(128),
     city character varying(50),
     phone character varying(25),
-    customer_type public.cust_type DEFAULT 'Bandeng'::public.cust_type NOT NULL,
-    customer_div integer DEFAULT 0 NOT NULL
+    customer_type public.cust_type DEFAULT 'Bandeng'::public.cust_type NOT NULL
 );
 
 
@@ -1607,17 +1573,11 @@ CREATE TABLE public.grass (
     id integer DEFAULT nextval('public.order_seq'::regclass) NOT NULL,
     descriptions character varying(128) NOT NULL,
     order_date timestamp without time zone NOT NULL,
-    price numeric(12,2) DEFAULT 0 NOT NULL,
     total numeric(12,2) DEFAULT 0 NOT NULL,
-    qty numeric(10,2) DEFAULT 0 NOT NULL,
     total_div numeric(12,2) DEFAULT 0 NOT NULL,
-    product_id integer DEFAULT 0 NOT NULL,
-    unit_id integer DEFAULT 0 NOT NULL,
-    buy_price numeric(12,2) DEFAULT 0 NOT NULL,
-    content numeric(8,2) DEFAULT 0 NOT NULL,
-    unit_name character varying(6) NOT NULL,
-    real_qty numeric(12,2) DEFAULT 0 NOT NULL,
-    lunas_id integer DEFAULT 0 NOT NULL
+    lunas_id integer DEFAULT 0 NOT NULL,
+    partner_id integer DEFAULT 0 NOT NULL,
+    qty numeric(10,2) DEFAULT 0 NOT NULL
 );
 
 
@@ -1639,13 +1599,36 @@ CREATE SEQUENCE public.grass_detail_seq
 ALTER TABLE public.grass_detail_seq OWNER TO postgres;
 
 --
+-- Name: order_detail_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.order_detail_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.order_detail_seq OWNER TO postgres;
+
+--
 -- Name: grass_details; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.grass_details (
     grass_id integer NOT NULL,
-    id integer DEFAULT nextval('public.grass_detail_seq'::regclass) NOT NULL,
-    qty numeric(10,2) DEFAULT 0 NOT NULL
+    id integer DEFAULT nextval('public.order_detail_seq'::regclass) NOT NULL,
+    unit_id integer NOT NULL,
+    qty numeric(10,2) DEFAULT 0 NOT NULL,
+    content numeric(8,2) DEFAULT 0 NOT NULL,
+    unit_name character varying(6) NOT NULL,
+    real_qty numeric(10,2) DEFAULT 0 NOT NULL,
+    price numeric(12,2) DEFAULT 0 NOT NULL,
+    subtotal numeric(12,2) DEFAULT 0 NOT NULL,
+    buy_price numeric(12,2) DEFAULT 0 NOT NULL,
+    product_id integer NOT NULL
 );
 
 
@@ -1706,21 +1689,6 @@ ALTER TABLE public.lunas_id_seq OWNER TO postgres;
 
 ALTER SEQUENCE public.lunas_id_seq OWNED BY public.lunas.id;
 
-
---
--- Name: order_detail_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.order_detail_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.order_detail_seq OWNER TO postgres;
 
 --
 -- Name: order_details; Type: TABLE; Schema: public; Owner: postgres
@@ -2041,11 +2009,10 @@ COPY public.categories (id, name, created_at, updated_at) FROM stdin;
 -- Data for Name: customers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.customers (id, name, street, city, phone, customer_type, customer_div) FROM stdin;
-1	Dhoni Armadi	Ds. Telukagung	Indramayu	085-5556-65656	Rumput Laut	0
-2	Agung Priatna	RT. 14 / 06	Ds. Plumbon	085-5556-65656	Bandeng	1
-3	CV. PURNAMA SEJAHTERA	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	Pabrik	0
-4	Joni Armadi	Ds. Telukagung	Indramayu	085-5556-65656	Rumput Laut	0
+COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
+1	Dhoni Armadi	Ds. Telukagung	Indramayu	085-5556-65656	Rumput Laut
+2	Agung Priatna	RT. 14 / 06	Ds. Plumbon	085-5556-65656	Bandeng
+3	CV. PURNAMA SEJAHTERA	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	Pabrik
 \.
 
 
@@ -2053,10 +2020,8 @@ COPY public.customers (id, name, street, city, phone, customer_type, customer_di
 -- Data for Name: grass; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.grass (customer_id, id, descriptions, order_date, price, total, qty, total_div, product_id, unit_id, buy_price, content, unit_name, real_qty, lunas_id) FROM stdin;
-2	50	Pembelian Rumput Laut	2021-11-28 08:16:00	5500.00	137500.00	25.00	0.00	16	24	4500.00	3.00	kg	75.00	98
-2	56	Rumput Laut	2021-12-02 22:22:00	5500.00	550000.00	200.00	550000.00	16	24	4500.00	3.00	kg	600.00	98
-2	164	Rumput Laut	2021-12-06 10:55:00	1500.00	375000.00	250.00	0.00	16	23	1500.00	1.00	pcs	250.00	100
+COPY public.grass (customer_id, id, descriptions, order_date, total, total_div, lunas_id, partner_id, qty) FROM stdin;
+2	9	Rumput Laut	2021-12-09 01:28:00	1350000.00	0.00	0	0	0.00
 \.
 
 
@@ -2064,10 +2029,7 @@ COPY public.grass (customer_id, id, descriptions, order_date, price, total, qty,
 -- Data for Name: grass_details; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.grass_details (grass_id, id, qty) FROM stdin;
-35	8	20.00
-35	9	10.00
-35	7	27.00
+COPY public.grass_details (grass_id, id, unit_id, qty, content, unit_name, real_qty, price, subtotal, buy_price, product_id) FROM stdin;
 \.
 
 
@@ -2076,10 +2038,6 @@ COPY public.grass_details (grass_id, id, qty) FROM stdin;
 --
 
 COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, total, lunas_id, ref_lunas_id) FROM stdin;
-31	2	Kasbon Beli Terpal	2021-12-17 00:00:00	2021-12-24 00:00:00	1500000.00	98	0
-37	2	Kasbon ewe	2021-11-25 13:01:00	2021-12-02 13:01:00	25000.00	98	0
-161	2	Saldo piutang pelunasan ID #98	2021-12-06 10:43:00	2021-12-13 10:43:00	661500.00	100	98
-163	2	Kasbon	2021-12-06 10:54:00	2021-12-13 10:54:00	100000.00	100	0
 \.
 
 
@@ -2088,8 +2046,6 @@ COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, to
 --
 
 COPY public.lunas (id, customer_id, remain_payment, descriptions, created_at, updated_at) FROM stdin;
-98	2	661500.00	eq21323	2021-12-06 10:43:00+07	2021-12-06 10:54:54.290247+07
-100	2	-13500.00	Pelunasan bulan desember	2021-12-08 14:56:00+07	2021-12-08 14:59:40.092246+07
 \.
 
 
@@ -2098,16 +2054,12 @@ COPY public.lunas (id, customer_id, remain_payment, descriptions, created_at, up
 --
 
 COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_qty, price, subtotal, buy_price, product_id) FROM stdin;
-32	87	21	1.00	1.00	zak	1.00	325000.00	325000.00	250000.00	15
-36	105	17	2.00	1.00	pcs	2.00	39000.00	78000.00	30000.00	1
-46	111	21	1.00	1.00	zak	1.00	325000.00	325000.00	250000.00	15
-46	112	1	1.00	1.00	btl	1.00	15000.00	15000.00	10000.00	7
-46	114	17	1.00	1.00	pcs	1.00	39000.00	39000.00	30000.00	1
-49	115	17	1.00	1.00	pcs	1.00	39000.00	39000.00	30000.00	1
-49	157	1	1.00	1.00	btl	1.00	15000.00	15000.00	10000.00	7
-36	159	21	2.00	1.00	zak	2.00	325000.00	650000.00	250000.00	15
-162	160	1	2.00	1.00	btl	2.00	15000.00	30000.00	10000.00	7
-162	161	21	1.00	1.00	zak	1.00	325000.00	325000.00	250000.00	15
+4	8	17	2.00	1.00	pcs	2.00	39000.00	78000.00	30000.00	1
+4	9	2	1.00	10.00	pak	10.00	130000.00	130000.00	100000.00	7
+4	10	21	2.00	1.00	zak	2.00	325000.00	650000.00	250000.00	15
+5	11	1	2.00	1.00	btl	2.00	15000.00	30000.00	10000.00	7
+6	12	1	3.00	1.00	btl	3.00	15000.00	45000.00	10000.00	7
+7	13	21	5.00	1.00	zak	5.00	325000.00	1625000.00	250000.00	15
 \.
 
 
@@ -2116,11 +2068,10 @@ COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_
 --
 
 COPY public.orders (id, customer_id, order_date, total, payment, remain_payment, descriptions, lunas_id) FROM stdin;
-32	2	2021-11-17 15:38:00	325000.00	30000.00	295000.00	Utang Obat	98
-49	2	2021-11-28 08:04:00	54000.00	0.00	54000.00	Pembelian Barang	98
-162	2	2021-12-06 10:55:00	355000.00	55000.00	300000.00	Pembelian Barang	100
-36	1	2021-11-25 12:15:00	728000.00	70000.00	658000.00	Utang Pupuk dan Obat	0
-46	1	2021-11-28 02:56:00	379000.00	0.00	379000.00	Penjualan Umum	0
+4	1	2021-12-07 00:27:00	858000.00	0.00	858000.00	Utang Obat dan Pakan	0
+5	1	2021-12-07 00:30:00	30000.00	0.00	30000.00	Utang obat	0
+6	2	2021-12-07 00:30:00	45000.00	0.00	45000.00	Utang obat	0
+7	2	2021-12-07 00:55:00	1625000.00	0.00	1625000.00	Utang Pakan	0
 \.
 
 
@@ -2129,10 +2080,6 @@ COPY public.orders (id, customer_id, order_date, total, payment, remain_payment,
 --
 
 COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total, lunas_id) FROM stdin;
-33	2	Cicilan Bayar Obat	0	2021-11-18 11:55:00	25000.00	98
-125	2	Cicilan	0	2021-12-06 01:13:00	500000.00	98
-165	2	Cicilan	0	2021-12-06 10:55:00	700000.00	100
-57	1	Bagi hasil dengan Agung Priatna	56	2021-12-02 22:53:49.203045	550000.00	0
 \.
 
 
@@ -2141,11 +2088,11 @@ COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total
 --
 
 COPY public.products (id, name, spec, price, stock, first_stock, unit, update_notif, category_id) FROM stdin;
+1	EM 4 Perikanan	1 ltr	30000.00	308.00	100.00	pcs	t	1
+7	Abachel	250cc	10000.00	335.00	250.00	btl	t	1
+15	Pakan Bandeng	Pelet KW1	250000.00	668.00	500.00	zak	t	1
+16	Rumput Laut	KW-1	1500.00	-300.00	0.00	kg	t	2
 23	Rumput Laut KW-2	\N	3500.00	0.00	0.00	kg	t	2
-7	Abachel	250cc	10000.00	101.00	90.00	btl	t	1
-15	Pakan Bandeng	Pelet KW1	250000.00	108.00	110.00	zak	t	1
-1	EM 4 Perikanan	1 ltr	30000.00	143.00	100.00	pcs	t	2
-16	Rumput Laut	KW-1	1500.00	-1640.00	20.00	kg	t	2
 \.
 
 
@@ -2154,10 +2101,6 @@ COPY public.products (id, name, spec, price, stock, first_stock, unit, update_no
 --
 
 COPY public.special_details (order_id, id, product_id, unit_id, qty, unit_name, price, subtotal, content, real_qty, buy_price) FROM stdin;
-104	153	16	23	25.00	pcs	1950.00	48750.00	1.00	25.00	1500.00
-104	154	16	23	100.00	pcs	1950.00	195000.00	1.00	100.00	1500.00
-106	155	16	23	10.00	pcs	1950.00	19500.00	1.00	10.00	1500.00
-109	156	16	24	100.00	kg	5850.00	585000.00	3.00	300.00	4500.00
 \.
 
 
@@ -2166,9 +2109,6 @@ COPY public.special_details (order_id, id, product_id, unit_id, qty, unit_name, 
 --
 
 COPY public.special_orders (id, customer_id, created_at, updated_at, packaged_at, shipped_at, driver_name, police_number, street, city, phone, total, cash, payments, remain_payment, descriptions, lunas_id) FROM stdin;
-104	3	2021-12-04 01:29:00	2021-12-04 23:12:28.012161	2021-12-04 01:29:00	2021-12-04 01:29:00	Udin	-5665656	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	243750.00	43750.00	200000.00	0.00	\N	0
-109	3	2021-12-07 00:00:00	2021-12-04 23:13:26.585333	2021-12-07 00:00:00	2021-12-07 00:00:00	Warim	E-1025-GH	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	585000.00	0.00	0.00	585000.00	\N	0
-106	3	2021-12-06 00:00:00	2021-12-04 23:13:35.145055	2021-12-04 01:29:00	2021-12-04 01:29:00	tttt	werwerwer	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	19500.00	0.00	19500.00	0.00	\N	0
 \.
 
 
@@ -2177,8 +2117,6 @@ COPY public.special_orders (id, customer_id, created_at, updated_at, packaged_at
 --
 
 COPY public.special_payments (customer_id, order_id, id, descriptions, payment_at, nominal, pay_num, lunas_id) FROM stdin;
-3	106	107	Angsuran piutang dagang #106	2021-12-06 00:00:00	19500.00	xc/2656/155464	0
-3	104	105	Angsuran piutang dagang #104	2021-12-05 00:00:00	200000.00	qweqwewqe qweqwe	0
 \.
 
 
@@ -2187,15 +2125,11 @@ COPY public.special_payments (customer_id, order_id, id, descriptions, payment_a
 --
 
 COPY public.stock_details (stock_id, id, product_id, unit_id, qty, content, unit_name, real_qty, price, subtotal) FROM stdin;
-4	94	15	21	3.00	1.00	zak	3.00	250000.00	750000.00
-11	92	7	1	4.00	1.00	btl	4.00	10000.00	40000.00
-11	95	1	17	2.00	1.00	pcs	2.00	30000.00	60000.00
-29	96	7	1	3.00	1.00	btl	3.00	10000.00	30000.00
-4	97	1	17	50.00	1.00	pcs	50.00	30000.00	1500000.00
-12	91	7	2	1.00	10.00	pak	10.00	100000.00	100000.00
-12	90	15	21	10.00	1.00	zak	10.00	250000.00	2500000.00
-45	99	1	17	2.00	1.00	pcs	2.00	30000.00	60000.00
-33	98	1	17	3.00	1.00	pcs	3.00	30000.00	90000.00
+1	3	7	2	10.00	10.00	pak	100.00	100000.00	1000000.00
+2	4	1	20	20.00	3.00	pak	60.00	90000.00	1800000.00
+2	5	15	21	150.00	1.00	zak	150.00	250000.00	37500000.00
+3	6	15	21	25.00	1.00	zak	25.00	250000.00	6250000.00
+3	7	1	20	50.00	3.00	pak	150.00	90000.00	4500000.00
 \.
 
 
@@ -2204,16 +2138,13 @@ COPY public.stock_details (stock_id, id, product_id, unit_id, qty, content, unit
 --
 
 COPY public.stock_payments (id, stock_id, pay_num, pay_date, nominal, descriptions) FROM stdin;
-24	11	x-0001	2021-11-23 03:16:00	35000.00	Bayar Stock Pembelian #BG-562987
-23	11	x-0001	2021-11-23 03:08:00	50000.00	Bayar Stock Pembelian #BG-562987
-25	12	x-65000	2021-11-23 03:25:00	510000.00	Bayar Stock Pembelian #CV/3-985441
-26	4	cp-004	2021-11-23 03:27:00	50000.00	Bayar Stock Pembelian #x-10256559
-27	11	x63332	2021-11-23 03:32:00	10000.00	Bayar Stock Pembelian #BG-562987
-30	29	x9898	2021-11-23 03:39:00	10000.00	Bayar Stock Pembelian #ssssss
-31	29	x-695554	2021-11-23 13:40:00	15000.00	Bayar Stock Pembelian #ssssss
-32	4	c-6522	2021-11-23 14:38:00	1250000.00	Bayar Stock Pembelian #x-10256559
-46	33	ww	2021-11-25 11:54:00	25000.00	Bayar Stock Pembelian #dddd
-47	33	ewqewe	2021-11-25 11:56:00	5000.00	Bayar Stock Pembelian #dddd
+4	2	df-0001	2021-12-06 23:21:00	30000000.00	Bayar Stock Pembelian #df-55588-44
+5	1	d-6-555-888	2021-12-06 23:22:00	750000.00	Bayar Stock Pembelian #x-501
+6	1	df-665	2021-12-06 23:22:00	250000.00	Bayar Stock Pembelian #x-501
+7	3	sf-0001	2021-12-06 23:23:00	750000.00	Bayar Stock Pembelian #df-66665
+8	3	x-0006	2021-12-06 23:24:00	5000000.00	Bayar Stock Pembelian #df-66665
+9	3	x-006	2021-12-06 23:25:00	3000000.00	Bayar Stock Pembelian #df-66665
+10	3	c-0006	2021-12-06 23:25:00	2000000.00	Bayar Stock Pembelian #df-66665
 \.
 
 
@@ -2222,12 +2153,9 @@ COPY public.stock_payments (id, stock_id, pay_num, pay_date, nominal, descriptio
 --
 
 COPY public.stocks (id, supplier_id, stock_num, stock_date, total, cash, payments, remain_payment, descriptions) FROM stdin;
-29	6	ssssss	2021-11-23 03:38:00	30000.00	5000.00	25000.00	0.00	\N
-4	2	x-10256559	2021-11-22 20:49:00	2250000.00	700000.00	1300000.00	250000.00	test
-12	5	CV/3-985441	2021-11-22 21:14:00	2600000.00	300000.00	510000.00	1790000.00	\N
-11	4	BG-562987	2021-11-22 21:04:00	100000.00	5000.00	95000.00	0.00	Jatuh tempo tanggal 8-10-2021
-45	3	weqweq weqwe	2021-11-23 14:53:00	60000.00	0.00	0.00	60000.00	qwewe
-33	1	dddd	2021-11-23 14:41:00	90000.00	50000.00	30000.00	10000.00	\N
+3	6	df-66665	2021-12-06 23:17:00	10750000.00	0.00	10750000.00	0.00	\N
+2	4	df-55588-44	2021-12-06 23:17:00	39300000.00	0.00	30000000.00	9300000.00	\N
+1	5	x-501	2021-12-06 23:17:00	1000000.00	0.00	1000000.00	0.00	\N
 \.
 
 
@@ -2250,14 +2178,12 @@ COPY public.suppliers (id, name, sales_name, street, city, phone, cell, email) F
 --
 
 COPY public.units (product_id, id, name, content, price, buy_price, margin) FROM stdin;
-15	21	zak	1.00	325000.00	250000.00	0.3000
-7	2	pak	10.00	130000.00	100000.00	0.3000
-7	1	btl	1.00	15000.00	10000.00	0.5000
-7	25	ls	12.00	150000.00	120000.00	0.2500
+23	27	kg	1.00	5500.00	0.00	0.5714
 16	23	pcs	1.00	1950.00	1500.00	0.3000
 16	24	kg	3.00	5850.00	4500.00	0.3000
-23	27	kg	1.00	5500.00	0.00	0.5714
-15	22	pak	3.00	950025.00	750000.00	0.2667
+7	2	pak	10.00	130000.00	100000.00	0.3000
+7	1	btl	1.00	15000.00	10000.00	0.5000
+15	21	zak	1.00	325000.00	250000.00	0.3000
 1	17	pcs	1.00	39000.00	30000.00	0.3000
 1	19	ls	12.00	468000.00	360000.00	0.3000
 1	20	pak	3.00	99999.00	90000.00	0.1111
@@ -2268,70 +2194,70 @@ COPY public.units (product_id, id, name, content, price, buy_price, margin) FROM
 -- Name: categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.categories_id_seq', 6, true);
+SELECT pg_catalog.setval('public.categories_id_seq', 1, false);
 
 
 --
 -- Name: customer_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.customer_seq', 4, true);
+SELECT pg_catalog.setval('public.customer_seq', 1, false);
 
 
 --
 -- Name: grass_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.grass_detail_seq', 9, true);
+SELECT pg_catalog.setval('public.grass_detail_seq', 1, false);
 
 
 --
 -- Name: lunas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.lunas_id_seq', 103, true);
+SELECT pg_catalog.setval('public.lunas_id_seq', 1, false);
 
 
 --
 -- Name: order_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_detail_seq', 161, true);
+SELECT pg_catalog.setval('public.order_detail_seq', 13, true);
 
 
 --
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 168, true);
+SELECT pg_catalog.setval('public.order_seq', 9, true);
 
 
 --
 -- Name: product_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.product_seq', 26, true);
+SELECT pg_catalog.setval('public.product_seq', 1, false);
 
 
 --
 -- Name: seq_stock; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.seq_stock', 47, true);
+SELECT pg_catalog.setval('public.seq_stock', 10, true);
 
 
 --
 -- Name: seq_supplier; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.seq_supplier', 38, true);
+SELECT pg_catalog.setval('public.seq_supplier', 1, false);
 
 
 --
 -- Name: unit_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.unit_seq', 27, true);
+SELECT pg_catalog.setval('public.unit_seq', 1, false);
 
 
 --
@@ -2507,17 +2433,24 @@ CREATE INDEX ix_grass_customer ON public.grass USING btree (customer_id);
 
 
 --
--- Name: ix_grass_detail; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_grass_detail_product; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX ix_grass_detail ON public.grass_details USING btree (grass_id);
+CREATE INDEX ix_grass_detail_product ON public.grass_details USING btree (product_id);
 
 
 --
--- Name: ix_grass_product; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_grass_detail_unit; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX ix_grass_product ON public.grass USING btree (product_id);
+CREATE INDEX ix_grass_detail_unit ON public.grass_details USING btree (unit_id);
+
+
+--
+-- Name: ix_grass_details; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_grass_details ON public.grass_details USING btree (grass_id);
 
 
 --
@@ -2689,13 +2622,6 @@ CREATE TRIGGER grass_after_update_trig AFTER UPDATE ON public.grass FOR EACH ROW
 
 
 --
--- Name: grass grass_before_insert_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
---
-
-CREATE TRIGGER grass_before_insert_update_trig BEFORE INSERT OR UPDATE ON public.grass FOR EACH ROW EXECUTE FUNCTION public.grass_before_insert_update_func();
-
-
---
 -- Name: grass_details grass_detail_after_delete_trig; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -2717,6 +2643,13 @@ CREATE TRIGGER grass_detail_after_update_trig AFTER UPDATE ON public.grass_detai
 
 
 --
+-- Name: grass_details grass_detail_before_insert_trig; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER grass_detail_before_insert_trig BEFORE INSERT OR UPDATE ON public.grass_details FOR EACH ROW EXECUTE FUNCTION public.grass_detail_before_insert_update_func();
+
+
+--
 -- Name: lunas lunas_aft_delete_trig; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -2728,13 +2661,6 @@ CREATE TRIGGER lunas_aft_delete_trig AFTER DELETE ON public.lunas FOR EACH ROW E
 --
 
 CREATE TRIGGER lunas_aft_insert_trig AFTER INSERT ON public.lunas FOR EACH ROW EXECUTE FUNCTION public.lunas_insert_func();
-
-
---
--- Name: lunas lunas_aft_update_trig; Type: TRIGGER; Schema: public; Owner: postgres
---
-
-CREATE TRIGGER lunas_aft_update_trig AFTER UPDATE ON public.lunas FOR EACH ROW EXECUTE FUNCTION public.lunas_update_func();
 
 
 --
@@ -2962,19 +2888,27 @@ ALTER TABLE ONLY public.order_details
 
 
 --
--- Name: grass fk_grass_product; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: grass_details fk_grass_detail_product; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.grass
-    ADD CONSTRAINT fk_grass_product FOREIGN KEY (product_id) REFERENCES public.products(id);
+ALTER TABLE ONLY public.grass_details
+    ADD CONSTRAINT fk_grass_detail_product FOREIGN KEY (product_id) REFERENCES public.products(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
--- Name: grass fk_grass_unit; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: grass_details fk_grass_detail_unit; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.grass
-    ADD CONSTRAINT fk_grass_unit FOREIGN KEY (unit_id) REFERENCES public.units(id);
+ALTER TABLE ONLY public.grass_details
+    ADD CONSTRAINT fk_grass_detail_unit FOREIGN KEY (unit_id) REFERENCES public.units(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: grass_details fk_grass_details; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.grass_details
+    ADD CONSTRAINT fk_grass_details FOREIGN KEY (grass_id) REFERENCES public.grass(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --

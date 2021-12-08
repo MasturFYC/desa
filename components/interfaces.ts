@@ -55,7 +55,7 @@ export interface iCustomer {
   street?: string,
   city?: string,
   phone?: string,
-  customerDiv: number;
+//  customerDiv: number;
   customerType: customerType;
   orders?: iOrder[];
 }
@@ -147,27 +147,29 @@ export interface iPayment {
 
 export interface iGrass {
   customerId: number;
-  lunasId: number;
   id: number;
-  productId: number;
   descriptions: string;
   orderDate: string;
-  price: number;
-  qty: number;
-  unitId: number;
-  unitName: string;
-  content: number;
-  realQty: number;
-  buyPrice: number;
   total: number;
   totalDiv: number;
+  lunasId: number;
+  partnerId: number;
+  qty: number;
   customer?: iCustomer;
 }
 
 export interface iGrassDetail {
   grassId: number;
   id: number;
-  qty: number
+  unitId: number;
+  qty: number;
+  content: number;
+  unitName: string;
+  realQty: number;
+  price: number;
+  subtotal: number;
+  buyPrice: number;
+  productId: number;
 }
 
 export interface iSupplier {

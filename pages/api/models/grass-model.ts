@@ -2,7 +2,6 @@ import moment from 'moment';
 import { dateParam, hour24Format, iGrass } from '@components/interfaces'
 import db, { nestQuerySingle, sql } from "../config";
 
-
 type apiReturn = Promise<any[] | (readonly iGrass[] | undefined)[]>;
 
 interface apiFunction {
@@ -18,13 +17,12 @@ const apiGrass: apiFunction = {
   getGrass: async (id: number) => {
 
     const queryCustomer = sql`SELECT
-      d.id, d.name, d.street, d.city, d.phone, d.customer_type as "customerType", d.customer_div as "customerDiv"
+      d.id, d.name, d.street, d.city, d.phone, d.customer_type as "customerType"
     FROM customers AS d
-    WHERE d.id = c.customer_id`;
+    WHERE d.id = c.partner_id`;
 
     const query = sql`SELECT
-      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div,
-      c.product_id, c.unit_id, c.content, c.unit_name, c.real_qty, c.buy_price,
+      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div, c.partner_id,
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     WHERE c.id = ${id}`;
@@ -38,13 +36,12 @@ const apiGrass: apiFunction = {
   list: async () => {
 
     const queryCustomer = sql`SELECT
-      d.id, d.name, d.street, d.city, d.phone, d.customer_type as "customerType", d.customer_div as "customerDiv"
+      d.id, d.name, d.street, d.city, d.phone, d.customer_type as "customerType"
     FROM customers AS d
-    WHERE d.id = c.customer_id`;
+    WHERE d.id = c.partner_id`;
 
     const query = sql`SELECT
-      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div,
-      c.product_id, c.unit_id, c.content, c.unit_name, c.real_qty, c.buy_price,
+      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div, c.partner_id,
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     ORDER BY c.id DESC`;
@@ -58,13 +55,12 @@ const apiGrass: apiFunction = {
   getByCustomer: async (customerId: number, lunasId: number | undefined | null = 0) => {
 
     const queryCustomer = sql`SELECT
-      d.id, d.name, d.street, d.city, d.phone, d.customer_type as "customerType", d.customer_div as "customerDiv"
+      d.id, d.name, d.street, d.city, d.phone, d.customer_type as "customerType"
     FROM customers AS d
-    WHERE d.id = c.customer_id`;
+    WHERE d.id = c.partner_id`;
 
     const query = sql`SELECT
-      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div,
-      c.product_id, c.unit_id, c.content, c.unit_name, c.real_qty, c.buy_price,
+      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div, c.partner_id,
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     WHERE c.customer_id = ${customerId} AND c.lunas_id = ${lunasId}
@@ -87,18 +83,14 @@ const apiGrass: apiFunction = {
   },
 
   update: async (id: number, p: iGrass) => {
+
     const query = sql`
       UPDATE grass SET
       order_date = to_timestamp(${dateParam(p.orderDate)}, ${hour24Format}),
       customer_id = ${p.customerId},
       descriptions = ${p.descriptions},      
+      partner_id = ${p.partnerId},
       qty = ${p.qty},
-      content = ${p.content},
-      unit_name = ${p.unitName},
-      unit_id = ${p.unitId},
-      product_id = ${p.productId},
-      buy_price = ${p.buyPrice},
-      price = ${p.price},
       total_div = ${p.totalDiv}
       WHERE id = ${p.id}
       RETURNING *
@@ -114,20 +106,14 @@ const apiGrass: apiFunction = {
 
     const query = sql`
       INSERT INTO grass (
-        order_date, customer_id, descriptions, qty, price, total_div,
-        product_id, unit_id, content, unit_name, buy_price
+        order_date, customer_id, descriptions, qty, total_div, partner_id
       ) VALUES (
         to_timestamp(${dateParam(p.orderDate)}, ${hour24Format}),
         ${p.customerId},
         ${p.descriptions},
         ${p.qty},
-        ${p.price},
         ${p.totalDiv},
-        ${p.productId},
-        ${p.unitId},
-        ${p.content},
-        ${p.unitName},
-        ${p.buyPrice}
+        ${p.partnerId},
       )
       RETURNING *
     `;

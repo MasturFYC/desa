@@ -22,12 +22,11 @@ const CustomerForm = dynamic(() => import("./form"), {
   ssr: false,
 });
 
-const siteTitle = "Pelanggan";
+const siteTitle = 'Pelanggan';
 
 const initCustomer: iCustomer = {
   id: 0,
-  name: "",
-  customerDiv: 0,
+  name: '',
   customerType: customerType.BANDENG,
 };
 
@@ -40,7 +39,7 @@ const CustomerComponent: NextPage = () => {
 
   let customers = useAsyncList<iCustomer>({
     async load({ signal }) {
-      let res = await fetch("/api/customer", { signal });
+      let res = await fetch('/api/customer', { signal });
       let json = await res.json();
       return { items: json };
     },
@@ -234,7 +233,6 @@ const CustomerComponent: NextPage = () => {
                   <View paddingX={{ base: 0, M: "size-1000" }}>
                     <CustomerForm
                       data={x}
-                      customers={customers.items.filter(c => c.id !== x.id)}
                       updateCustomer={postCustomer}
                       closeForm={closeForm}
                     />

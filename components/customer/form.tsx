@@ -11,7 +11,6 @@ import { ComboBox, Item } from "@react-spectrum/combobox";
 
 type CustomerFormProps = {
   data: iCustomer;
-  customers: iCustomer[],
   updateCustomer: (method: string, id: number, data: iCustomer) => void;
   closeForm: () => void;
 };
@@ -24,11 +23,9 @@ interface CustomerDiv {
 const CustomerForm: NextPage<CustomerFormProps> = ({
   data,
   updateCustomer,
-  closeForm,
-  customers
+  closeForm
 }) => {
   let [customer, setCustomer] = useState<iCustomer>({} as iCustomer);
-  let [customerDivs, setCustomerDivs] = useState<CustomerDiv[]>([...customers.map( x => ({id: x.id, name: x.name}))])
 
   useEffect(() => {
     let isLoaded = false;
@@ -103,20 +100,6 @@ const CustomerForm: NextPage<CustomerFormProps> = ({
               value={customer.phone || ""}
               onChange={(e) => setCustomer((o) => ({ ...o, phone: e }))}
             />
-        <ComboBox
-          width={{ base: "auto", M: "28%" }}
-          label={"Berbagi dengan"}
-          placeholder={"e.g. pilih pelanggan"}
-          defaultItems={[{id:0, name:'none'},...customerDivs]}
-          selectedKey={customer.customerDiv}
-          onSelectionChange={(e) => setCustomer((o) => ({
-            ...o,
-            customerDiv: +e
-          }))}
-        >
-          {(item) => <Item>{item.id === 0 ? 'None' : item.name}</Item>}
-        </ComboBox>
-
           </Flex>
         </Flex>
         <Flex marginTop={"size-300"} direction="row" gap="size-100" margin={"size-100"}>
