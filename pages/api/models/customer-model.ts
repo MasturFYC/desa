@@ -118,7 +118,7 @@ const apiCustomer: apiFunction = {
       street = ${isNullOrEmpty(p.street)},
       city = ${isNullOrEmpty(p.city)},
       phone = ${isNullOrEmpty(p.phone)},
-      customer_type = ${p.customerType},
+      customer_type = ${p.customerType}
       WHERE id = ${p.id}
       RETURNING *
     `;

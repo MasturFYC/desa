@@ -6,8 +6,13 @@ export default async function specialOrderApi(
   res: NextApiResponse
 ) {
 
-  const id: number = req.query.id ? +req.query.id : 0;
-  const result = await api.getByCustomer(id);
+  console.log(req.query)
+
+  const {id} = req.query; //.id ? +req.query.id : 0;
+  const custId = id[0];
+  const all = id[1];
+
+  const result = await api.getByCustomer(+custId, all ? all === 'true' : false);
   const [data, error] = result;
 
   if (data) {

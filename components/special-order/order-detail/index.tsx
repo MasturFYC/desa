@@ -146,6 +146,7 @@ const SpecialDetail: NextPage<SpecialDetailProps> = ({
         {x.id > 0 && <View width={"5%"}>{x.id}</View>}
         <View flex={{ base: "50%", M: 1 }}>
           <ActionButton
+            isDisabled={orderId === 0}
             flex
             height={"auto"}
             isQuiet

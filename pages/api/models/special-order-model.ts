@@ -6,9 +6,9 @@ import db, { sql } from "../config";
 type apiReturn = Promise<any[] | (readonly iSpecialOrder[] | undefined)[]>;
 
 interface apiFunction {
-  list: () => apiReturn;
+  list: (all?: boolean | null) => apiReturn;
   search: (name: string) => apiReturn;
-  getByCustomer: (customerId: number) => apiReturn;
+  getByCustomer: (customerId: number, all?: boolean | null) => apiReturn;
   getOrder: (id: number) => apiReturn;
   delete: (id: number) => apiReturn;
   update: (id: number, data: iSpecialOrder) => apiReturn;
@@ -21,7 +21,7 @@ const apiSpecialOrder: apiFunction = {
     const query = sql`SELECT
       c.id, c.customer_id, c.created_at, c.updated_at, c.packaged_at, c.shipped_at,
       c.driver_name, c.police_number, c.street, c.city, c.phone,
-      c.total, c.cash, c.payments, c.remain_payment, c.descriptions
+      c.total, c.cash, c.payments, c.remain_payment, c.descriptions, surat_jalan
     FROM special_orders AS c
     WHERE c.id = ${id}`;
 
@@ -38,7 +38,7 @@ const apiSpecialOrder: apiFunction = {
     const query = id === 0 ? sql`SELECT
       c.id, c.customer_id, c.created_at, c.updated_at, c.packaged_at, c.shipped_at,
       c.driver_name, c.police_number, c.street, c.city, c.phone,
-      c.total, c.cash, c.payments, c.remain_payment, c.descriptions, cust.name
+      c.total, c.cash, c.payments, c.remain_payment, c.descriptions, surat_jalan, cust.name
     FROM special_orders AS c
     inner join customers cust on cust.id = c.customer_id
     WHERE POSITION(${name} IN LOWER(cust.name)) > 0
@@ -46,7 +46,7 @@ const apiSpecialOrder: apiFunction = {
       sql`SELECT
       c.id, c.customer_id, c.created_at, c.updated_at, c.packaged_at, c.shipped_at,
       c.driver_name, c.police_number, c.street, c.city, c.phone,
-      c.total, c.cash, c.payments, c.remain_payment, c.descriptions, cust.name
+      c.total, c.cash, c.payments, c.remain_payment, c.descriptions, surat_jalan, cust.name
     FROM special_orders AS c
     inner join customers cust on cust.id = c.customer_id
     WHERE c.id = ${id}`;
@@ -57,14 +57,15 @@ const apiSpecialOrder: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  list: async() => {
+  list: async(all: boolean | null | undefined) => {
 
     const query = sql`SELECT
       c.id, c.customer_id, c.created_at, c.updated_at, c.packaged_at, c.shipped_at,
       c.driver_name, c.police_number, c.street, c.city, c.phone,
-      c.total, c.cash, c.payments, c.remain_payment, c.descriptions, cust.name
+      c.total, c.cash, c.payments, c.remain_payment, c.descriptions, surat_jalan, cust.name
     FROM special_orders AS c
     inner join customers cust on cust.id = c.customer_id
+    where c.remain_payment > 0 OR 0 = ${all ? 0 : 1}
     ORDER BY c.id DESC`;
 
     return await db
@@ -73,14 +74,14 @@ const apiSpecialOrder: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  getByCustomer: async (customerId: number) => {
+  getByCustomer: async (customerId: number, all: boolean | null | undefined = false) => {
 
     const query = sql`SELECT
       c.id, c.customer_id, c.created_at, c.updated_at, c.packaged_at, c.shipped_at,
       c.driver_name, c.police_number, c.street, c.city, c.phone,
-      c.total, c.cash, c.payments, c.remain_payment, c.descriptions
+      c.total, c.cash, c.payments, c.remain_payment, c.descriptions, surat_jalan
     FROM special_orders AS c
-    WHERE c.customer_id = ${customerId}
+    WHERE c.customer_id = ${customerId} and (c.remain_payment > 0 OR 0 = ${all ? 0 : 1})
     ORDER BY c.id DESC`;
 
     return await db
@@ -114,6 +115,7 @@ const apiSpecialOrder: apiFunction = {
       city = ${p.city},
       phone = ${p.phone},
       cash = ${p.cash},
+      surat_jalan = ${p.suratJalan},
       descriptions = ${p.descriptions || null}
       WHERE id = ${p.id}
       RETURNING *
@@ -130,7 +132,7 @@ const apiSpecialOrder: apiFunction = {
     const query = sql`
       INSERT INTO special_orders (
         customer_id, created_at, packaged_at, shipped_at, driver_name,
-        police_number, street, city, phone, cash, descriptions
+        police_number, street, city, phone, cash, descriptions, surat_jalan
       ) VALUES (
         ${p.customerId},
         to_timestamp(${dateParam(p.createdAt)}, ${hour24Format}),
@@ -142,7 +144,8 @@ const apiSpecialOrder: apiFunction = {
         ${p.city},
         ${p.phone},
         ${p.cash},
-        ${p.descriptions || null}
+        ${p.descriptions || null},
+        ${p.suratJalan}
       )
       RETURNING *
     `;

@@ -14,6 +14,7 @@ import {
 } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
 import SpanLink from "@components/ui/span-link";
+import { Checkbox } from "@react-spectrum/checkbox";
 
 const SpecialOrderDetail = dynamic(
   () => import("@components/special-order/order-detail"),
@@ -33,6 +34,7 @@ const initOrder: iSpecialOrder = {
   createdAt: dateParam(null),
   packagedAt: dateParam(null),
   shippedAt: dateParam(null),
+  suratJalan: '',
   driverName: '',
   policeNumber: '',
   lunasId: 0,
@@ -53,6 +55,8 @@ type PiutangDagangProps = {
 const SpecialOrderComponent: NextPage<PiutangDagangProps> = (props) => {
   let { customer } = props;
   let [selectedOrderId, setSelectedOrderId] = useState<number>(-1);
+  let [isShowAll, setIsShowAll] = useState<boolean>(false);
+  let [isReload, setIsReload] = useState<boolean>(false);
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
@@ -70,7 +74,7 @@ const SpecialOrderComponent: NextPage<PiutangDagangProps> = (props) => {
 
   let orders = useAsyncList<iSpecialOrder>({
     async load({ signal }) {
-      let res = await fetch(`/api/special-order/customer/${customer.id}`, {
+      let res = await fetch(`/api/special-order/customer/${customer.id}/${isShowAll}`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -88,6 +92,32 @@ const SpecialOrderComponent: NextPage<PiutangDagangProps> = (props) => {
     }
     setSelectedOrderId(-1);
   };
+
+  async function reloadOrder(all: boolean) {
+    setIsReload(true);
+
+    const url = `/api/special-order/customer/${customer.id}/${all}`;
+    const fetchOptions = {
+      method: "GET",
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
+    };
+
+    const res = await fetch(url, fetchOptions);
+    const json = await res.json();
+
+    if (res.status === 200) {
+      orders.setSelectedKeys("all");
+      orders.removeSelectedItems();
+      orders.append(...json);
+    } else {
+      console.log(json.message);
+      alert("Data tidak ditemukan.");
+    }
+
+    setIsReload(false);
+  }  
 
   const updateOrder = (method: string, p: iSpecialOrder) => {
     switch (method) {
@@ -142,9 +172,21 @@ const SpecialOrderComponent: NextPage<PiutangDagangProps> = (props) => {
             Penjualan Baru
           </Button>
         </View>
+        <View>
+          <Checkbox
+            isSelected={isShowAll}
+            aria-label={"Show all orders"}
+            onChange={(e) => {
+              setIsShowAll(!isShowAll);
+              reloadOrder(e);
+            }}
+          >
+            Show all orders
+          </Checkbox>
+        </View>
 
       </Flex>
-      {products.isLoading || orders.isLoading && <WaitMe />}
+      {products.isLoading || orders.isLoading && isReload && <WaitMe />}
       {orders &&
         orders.items.map(
           (x, i) => (
@@ -240,11 +282,11 @@ function RenderOrder(props: RenderOrderProps) {
       <View flex>
         <View>{children}</View>
         <View><span style={{ fontWeight: 700 }}>Tanggal Order</span>: {FormatDate(x.createdAt)}</View>
+        <View><span style={{ fontWeight: 700 }}>Tanggal Pengepakan</span>: {FormatDate(x.packagedAt)}</View>
         <View><span style={{ fontWeight: 700 }}>Total</span>: {FormatNumber(x.total)}</View>
         <View><span style={{ fontWeight: 700 }}>Panjer / Cash</span>: {FormatNumber(x.cash)}</View>
         <View><span style={{ fontWeight: 700 }}>Angsuran</span>: {FormatNumber(x.payments)}</View>
         <View><span style={{ fontWeight: 700 }}>Piutang</span>: {FormatNumber(x.remainPayment)}</View>
-        <View><b>Supir</b>: {x.driverName} / <b>Mobil</b>: {x.policeNumber}</View>
       </View>
       <View flex>
         <div style={{ marginBottom: "6px", fontWeight: 700 }}>Informasi Pembeli</div>
@@ -261,7 +303,8 @@ function RenderOrder(props: RenderOrderProps) {
           <b>Informasi Pengiriman</b><br />
         </div>
         <div>
-          <span style={{ fontWeight: 700 }}>Tgl. Pengepakan</span>: {FormatDate(x.packagedAt)}<br />
+          <span style={{ fontWeight: 700 }}>Surat Jalan</span>: {x.suratJalan}<br />
+          <span style={{ fontWeight: 700 }}>Supir</span>: {x.driverName} / <b>Mobil</b>: {x.policeNumber}<br />
           <span style={{ fontWeight: 700 }}>Tgl. Pengiriman</span>: {FormatDate(x.shippedAt)}
         </div>
         <div style={{ marginTop: "12px" }}>

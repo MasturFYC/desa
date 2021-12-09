@@ -16,7 +16,8 @@ const apiGrassDetail: apiFunction = {
   getByGrass: async (grassId: number) => {
 
     const query = sql`SELECT
-    c.grass_id, c.id, c.qty
+      c.grass_id, c.id, c.unit_id, c.qty, c.content, c.unit_name, c.real_qty,
+      c.price, c.subtotal, c.buy_price, c.product_id
     FROM grass_details AS c
     WHERE c.grass_id = ${grassId}
     ORDER BY c.id`;
@@ -41,7 +42,13 @@ const apiGrassDetail: apiFunction = {
     const query = sql`
       UPDATE grass_details SET
         grass_id = ${p.grassId},
-        qty = ${p.qty}
+        unit_id = ${p.unitId},
+        qty = ${p.qty},
+        content = ${p.content},
+        unit_name = ${p.unitName},
+        price = ${p.price},
+        buy_price = ${p.buyPrice},
+        product_id  = ${p.productId}
       WHERE id = ${p.id}
       RETURNING *
     `;
@@ -56,10 +63,17 @@ const apiGrassDetail: apiFunction = {
 
     const query = sql`
       INSERT INTO grass_details (
-        grass_id, qty
+        grass_id, unit_id, qty, content, unit_name,
+        price,  buy_price, product_id
       ) VALUES (
         ${p.grassId},
-        ${p.qty}
+        ${p.unitId},
+        ${p.qty},
+        ${p.content},
+        ${p.unitName},
+        ${p.price},
+        ${p.buyPrice},
+        ${p.productId}
       )
       RETURNING *
     `;

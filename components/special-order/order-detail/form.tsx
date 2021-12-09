@@ -12,6 +12,7 @@ import { Form } from "@react-spectrum/form";
 import { NumberField } from "@react-spectrum/numberfield";
 import { AsyncListData } from "@react-stately/data";
 import { ComboBox, Item } from "@react-spectrum/combobox";
+import { Text } from "@react-spectrum/text";
 
 
 export type SpecialDetailFormProps = {
@@ -224,7 +225,7 @@ const SpecialDetailForm: NextPage<SpecialDetailFormProps> = ({
             label={"Subtotal"}
             value={orderDetail.subtotal}
             onChange={(e) =>
-              setOrderDetail((o) => ({ ...o, payment: e, subtotal: e }))
+              setOrderDetail((o) => ({ ...o, subtotal: e }))
             }
           />
         </Flex>

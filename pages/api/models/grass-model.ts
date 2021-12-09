@@ -22,7 +22,8 @@ const apiGrass: apiFunction = {
     WHERE d.id = c.partner_id`;
 
     const query = sql`SELECT
-      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div, c.partner_id,
+      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, 
+      c.total, c.total_div, c.partner_id,
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     WHERE c.id = ${id}`;
@@ -41,7 +42,8 @@ const apiGrass: apiFunction = {
     WHERE d.id = c.partner_id`;
 
     const query = sql`SELECT
-      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div, c.partner_id,
+      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, 
+      c.total, c.total_div, c.partner_id, 
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     ORDER BY c.id DESC`;
@@ -60,7 +62,8 @@ const apiGrass: apiFunction = {
     WHERE d.id = c.partner_id`;
 
     const query = sql`SELECT
-      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, c.price, c.total, c.total_div, c.partner_id,
+      c.customer_id, c.id, c.descriptions, c.order_date, c.qty, 
+      c.total, c.total_div, c.partner_id,
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     WHERE c.customer_id = ${customerId} AND c.lunas_id = ${lunasId}
@@ -88,7 +91,7 @@ const apiGrass: apiFunction = {
       UPDATE grass SET
       order_date = to_timestamp(${dateParam(p.orderDate)}, ${hour24Format}),
       customer_id = ${p.customerId},
-      descriptions = ${p.descriptions},      
+      descriptions = ${p.descriptions},
       partner_id = ${p.partnerId},
       qty = ${p.qty},
       total_div = ${p.totalDiv}
@@ -113,7 +116,7 @@ const apiGrass: apiFunction = {
         ${p.descriptions},
         ${p.qty},
         ${p.totalDiv},
-        ${p.partnerId},
+        ${p.partnerId}
       )
       RETURNING *
     `;

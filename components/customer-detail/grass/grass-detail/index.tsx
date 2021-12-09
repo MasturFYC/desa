@@ -6,11 +6,14 @@ import { View } from "@react-spectrum/view";
 import { Text } from "@react-spectrum/text";
 import { NextPage } from "next";
 import { ActionButton } from "@react-spectrum/button";
-import { Flex } from '@react-spectrum/layout';
+import { Flex } from "@react-spectrum/layout";
 import PinAdd from "@spectrum-icons/workflow/Add";
+import { AsyncListData } from "@react-stately/data";
 
-import { iGrassDetail } from "@components/interfaces";
+import { iGrassDetail, iProduct } from "@components/interfaces";
 import Div from "@components/ui/Div";
+import product from "@components/product";
+import ProductList from "@components/product/ProductList";
 
 const GrassDetailForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -23,7 +26,7 @@ const initGrassDetail: iGrassDetail = {
   unitId: 0,
   qty: 0,
   content: 0,
-  unitName: '',
+  unitName: "",
   realQty: 0,
   price: 0,
   subtotal: 0,
@@ -33,17 +36,24 @@ const initGrassDetail: iGrassDetail = {
 
 type GrassDetailProps = {
   grassId: number;
-  updateTotal: (grassId: number, qty: number) => void;
+  products: AsyncListData<iProduct>;
+  updateTotal: (total: number, qty: number) => void;
 };
 
-const GrassDetail: NextPage<GrassDetailProps> = ({ grassId, updateTotal }) => {
+export default function GrassDetail(props: GrassDetailProps): JSX.Element {
+  let { grassId, updateTotal, products } = props;
   let [selectedDetailId, setSelectedDetailId] = useState<number>(-1);
   let [detail, setDetail] = useState<iGrassDetail>(initGrassDetail);
   let [isNew, setIsNew] = useState<boolean>(false);
 
   let grassDetails = useAsyncList<iGrassDetail>({
     async load({ signal }) {
-      let res = await fetch(`/api/grass-detail/${grassId}`, { signal });
+      let res = await fetch(`/api/grass-detail/${grassId}`, {
+        signal,
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      });
       let json = await res.json();
       return { items: json };
     },
@@ -62,84 +72,82 @@ const GrassDetail: NextPage<GrassDetailProps> = ({ grassId, updateTotal }) => {
       case "POST":
         {
           grassDetails.append(p);
-          updateTotal(grassId, p.qty);
         }
         break;
       case "PUT":
         {
           grassDetails.update(p.id, p);
-          updateTotal(grassId, p.qty - detail.qty);
         }
         break;
       case "DELETE":
         {
           grassDetails.remove(p.id);
-          updateTotal(grassId, -detail.qty);
         }
         break;
     }
+    updateTotal(
+      grassDetails.items.reduce((a, b) => a + b.subtotal, 0),
+      grassDetails.items.reduce((a, b) => a + b.qty * b.content, 0)
+    );
   };
 
   return (
     <Fragment>
-      <View
-        backgroundColor={"gray-50"}
-        marginTop={"size-100"}
-        padding={{ base: "size-50", M: "size-200" }}
-      >
-        <Div isHidden isHeader>
-          <Flex
-            marginX={"size-100"}
-            direction={{ base: "column", M: "row" }}
-            columnGap="size-100"
-          >
-            <View width="5%">ID#</View>
-            <View flex>Keterangan</View>
-            <View width={"20%"}>
-              <span
-                style={{
-                  textAlign: "right",
-                  fontWeight: 700,
-                  display: "block",
-                }}
-              >
-                Qty (kg)
-              </span>
-            </View>
-          </Flex>
-        </Div>
-        {grassDetails.isLoading && <WaitMe />}
-        {grassDetails &&
-          [...grassDetails.items, { ...initGrassDetail, grassId: grassId }].map(
-            (x, i) => (
-              <Div index={i} key={x.id} isSelected={selectedDetailId === x.id} selectedColor={"6px solid orange"}>
-                {renderDetails(i, x, isNew)}
-                {selectedDetailId === x.id && (
-                  <GrassDetailForm
-                    data={x}
-                    updateDetail={updateGrassDetail}
-                    closeForm={closeForm}
-                  />
-                )}
-              </Div>
-            )
-          )}
-      </View>
+      <Div isHidden isHeader>
+        <Flex
+          marginX={"size-100"}
+          direction={{ base: "column", M: "row" }}
+          columnGap="size-100"
+        >
+          <View width="5%">ID#</View>
+          <View flex>Keterangan</View>
+          <View width={"20%"}>
+            <span
+              style={{
+                textAlign: "right",
+                fontWeight: 700,
+                display: "block",
+              }}
+            >
+              Qty (kg)
+            </span>
+          </View>
+        </Flex>
+      </Div>
+      {grassDetails.isLoading && <WaitMe />}
+      {grassDetails &&
+        [...grassDetails.items, { ...initGrassDetail, grassId: grassId }].map(
+          (x, i) => (
+            <Div
+              index={i}
+              key={x.id}
+              isSelected={selectedDetailId === x.id}
+              selectedColor={"6px solid orange"}
+            >
+              {selectedDetailId === x.id ? (
+                <GrassDetailForm
+                  products={products}
+                  data={x}
+                  updateDetail={updateGrassDetail}
+                  closeForm={closeForm}
+                />
+              ) : (
+                renderDetails(i, x, isNew)
+              )}
+            </Div>
+          )
+        )}
     </Fragment>
   );
 
   function renderDetails(index: number, x: iGrassDetail, isNew: boolean) {
     return (
-      <Flex
-        marginX={"size-100"}
-        direction={"row"}
-        columnGap="size-100"
-        wrap={"wrap"}
-      >
+      <Flex direction={"row"} columnGap="size-100" wrap={"wrap"}>
         {x.id > 0 && <View width={"5%"}>{x.id}</View>}
         <View flex={{ base: "50%", M: 1 }}>
           <ActionButton
             flex
+            isDisabled={x.grassId === 0}
             height={"auto"}
             isQuiet
             onPress={() => {
@@ -153,7 +161,9 @@ const GrassDetail: NextPage<GrassDetailProps> = ({ grassId, updateTotal }) => {
                 Add Item
               </>
             ) : (
-              <Text><b>Timbangan ke {index + 1}</b></Text>
+              <Text>
+                <b>Timbangan ke {index + 1}</b>
+              </Text>
             )}
           </ActionButton>
         </View>
@@ -169,6 +179,4 @@ const GrassDetail: NextPage<GrassDetailProps> = ({ grassId, updateTotal }) => {
       </Flex>
     );
   }
-};
-
-export default GrassDetail;
+}

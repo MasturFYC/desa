@@ -2,11 +2,12 @@ import Head from "next/head";
 import dynamic from "next/dynamic";
 import React, { useEffect, useState } from "react";
 import Layout from "@components/layout";
-import { iCustomer } from "@components/interfaces";
+import { customerType, iCustomer } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { Item, TabList, Tabs } from "@react-spectrum/tabs";
+import { useAsyncList } from "@react-stately/data";
 
 const siteTitle = "Pelanggan";
 
@@ -96,6 +97,7 @@ const CustomerDetailComponent: NextPage = () => {
       isLoaded = true;
     };
   }, [queryParams]);
+
 
   return (
     <Layout activeMenu={"Pelanggan"}>

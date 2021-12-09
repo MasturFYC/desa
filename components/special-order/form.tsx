@@ -24,13 +24,8 @@ type SpecialOrderFormProps = {
   children: JSX.Element
 };
 
-const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
-  customerList,
-  data,
-  updateOrder,
-  closeForm,
-  children
-}) => {
+export default function SpecialOrderForm(props: SpecialOrderFormProps) {
+  let {customerList, data, updateOrder, closeForm, children} = props;
   let [order, setOrder] = React.useState<CustomerSpecialOrder>({} as CustomerSpecialOrder);
   let [message, setMessage] = useState<string>('');
   let [customer, setCustomer] = useState<iCustomer>(customerList.getItem(data.customerId));
@@ -38,28 +33,33 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
   const isCustomerIdValid = React.useMemo(
     () => order && order.customerId && order.customerId > 0,
     [order]
-  )
+  );
+
+  const isSuratJalanValid = React.useMemo(
+    () => order && order.suratJalan && order.suratJalan.length > 0,
+    [order]
+  );
 
   const isDriverValid = React.useMemo(
     () => order && order.driverName && order.driverName.length > 0,
     [order]
-  )
+  );
   const isPoliceValid = React.useMemo(
     () => order && order.policeNumber && order.policeNumber.length > 0,
     [order]
-  )
+  );
   const isStreetValid = React.useMemo(
     () => order && order.street && order.street.length > 0,
     [order]
-  )
+  );
   const isPhoneValid = React.useMemo(
     () => order && order.phone && order.phone.length > 0,
     [order]
-  )
+  );
   const isCityValid = React.useMemo(
     () => order && order.city && order.city.length > 0,
     [order]
-  )
+  );
 
   React.useEffect(() => {
     let isLoaded = false;
@@ -93,8 +93,8 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
         closeForm();
       }
     } else {
-      console.log(json.message)
-      setMessage('Data order tidak bisa dipost, lihat log.')
+      console.log(json.message);
+      setMessage('Data order tidak bisa dipost, lihat log.');
     }
   }
 
@@ -117,28 +117,27 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
     const data: CustomerSpecialOrder | any = await res.json();
 
     if (res.status === 200) {
-      updateOrder('DELETE', order)
+      updateOrder('DELETE', order);
       closeForm();
     } else {
       console.log(data);
-      setMessage('Order tidak dapat dihapus, ada pembayaran piutang terkait order ini.')
+      setMessage('Order tidak dapat dihapus, ada pembayaran piutang terkait order ini.');
     }
-  }
+  };
 
   return (<View paddingX={{ base: "size-50", M: "size-100" }}>
     <Form onSubmit={handleSubmit}>
       <Flex direction="row" gap="size-100" marginBottom={"size-100"}>
         <View flex>
           <Button type={"submit"} variant="cta"
-            isDisabled={
-              isCustomerIdValid === 0 ||
+            isDisabled={isCustomerIdValid === 0 ||
               isPhoneValid === '' ||
               isDriverValid === '' ||
               isPoliceValid === '' ||
               isStreetValid === '' ||
+              isSuratJalanValid === '' ||
               isCityValid === '' ||
-              order.payments < 0
-            }
+              order.payments < 0}
           >
             Save
           </Button>
@@ -165,7 +164,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
         <Flex flex direction="column">
           <div style={{ fontWeight: 700 }}>Informasi pembeli:</div>
           <ComboBox
-            autoFocus
+            autoFocus={order.id === 0}
             validationState={isCustomerIdValid ? "valid" : "invalid"}
             width={"auto"}
             label={"Pembeli"}
@@ -177,17 +176,17 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
                 ...o,
                 customerId: +e
               }));
-              const c = customerList.getItem(+e)
+              const c = customerList.getItem(+e);
               setCustomer(c);
-              if(order.street.length === 0) {
+              if (order.street.length === 0) {
                 setOrder(o => ({
                   ...o,
                   street: c.street || '',
                   city: c.city || '',
                   phone: c.phone || ''
-                }))
+                }));
               }
-            }}
+            } }
           >
             {(item) => <Item>{item.name}</Item>}
           </ComboBox>
@@ -195,13 +194,22 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
             <strong>Alamat</strong>:<br />
             {customer &&
               <View>
-                {customer.street} - {customer.city}, Telp. {customer.phone}
-              </View>
-            }
+                {customer.street} - {customer.city}, Telp.{customer.phone}
+              </View>}
           </View>
         </Flex>
         <View flex>
           <div style={{ fontWeight: 700 }}>Informasi pengiriman:</div>
+          <TextField
+            flex
+            autoFocus={order.id > 0}
+            width={'100%'}
+            aria-autocomplete={"both"}
+            validationState={isSuratJalanValid ? "valid" : "invalid"}
+            placeholder={"e.g. Johni"}
+            label={"Surat jalan"}
+            value={order.suratJalan}
+            onChange={(e) => setOrder((o) => ({ ...o, suratJalan: e }))} />
           <Flex direction={"row"} columnGap={"size-100"}>
             <TextField
               flex
@@ -210,8 +218,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
               placeholder={"e.g. Johni"}
               label={"Supir"}
               value={order.driverName}
-              onChange={(e) => setOrder((o) => ({ ...o, driverName: e }))}
-            />
+              onChange={(e) => setOrder((o) => ({ ...o, driverName: e }))} />
             <TextField
               flex
               aria-autocomplete={"both"}
@@ -219,8 +226,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
               placeholder={"e.g. E-0598-EM"}
               label={"No. Mobil"}
               value={order.policeNumber}
-              onChange={(e) => setOrder((o) => ({ ...o, policeNumber: e }))}
-            />
+              onChange={(e) => setOrder((o) => ({ ...o, policeNumber: e }))} />
           </Flex>
           <TextArea
             width={"100%"}
@@ -229,8 +235,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
             placeholder={"e.g. Jl. Jend. Sudirman No. 155 Tanjung Priuk\nJakarta Timur"}
             label={"Alamat pengiriman"}
             value={order.street}
-            onChange={(e) => setOrder((o) => ({ ...o, street: e }))}
-          />
+            onChange={(e) => setOrder((o) => ({ ...o, street: e }))} />
           <Flex direction={"row"} columnGap={"size-100"}>
             <TextField
               flex
@@ -238,16 +243,14 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
               placeholder={"e.g. Jakarta"}
               label={"Kota"}
               value={order.city}
-              onChange={(e) => setOrder((o) => ({ ...o, city: e }))}
-            />
+              onChange={(e) => setOrder((o) => ({ ...o, city: e }))} />
             <TextField
               flex
               validationState={isPhoneValid ? "valid" : "invalid"}
               placeholder={"e.g. 085231654455"}
               label={"Telephone"}
               value={order.phone}
-              onChange={(e) => setOrder((o) => ({ ...o, phone: e }))}
-            />
+              onChange={(e) => setOrder((o) => ({ ...o, phone: e }))} />
           </Flex>
         </View>
       </Flex>
@@ -261,8 +264,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
           isRequired
           label={"Tanggal order"}
           value={dateOnly(order.createdAt)}
-          onChange={(e) => setOrder((o) => ({ ...o, createdAt: e }))}
-        />
+          onChange={(e) => setOrder((o) => ({ ...o, createdAt: e }))} />
         <TextField
           flex
           type={"date"}
@@ -271,8 +273,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
           isRequired
           label={"Tanggal Pengepakan"}
           value={dateOnly(order.packagedAt)}
-          onChange={(e) => setOrder((o) => ({ ...o, packagedAt: e }))}
-        />
+          onChange={(e) => setOrder((o) => ({ ...o, packagedAt: e }))} />
         <TextField
           flex
           type={"date"}
@@ -281,8 +282,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
           isRequired
           label={"Tanggal pengiriman"}
           value={dateOnly(order.shippedAt)}
-          onChange={(e) => setOrder((o) => ({ ...o, shippedAt: e }))}
-        />
+          onChange={(e) => setOrder((o) => ({ ...o, shippedAt: e }))} />
       </Flex>
 
       <Flex direction={{ base: "column", M: "row" }} columnGap={"size-100"}>
@@ -302,9 +302,7 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
           value={order.cash}
           //minValue={0}
           validationState={order.cash >= 0 ? "valid" : "invalid"}
-          onChange={(e) =>
-            setOrder((o) => ({ ...o, cash: e, remainPayment: o.total - e }))
-          } />
+          onChange={(e) => setOrder((o) => ({ ...o, cash: e, remainPayment: o.total - e }))} />
         <NumberField
           flex
           isReadOnly
@@ -320,14 +318,13 @@ const SpecualOrderForm: NextPage<SpecialOrderFormProps> = ({
         placeholder={"e.g. Pembayaran paling lambar sampai dengan tanggal ..."}
         label={"Keterangan"}
         value={order.descriptions || ''}
-        onChange={(e) => setOrder((o) => ({ ...o, descriptions: e }))}
-      />
+        onChange={(e) => setOrder((o) => ({ ...o, descriptions: e }))} />
 
     </Form>
-
-    {order.id > 0 && children}
-  </View >
+    <View marginBottom={'size-200'}>
+    {children}
+    </View>
+  </View>
   );
-};
+}
 
-export default SpecualOrderForm;

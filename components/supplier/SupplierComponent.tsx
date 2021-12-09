@@ -132,6 +132,7 @@ const SupplierComponent: NextPage = () => {
 
   const postData = (method: string, id: number, p: iSupplier) => {
     if (method === "DELETE") {
+      setOpen(false)
       deleteData(id);
     } else {
       updateData(method, id, p);

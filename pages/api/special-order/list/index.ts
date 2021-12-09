@@ -6,7 +6,8 @@ export default async function specialOrderApi(
   res: NextApiResponse
 ) {
 
-  const result = await order.list();
+  const {all} = req.query;
+  const result = await order.list(all === 'true');
   const [data, error] = result;
 
   if (data) {

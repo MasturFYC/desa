@@ -39,7 +39,7 @@
     "@types/pdfkit": "latest",
     "@types/react": "latest",
     "@types/slonik": "latest",
-    "core-js": "^3.19.2",
+    "core-js": "^3.19.3",
     "eslint": "latest",
     "eslint-config-next": "latest",
     "typescript": "^4.3.2"

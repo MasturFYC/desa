@@ -4,20 +4,21 @@ import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
-import { ActionButton, Button} from "@react-spectrum/button";
+import { ActionButton, Button } from "@react-spectrum/button";
 import { Flex } from "@react-spectrum/layout";
 import { Text } from "@react-spectrum/text";
-import { dateParam, iCategory, iCustomer, iGrass, iProduct } from "@components/interfaces";
+import {
+  customerType,
+  dateParam,
+  iCategory,
+  iCustomer,
+  iGrass,
+  iProduct,
+} from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
 import Div from "@components/ui/Div";
 
-// const GrassDetail = dynamic(
-//   () => import("@components/customer-detail/grass/grass-detail"),
-//   {
-//     loading: () => <WaitMe />,
-//     ssr: false,
-//   }
-// );
+const GrassDetail = dynamic(() => import("./grass-detail"), { ssr: false });
 
 const GrassForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -46,11 +47,30 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
 
   let grasses = useAsyncList<iGrass>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer/grass/${customerId}`, { signal });
+      let res = await fetch(`/api/customer/grass/${customerId}`, {
+        signal,
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      });
       let json = await res.json();
       return { items: json };
     },
     getKey: (item: iGrass) => item.id,
+  });
+
+  let customers = useAsyncList<iCustomer>({
+    async load({ signal }) {
+      let res = await fetch("/api/customer", {
+        signal,
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      });
+      let json = await res.json();
+      return { items: json };
+    },
+    getKey: (item: iCustomer) => item.id,
   });
 
   let products = useAsyncList<iProduct>({
@@ -58,8 +78,8 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
       let res = await fetch("/api/product/list", {
         signal,
         headers: {
-          'Content-type': 'application/json; charset=UTF-8'
-        }
+          "Content-type": "application/json; charset=UTF-8",
+        },
       });
       let json = await res.json();
       return { items: json };
@@ -108,6 +128,8 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
       >
         Pembelian Baru
       </Button>
+      {grasses.isLoading ||
+        (customers.isLoading && products.isLoading && <WaitMe />)}
       <Div isHeader isHidden>
         <Flex
           marginX={"size-100"}
@@ -126,7 +148,9 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
             <span style={{ textAlign: "right", display: "block" }}>HARGA</span>
           </View>
           <View width="10%">
-            <span style={{ textAlign: "right", display: "block" }}>JML HARGA</span>
+            <span style={{ textAlign: "right", display: "block" }}>
+              JML HARGA
+            </span>
           </View>
           <View width="10%">
             <span style={{ textAlign: "right", display: "block" }}>
@@ -151,11 +175,28 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
           >
             {selectedGrassId === x.id ? (
               <GrassForm
+                customers={[
+                  { id: 0, name: "None", customerType: customerType.PABRIK },
+                  ...customers.items.filter(
+                    (f) =>
+                      f.customerType !== customerType.PABRIK &&
+                      f.id != customerId
+                  ),
+                ]}
                 data={x}
                 products={products}
                 updateGrass={updateData}
                 closeForm={closeForm}
-              />
+              >
+                <GrassDetail
+                  grassId={x.id}
+                  products={products}
+                  updateTotal={(total, qty) => {
+                    x.total = total;
+                    x.qty = qty;
+                  }}
+                />
+              </GrassForm>
             ) : (
               renderPembelian({ x })
             )}
@@ -205,21 +246,9 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
                 {x.id === 0 ? "Pembelian Baru" : x.descriptions}
               </span>
             </ActionButton>
-            {/* {x.id > 0 && (
-              <ToggleDetail
-                isSelected={detailId === x.id && showDetail}
-                showGrassDetail={(e) => {
-                  setDetailId(x.id);
-                  setShowDetail(e);
-                }}
-              />
-            )} */}
           </View>
           {x.id > 0 && renderDetail(x)}
         </Flex>
-        {/* {detailId === x.id && showDetail && (
-          <GrassDetail grassId={x.id} updateTotal={updateTotal} />
-        )} */}
       </Fragment>
     );
   }
@@ -244,7 +273,7 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
           <span
             style={{ textAlign: "right", display: "block", fontWeight: 700 }}
           >
-              {FormatNumber(x.totalDiv)}
+            {FormatNumber(x.totalDiv)}
           </span>
         </View>
         <View width={{ base: "47%", M: "10%" }}>

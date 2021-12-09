@@ -8,6 +8,7 @@ alter table grass drop column content;
 alter table grass drop column unit_name;
 alter table grass drop column real_qty;
 alter table grass add column partner_id integer not null default 0;
+alter table special_orders add column surat_jalan varchar(50) not null default '-';
 drop trigger grass_before_insert_update_trig on grass;
 drop function grass_before_insert_update_func;
 drop table grass_details;
@@ -28,7 +29,7 @@ BEGIN
         return ret;
 
 END;
-$$
+$$;
 ```
 ```sh
 CREATE TABLE public.grass_details (
@@ -283,3 +284,95 @@ BEGIN
 
 END; $$;
 ```
+
+```sh
+CREATE OR REPLACE FUNCTION public.customer_get_transaction_detail(cust_id integer, lunasid integer)
+ RETURNS TABLE(
+        id integer,
+        idx integer,
+        trx_date timestamp without time zone,
+        descriptions character varying,
+        title character varying,
+        qty numeric,
+        unit character varying,
+        price numeric,
+        debt numeric,
+        cred numeric,
+        saldo numeric)
+    LANGUAGE plpgsql
+AS $$
+
+begin
+
+    return query with recursive trx as (
+
+        select k.id, 1 idx, k.kasbon_date trx_date,
+        k.descriptions, concat('Kasbon #', k.id)::character varying title,
+        0 qty, '-'::varchar(6) unit, 0 price,
+        k.total debt, 0 cred
+        from kasbons k
+        where k.customer_id = cust_id
+        AND k.lunas_id = lunasid
+
+        union all
+
+        select d.order_id id, 2 idx, od.order_date trx_date,
+          pr.name descriptions, concat('Piutang Barang #', d.order_id) title,
+          d.qty, d.unit_name unit, d.price,
+          d.subtotal debt, 0 cred
+        from order_details d
+        inner join products pr on pr.id = d.product_id
+        inner join orders od on od.id = d.order_id
+        where od.customer_id = cust_id
+        AND od.lunas_id = lunasid
+
+        union all
+
+        select s.id, 3 idx, s.order_date trx_date,
+          s.descriptions, concat('DP Piutang Barang: #', s.id) title,
+          0 qty, '-'::varchar(6) unit, 0 price,
+          0 debt, s.payment cred
+        from orders s
+        where s.customer_id = cust_id and s.payment > 0
+        AND s.lunas_id = lunasid
+
+        union all
+
+      select g.id, 4 idx, g.order_date trx_date,
+        gp.name descriptions, concat('Pembelian: #', g.id ) title,
+        gd.qty, gd.unit_name unit, gd.price price,
+        0::numeric debt,
+        gd.subtotal cred
+        from grass_details gd
+        inner join products gp on gp.id = gd.product_id
+        inner join grass g on g.id = gd.grass_id
+        where g.customer_id = cust_id
+        AND g.lunas_id = lunasid
+
+      union all
+
+      select pmt.id, 5 idx, pmt.payment_date trx_date,
+        pmt.descriptions, concat('Angsuran: #', pmt.id) title,
+        0 qty, '-'::varchar(6) unit, 0 price,
+        0::numeric debt,
+        pmt.total cred
+        from payments pmt
+        where pmt.customer_id = cust_id
+        AND pmt.lunas_id = lunasid
+
+    )
+
+    select t.id, t.idx, t.trx_date,
+        t.descriptions, t.title, t.qty, t.unit, t.price,
+        t.debt,
+        t.cred,
+        sum(t.debt - t.cred)
+        over (order by t.id, t.idx rows between unbounded preceding and current row) as saldo
+    from trx t
+    order by t.id, t.idx;
+
+end;
+
+$$;
+
+``

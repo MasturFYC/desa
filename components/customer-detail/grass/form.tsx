@@ -1,4 +1,3 @@
-import { NextPage } from "next";
 import React, { FormEvent, useState } from "react";
 import { dateOnly, iCustomer, iGrass, iProduct } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
@@ -13,17 +12,15 @@ import { ComboBox, Item } from "@react-spectrum/combobox";
 
 type GrassFormProps = {
   data: iGrass;
+  customers: iCustomer[];
   products: AsyncListData<iProduct>;
   updateGrass: (method: string, data: iGrass) => void;
   closeForm: () => void;
+  children: JSX.Element
 };
 
-const GrassForm: NextPage<GrassFormProps> = ({
-  data,
-  products,
-  updateGrass,
-  closeForm
-}) => {
+export default function GrassForm(props:GrassFormProps) {
+  let { data, products, customers, updateGrass, closeForm, children} = props;
   let [grass, setGrass] = React.useState<iGrass>({} as iGrass);
   let [message, setMessage] = useState<string>("");
 
@@ -31,6 +28,11 @@ const GrassForm: NextPage<GrassFormProps> = ({
     () => grass && grass.descriptions && grass.descriptions.length > 0,
     [grass]
   );
+  const isCustomerIdValid = React.useMemo(
+    () => grass && grass.customerId && grass.customerId >= 0,
+    [grass]
+  )
+
 
   React.useEffect(() => {
     let isLoaded = false;
@@ -100,6 +102,43 @@ const GrassForm: NextPage<GrassFormProps> = ({
   return (
     <View paddingY={"size-100"} paddingX={{ base: "size-100", M: "size-1000" }}>
       <Form onSubmit={handleSubmit}>
+
+      <Flex
+          direction="row"
+          gap="size-100"
+          marginBottom={"size-100"}
+          marginTop={"size-200"}
+        >
+          <View flex>
+            <Button
+              type={"submit"}
+              variant="cta"
+              isDisabled={isDescriptionValid === ""}
+            >
+              Save
+            </Button>
+            <Button
+              type={"button"}
+              variant="secondary"
+              marginStart={"size-100"}
+              onPress={() => closeForm()}
+            >
+              Cancel
+            </Button>
+          </View>
+          {grass.id > 0 && (
+            <View>
+              <Button
+                type={"button"}
+                variant="negative"
+                onPress={() => deleteData()}
+              >
+                Delete
+              </Button>
+            </View>
+          )}
+        </Flex>
+                
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <TextField
             type={"date"}
@@ -110,6 +149,22 @@ const GrassForm: NextPage<GrassFormProps> = ({
             value={dateOnly(grass.orderDate)}
             onChange={(e) => setGrass((o) => ({ ...o, orderDate: e }))}
           />
+        <ComboBox
+          validationState={isCustomerIdValid ? "valid" : "invalid"}
+          width={{ base: "auto", M: "28%" }}
+          label={"Pelanggan"}
+          isRequired
+          placeholder={"e.g. pilih pelanggan"}
+          defaultItems={customers}
+          selectedKey={grass.partnerId}
+          onSelectionChange={(e) => setGrass((o) => ({
+            ...o,
+            partnerId: +e
+          }))}
+        >
+          {(item) => <Item>{item.name}</Item>}
+        </ComboBox>
+
         </Flex>
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <NumberField
@@ -174,45 +229,10 @@ const GrassForm: NextPage<GrassFormProps> = ({
             </Flex>
           </View>
         </View>
-
-        <Flex
-          direction="row"
-          gap="size-100"
-          marginBottom={"size-100"}
-          marginTop={"size-200"}
-        >
-          <View flex>
-            <Button
-              type={"submit"}
-              variant="cta"
-              isDisabled={isDescriptionValid === ""}
-            >
-              Save
-            </Button>
-            <Button
-              type={"button"}
-              variant="secondary"
-              marginStart={"size-100"}
-              onPress={() => closeForm()}
-            >
-              Cancel
-            </Button>
-          </View>
-          {grass.id > 0 && (
-            <View>
-              <Button
-                type={"button"}
-                variant="negative"
-                onPress={() => deleteData()}
-              >
-                Delete
-              </Button>
-            </View>
-          )}
-        </Flex>
       </Form>
+      <View marginBottom={'size-200'}>
+        {children}
+      </View>
     </View>
   );
 };
-
-export default GrassForm;

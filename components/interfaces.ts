@@ -240,6 +240,7 @@ export interface iSpecialPayment {
 export interface iSpecialOrder {
   id: number;
   lunasId: number;
+  suratJalan: string;
   customerId: number;
   createdAt: string;
   updatedAt?: string;

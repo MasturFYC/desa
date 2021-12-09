@@ -27,6 +27,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
   );
   let [message, setMessage] = useState<string>("");
   //let [units, setUnits] = useState<iUnit[] | undefined>([]);
+
   const isProductValid = React.useMemo(
     () => orderDetail && orderDetail.productId && orderDetail.productId > 0,
     [orderDetail]
@@ -219,7 +220,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
             label={"Subtotal"}
             value={orderDetail.subtotal}
             onChange={(e) =>
-              setOrderDetail((o) => ({ ...o, payment: e, subtotal: e }))
+              setOrderDetail((o) => ({ ...o, subtotal: e }))
             }
           />
         </Flex>
