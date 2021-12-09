@@ -96,13 +96,13 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
             columnGap="size-100"
           >
             <View width="5%">ID#</View>
-            <View flex>Nama Barang</View>
-            <View width={"20%"}>Qty / Unit</View>
+            <View flex>NAMA BARANG</View>
+            <View width={"20%"}>QTY/UNIT</View>
             <View width="10%">
-              <span style={{ textAlign: "right", display: "block" }}>Harga</span>
+              <span style={{ textAlign: "right", display: "block" }}>HARGA</span>
             </View>
             <View width="10%">
-              <span style={{ textAlign: "right", display: "block" }}>Subtotal</span>
+              <span style={{ textAlign: "right", display: "block" }}>SUBTOTAL</span>
             </View>
           </Flex>
           <Divider size={"S"} />

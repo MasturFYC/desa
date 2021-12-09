@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from "react";
-import { dateOnly, iCustomer, iGrass, iProduct } from "@components/interfaces";
+import { customerType, dateOnly, iCustomer, iGrass, iProduct } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
@@ -9,18 +9,18 @@ import { NumberField } from "@react-spectrum/numberfield";
 import { FormatNumber } from "@lib/format";
 import { AsyncListData } from "@react-stately/data";
 import { ComboBox, Item } from "@react-spectrum/combobox";
+import { x } from "pdfkit";
 
 type GrassFormProps = {
   data: iGrass;
-  customers: iCustomer[];
-  products: AsyncListData<iProduct>;
+  customers: AsyncListData<iCustomer>;
   updateGrass: (method: string, data: iGrass) => void;
   closeForm: () => void;
   children: JSX.Element
 };
 
-export default function GrassForm(props:GrassFormProps) {
-  let { data, products, customers, updateGrass, closeForm, children} = props;
+export default function GrassForm(props: GrassFormProps) {
+  let { data, customers, updateGrass, closeForm, children } = props;
   let [grass, setGrass] = React.useState<iGrass>({} as iGrass);
   let [message, setMessage] = useState<string>("");
 
@@ -28,11 +28,6 @@ export default function GrassForm(props:GrassFormProps) {
     () => grass && grass.descriptions && grass.descriptions.length > 0,
     [grass]
   );
-  const isCustomerIdValid = React.useMemo(
-    () => grass && grass.customerId && grass.customerId >= 0,
-    [grass]
-  )
-
 
   React.useEffect(() => {
     let isLoaded = false;
@@ -47,6 +42,7 @@ export default function GrassForm(props:GrassFormProps) {
   }, [data]);
 
   async function postData(method: string) {
+
     const url = `/api/grass/${grass.id}`;
     const fetchOptions = {
       method: method,
@@ -64,7 +60,10 @@ export default function GrassForm(props:GrassFormProps) {
         ...json,
         customer: grass.customer,
       });
-      closeForm();
+
+      if(method === 'PUT') {
+        closeForm();
+      } 
     } else {
       console.log(json.message);
       setMessage("Data pembelian tidak bisa dipost, lihat log.");
@@ -100,14 +99,13 @@ export default function GrassForm(props:GrassFormProps) {
   };
 
   return (
-    <View paddingY={"size-100"} paddingX={{ base: "size-100", M: "size-1000" }}>
+    <View paddingX={{ base: "size-50", M: "size-100" }}>
       <Form onSubmit={handleSubmit}>
 
-      <Flex
+        <Flex
           direction="row"
           gap="size-100"
           marginBottom={"size-100"}
-          marginTop={"size-200"}
         >
           <View flex>
             <Button
@@ -126,6 +124,7 @@ export default function GrassForm(props:GrassFormProps) {
               Cancel
             </Button>
           </View>
+          <View flex><strong>#{grass.id}</strong></View>
           {grass.id > 0 && (
             <View>
               <Button
@@ -138,35 +137,42 @@ export default function GrassForm(props:GrassFormProps) {
             </View>
           )}
         </Flex>
-                
+
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <TextField
             type={"date"}
-            width={{ base: "auto", M: "35%" }}
+            width={'auto'}
             placeholder={"e.g. dd/mm/yyyy"}
             isRequired
             label={"Tanggal "}
             value={dateOnly(grass.orderDate)}
             onChange={(e) => setGrass((o) => ({ ...o, orderDate: e }))}
           />
-        <ComboBox
-          validationState={isCustomerIdValid ? "valid" : "invalid"}
-          width={{ base: "auto", M: "28%" }}
-          label={"Pelanggan"}
-          isRequired
-          placeholder={"e.g. pilih pelanggan"}
-          defaultItems={customers}
-          selectedKey={grass.partnerId}
-          onSelectionChange={(e) => setGrass((o) => ({
-            ...o,
-            partnerId: +e
-          }))}
-        >
-          {(item) => <Item>{item.name}</Item>}
-        </ComboBox>
-
-        </Flex>
-        <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
+          <ComboBox
+            flex
+            width={{ base: "auto", M: "28%" }}
+            label={"Pelanggan"}
+            placeholder={"e.g. pilih pelanggan"}
+            defaultItems={[
+              { id: 0, name: "None", customerType: customerType.PABRIK },
+              ...customers.items.filter(
+                (f) =>
+                  f.customerType !== customerType.PABRIK &&
+                  f.id != grass.customerId
+              ),
+            ]}
+            selectedKey={grass.partnerId}
+            onSelectionChange={(e) => {
+              let totalDiv = grass.total / 2;
+              setGrass((o) => ({
+                ...o,
+                partnerId: +e,
+                totalDiv: (+e === 0) ? 0 : grass.totalDiv !== totalDiv ? totalDiv : grass.totalDiv
+              }))
+            }}
+          >
+            {(item) => <Item>{item.name}</Item>}
+          </ComboBox>
           <NumberField
             isReadOnly
             hideStepper={true}
@@ -180,17 +186,19 @@ export default function GrassForm(props:GrassFormProps) {
             }
             value={grass.qty}
           />
-          <View flex alignSelf="flex-end" marginBottom={"size-100"}>
-            Total sebelum dibagi: <strong>{FormatNumber(grass.total + grass.totalDiv)}</strong>
-          </View>
+
         </Flex>
 
         <View flex backgroundColor={"static-chartreuse-300"} borderRadius={"medium"}>
-          <View padding={"size-300"}>
-            <Flex flex direction={"row"} gap={"size-300"}>
+          <View padding={"size-200"}>
+            <Flex flex direction={{base: 'column', M: 'row'}} gap={"size-300"}>
+              <View flex>
+                Total sebelum dibagi: <strong>{FormatNumber(grass.total)}</strong>
+              </View>
+
               <View flex>
                 <View>
-                  Bagi hasil dengan <strong> .... </strong>
+                  Bagi hasil dengan <strong> {customers.getItem(grass.partnerId) ? customers.getItem(grass.partnerId).name : 'None'} </strong>
                 </View>
                 <View>
                   <NumberField
@@ -199,32 +207,22 @@ export default function GrassForm(props:GrassFormProps) {
                     validationState={
                       grass.totalDiv >= 0 ? "valid" : "invalid"
                     }
+                    isDisabled={grass.partnerId === 0}
                     width={"auto"}
                     hideStepper={true}
                     label={"Nominal bagian"}
                     value={grass.totalDiv}
-                    onChange={(e) =>
-                      setGrass((o) => ({
-                        ...o,
+                    onChange={(e) => {
+                      setGrass(o => ({ ...o, 
                         totalDiv: e
-                      }))
+                      }))}
                     }
                   />
                 </View>
               </View>
-              <View>
-                <View>
-                  Bagian <b>{grass.customer?.name} </b>setelah dibagi
-                </View>
-                <NumberField
-                  flex
-                  isReadOnly
-                  width={"auto"}
-                  hideStepper={true}
-                  label={"Subtotal"}
-                  onChange={(e) => setGrass((o) => ({ ...o, total: e }))}
-                  value={grass.total}
-                />
+              <View flex>
+                Bagian <b>{customers.getItem(grass.customerId) && customers.getItem(grass.customerId).name} </b>setelah dibagi
+                {' '}<b>{FormatNumber(grass.total - grass.totalDiv)}</b>
               </View>
             </Flex>
           </View>

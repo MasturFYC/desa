@@ -150,12 +150,13 @@ export interface iGrass {
   id: number;
   descriptions: string;
   orderDate: string;
-  total: number;
-  totalDiv: number;
   lunasId: number;
   partnerId: number;
   qty: number;
   customer?: iCustomer;
+  totalDiv: number;
+  subtotal: number;
+  total: number;
 }
 
 export interface iGrassDetail {
@@ -170,6 +171,8 @@ export interface iGrassDetail {
   subtotal: number;
   buyPrice: number;
   productId: number;
+  productName?: string;
+  spec?: string;
 }
 
 export interface iSupplier {

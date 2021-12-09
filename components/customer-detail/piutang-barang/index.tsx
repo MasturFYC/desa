@@ -155,7 +155,6 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
                     updateTotal={updateTotal}
                     orderId={x.id}
                   />
-
                   </OrderForm>
               ) : (
                 renderPiutang({ x })

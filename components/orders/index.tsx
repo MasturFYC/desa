@@ -136,7 +136,7 @@ const OrderComponent: NextPage = () => {
     switch (method) {
       case "POST":
         {
-          //orders.remove(0)
+          //orders.remove(0) 
           orders.update(0, p);
           setSelectedOrderId(p.id)
         }

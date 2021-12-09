@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import order from '@model/grass-model';
+import api from '@model/grass-model';
 
 export default async function productApi(
   req: NextApiRequest,
@@ -7,7 +7,7 @@ export default async function productApi(
 ) {
 
   const { id } = req.query
-  const result = await order.getByCustomer(+id);
+  const result = await api.getByCustomer(+id);
   const [data, error] = result;
 
   if (data) {

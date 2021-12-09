@@ -139,7 +139,7 @@ const CustomerDetailComponent: NextPage = () => {
       {tabId === 2 && <Kasbon customerId={customerId} />}
       {tabId === 3 && <Grass customerId={customerId} />}
       {tabId === 4 && <Payment customerId={customerId} />}
-      {tabId === 5 && <Pelunasan customerId={customerId} />}
+      {tabId === 5 && <Pelunasan customerId={customerId} /> }
     </Layout>
   );
 };

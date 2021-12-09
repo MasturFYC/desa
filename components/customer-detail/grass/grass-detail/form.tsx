@@ -12,6 +12,7 @@ import { Form } from "@react-spectrum/form";
 import { NumberField } from "@react-spectrum/numberfield";
 import { ComboBox, Item } from "@react-spectrum/combobox";
 import { AsyncListData } from "@react-stately/data";
+import product from "@components/product";
 
 
 export type GrassDetailFormProps = {
@@ -22,7 +23,7 @@ export type GrassDetailFormProps = {
 };
 
 const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormProps) => {
-  let {data, updateDetail, closeForm, products} = props;
+  let { data, updateDetail, closeForm, products } = props;
   let [detail, setDetail] = React.useState<iGrassDetail>({} as iGrassDetail);
 
   let [message, setMessage] = useState<string>("");
@@ -114,7 +115,7 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
       paddingY={"size-100"}
       paddingX={{ base: "size-100", M: "size-1000" }}
     >
-<Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit}>
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <ComboBox
             autoFocus
@@ -122,7 +123,7 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
             validationState={isProductValid ? "valid" : "invalid"}
             label={"Nama Barang"}
             selectedKey={detail.productId}
-            defaultItems={products.items.filter((o) => o.categoryId !== 2)}
+            defaultItems={products.items}
             //            autoFocus
             onSelectionChange={(e) => {
               //setOrderDetail((o) => ({ ...o, productId: +e }));
@@ -142,6 +143,7 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
                     realQty: o.qty * u.content,
                     unitName: u.name,
                     productName: p.name,
+                    spec: p.spec,
                     productId: p.id,
                   }));
                 } else {
@@ -226,9 +228,10 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
             }
           />
         </Flex>
-         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
+        <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <View flex>
-            <Button variant="cta" onPress={(e) => postGrassDetail(detail.id === 0 ? "POST" : "PUT")}>
+            <Button variant="cta" 
+            onPress={(e) => postGrassDetail(detail.id === 0 ? "POST" : "PUT")}>
               Save
             </Button>
             <Button

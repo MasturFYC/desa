@@ -23,7 +23,7 @@ const apiGrass: apiFunction = {
 
     const query = sql`SELECT
       c.customer_id, c.id, c.descriptions, c.order_date, c.qty, 
-      c.total, c.total_div, c.partner_id,
+      c.total - c.total_div subtotal, c.total, c.total_div, c.partner_id,
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     WHERE c.id = ${id}`;
@@ -43,7 +43,7 @@ const apiGrass: apiFunction = {
 
     const query = sql`SELECT
       c.customer_id, c.id, c.descriptions, c.order_date, c.qty, 
-      c.total, c.total_div, c.partner_id, 
+      c.total - c.total_div subtotal, c.total, c.total_div, c.partner_id,
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     ORDER BY c.id DESC`;
@@ -63,7 +63,7 @@ const apiGrass: apiFunction = {
 
     const query = sql`SELECT
       c.customer_id, c.id, c.descriptions, c.order_date, c.qty, 
-      c.total, c.total_div, c.partner_id,
+      c.total - c.total_div subtotal, c.total, c.total_div, c.partner_id,
       ${nestQuerySingle(queryCustomer)} as customer
     FROM grass AS c
     WHERE c.customer_id = ${customerId} AND c.lunas_id = ${lunasId}
@@ -87,14 +87,15 @@ const apiGrass: apiFunction = {
 
   update: async (id: number, p: iGrass) => {
 
+    console.log(p)
     const query = sql`
       UPDATE grass SET
-      order_date = to_timestamp(${dateParam(p.orderDate)}, ${hour24Format}),
-      customer_id = ${p.customerId},
-      descriptions = ${p.descriptions},
-      partner_id = ${p.partnerId},
-      qty = ${p.qty},
-      total_div = ${p.totalDiv}
+        order_date = to_timestamp(${dateParam(p.orderDate)}, ${hour24Format}),
+        customer_id = ${p.customerId},
+        descriptions = ${p.descriptions},
+        partner_id = ${p.partnerId},
+        qty = ${p.qty},
+        total_div = ${p.totalDiv}
       WHERE id = ${p.id}
       RETURNING *
     `;

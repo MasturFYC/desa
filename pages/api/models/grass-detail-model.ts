@@ -16,9 +16,11 @@ const apiGrassDetail: apiFunction = {
   getByGrass: async (grassId: number) => {
 
     const query = sql`SELECT
-      c.grass_id, c.id, c.unit_id, c.qty, c.content, c.unit_name, c.real_qty,
-      c.price, c.subtotal, c.buy_price, c.product_id
+      c.grass_id, c.id, c.unit_id, c.qty, c.content, c.unit_name,
+      c.real_qty, c.price, c.subtotal, c.buy_price, c.product_id,
+      p.name as "productName", p.spec
     FROM grass_details AS c
+    INNER JOIN products as p ON p.id = c.product_id
     WHERE c.grass_id = ${grassId}
     ORDER BY c.id`;
 
@@ -75,8 +77,7 @@ const apiGrassDetail: apiFunction = {
         ${p.buyPrice},
         ${p.productId}
       )
-      RETURNING *
-    `;
+      RETURNING *`;
 
     //console.log(query.sql, query.values)
 

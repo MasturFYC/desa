@@ -3,8 +3,6 @@ import React, { Fragment, useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
-import { Text } from "@react-spectrum/text";
-import { NextPage } from "next";
 import { ActionButton } from "@react-spectrum/button";
 import { Flex } from "@react-spectrum/layout";
 import PinAdd from "@spectrum-icons/workflow/Add";
@@ -12,8 +10,8 @@ import { AsyncListData } from "@react-stately/data";
 
 import { iGrassDetail, iProduct } from "@components/interfaces";
 import Div from "@components/ui/Div";
-import product from "@components/product";
-import ProductList from "@components/product/ProductList";
+import { Divider } from "@react-spectrum/divider";
+import { FormatNumber } from "@lib/format";
 
 const GrassDetailForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -72,47 +70,45 @@ export default function GrassDetail(props: GrassDetailProps): JSX.Element {
       case "POST":
         {
           grassDetails.append(p);
+          updateTotal(p.subtotal, p.realQty);
         }
         break;
       case "PUT":
         {
           grassDetails.update(p.id, p);
+          updateTotal(p.subtotal - detail.subtotal, p.realQty - detail.realQty);
         }
         break;
       case "DELETE":
         {
           grassDetails.remove(p.id);
+          updateTotal(-detail.subtotal, -detail.realQty);
         }
         break;
     }
-    updateTotal(
-      grassDetails.items.reduce((a, b) => a + b.subtotal, 0),
-      grassDetails.items.reduce((a, b) => a + b.qty * b.content, 0)
-    );
+    
   };
 
   return (
     <Fragment>
-      <Div isHidden isHeader>
+      <Div isHeader>
         <Flex
+          isHidden={{ base: true, M: false }}
           marginX={"size-100"}
           direction={{ base: "column", M: "row" }}
           columnGap="size-100"
         >
           <View width="5%">ID#</View>
-          <View flex>Keterangan</View>
-          <View width={"20%"}>
-            <span
-              style={{
-                textAlign: "right",
-                fontWeight: 700,
-                display: "block",
-              }}
-            >
-              Qty (kg)
-            </span>
+          <View flex>NAMA BARANG</View>
+          <View width={"20%"}>QTY/UNIT</View>
+          <View width="10%">
+            <span style={{ textAlign: "right", display: "block" }}>HARGA</span>
+          </View>
+          <View width="10%">
+            <span style={{ textAlign: "right", display: "block" }}>SUBTOTAL</span>
           </View>
         </Flex>
+        <Divider size={"S"} />
       </Div>
       {grassDetails.isLoading && <WaitMe />}
       {grassDetails &&
@@ -142,12 +138,18 @@ export default function GrassDetail(props: GrassDetailProps): JSX.Element {
 
   function renderDetails(index: number, x: iGrassDetail, isNew: boolean) {
     return (
-      <Flex direction={"row"} columnGap="size-100" wrap={"wrap"}>
+      <Flex
+        marginX={"size-100"}
+        direction={"row"}
+        //direction={{base:"column", M:"row"}}
+        columnGap="size-100"
+        wrap={"wrap"}
+      >
         {x.id > 0 && <View width={"5%"}>{x.id}</View>}
         <View flex={{ base: "50%", M: 1 }}>
           <ActionButton
             flex
-            isDisabled={x.grassId === 0}
+            isDisabled={grassId === 0}
             height={"auto"}
             isQuiet
             onPress={() => {
@@ -161,22 +163,36 @@ export default function GrassDetail(props: GrassDetailProps): JSX.Element {
                 Add Item
               </>
             ) : (
-              <Text>
-                <b>Timbangan ke {index + 1}</b>
-              </Text>
+              <span style={{ fontWeight: 700 }}>
+                {x.productName} - {x.spec}
+              </span>
             )}
           </ActionButton>
         </View>
-        {x.id > 0 && (
-          <View width={"20%"}>
-            <span
-              style={{ textAlign: "right", fontWeight: 700, display: "block" }}
-            >
-              {x.qty}
-            </span>
-          </View>
-        )}
+        {x.id > 0 && renderDetail(x)}
       </Flex>
+    );
+  }
+
+  function renderDetail(x: iGrassDetail): React.ReactNode {
+    return (
+      <>
+        <View width={{ base: "50%", M: "20%" }}>
+          {FormatNumber(x.qty)} {x.unitName}
+        </View>
+        <View width={"10%"} isHidden={{ base: true, M: false }}>
+          <span style={{ textAlign: "right", display: "block" }}>
+            {FormatNumber(x.price)}
+          </span>
+        </View>
+        <View width={{ base: "47%", M: "10%" }}>
+          <span
+            style={{ textAlign: "right", display: "block", fontWeight: 700 }}
+          >
+            {FormatNumber(x.subtotal)}
+          </span>
+        </View>
+      </>
     );
   }
 }

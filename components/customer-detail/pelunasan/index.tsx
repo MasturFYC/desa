@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import React, { FormEvent, Fragment, useEffect, useState } from "react";
+import React, { Fragment, useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { NextPage } from "next";
@@ -36,7 +36,7 @@ type paymentProps = {
 };
 
 const PaymentPage: NextPage<paymentProps> = (props) => {
-  let {customerId} = props;
+  let { customerId } = props;
   let [selectedData, setSelectedData] = useState<iLunas>({ ...initLunas, customerId: customerId });
   let [isOpen, setIsOpen] = useState<boolean>(false);
   let [newLunasId, setNewLunasId] = useState<number>(0);
@@ -45,7 +45,8 @@ const PaymentPage: NextPage<paymentProps> = (props) => {
 
   let lunas = useAsyncList<iLunas>({
     async load({ signal }) {
-      let res = await fetch(`/api/lunas/${customerId}`, { signal,
+      let res = await fetch(`/api/lunas/${customerId}`, {
+        signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
         }
@@ -55,22 +56,6 @@ const PaymentPage: NextPage<paymentProps> = (props) => {
     },
     getKey: (item: iLunas) => item.id,
   });
-
-  // let payments = useAsyncList<iPayment>({
-  //   async load({ signal }) {
-  //     let res = await fetch(`/api/lunas/transactions`, {
-  //       method: 'POST',
-  //       signal,
-  //       headers: {
-  //         "Content-type": "application/json; charset=UTF-8",
-  //       },
-  //       body: JSON.stringify({ id: customerId, lunasId: 0 })
-  //     });
-  //     let json = await res.json();
-  //     return { items: json };
-  //   },
-  //   getKey: (item: iPayment) => item.id,
-  // });
 
   const handleSubmit = (method: string, e: iLunas | number) => {
     switch (method) {
@@ -89,12 +74,12 @@ const PaymentPage: NextPage<paymentProps> = (props) => {
         break;
       case "DELETE":
         {
-          
+
           setNewLunasId(-1);
           let idToRemove = e as number;
           lunas.remove(idToRemove);
           //setTimeout(() => {
-            setNewLunasId(0);
+          setNewLunasId(0);
           //}, 1000); 
         }
         break;
@@ -131,7 +116,6 @@ const PaymentPage: NextPage<paymentProps> = (props) => {
         )}
       </DialogContainer>
 
-      {lunas.isLoading && <WaitMe />}
       <View>
         {lunas && lunas.items.map((item, index) => (
           <ShowPelunasan key={index} item={item} setSelectedData={setSelectedData} setIsOpen={(e) => {
@@ -152,14 +136,16 @@ const PaymentPage: NextPage<paymentProps> = (props) => {
         </Button>
 
       </View>
-      {newLunasId === 0 && <View>
-        <p><strong>Rincian Transaksi yang belum dilakukan pelunasan</strong></p>
-        <CustomerTransaction customerId={customerId} lunasId={newLunasId}
-         handlePiutang={(e) => {
-           setRemainPayment(e);
-         }}
-        />
-      </View>}
+      {lunas.isLoading ? <WaitMe /> : (
+        newLunasId === 0 && <View>
+          <p><strong>Rincian Transaksi yang belum dilakukan pelunasan</strong></p>
+          <CustomerTransaction customerId={customerId} lunasId={newLunasId}
+            handlePiutang={(e) => {
+              setRemainPayment(e);
+            }}
+          />
+        </View>)
+      }
     </Fragment>
   );
 }

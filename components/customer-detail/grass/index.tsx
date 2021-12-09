@@ -31,6 +31,7 @@ const initGrass: iGrass = {
   partnerId: 0,
   lunasId: 0,
   totalDiv: 0,
+  subtotal: 0,
   orderDate: dateParam(null),
   descriptions: "Pembelian Rumput Laut",
   qty: 0,
@@ -75,7 +76,7 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
-      let res = await fetch("/api/product/list", {
+      let res = await fetch("/api/category/2", {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -98,7 +99,8 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
     switch (method) {
       case "POST":
         {
-          grasses.insert(0, p);
+          grasses.update(0, p);
+          setSelectedGrassId(p.id);
         }
         break;
       case "PUT":
@@ -144,9 +146,6 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
               QTY (kg)
             </span>
           </View>
-          <View width="9%">
-            <span style={{ textAlign: "right", display: "block" }}>HARGA</span>
-          </View>
           <View width="10%">
             <span style={{ textAlign: "right", display: "block" }}>
               JML HARGA
@@ -175,26 +174,15 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
           >
             {selectedGrassId === x.id ? (
               <GrassForm
-                customers={[
-                  { id: 0, name: "None", customerType: customerType.PABRIK },
-                  ...customers.items.filter(
-                    (f) =>
-                      f.customerType !== customerType.PABRIK &&
-                      f.id != customerId
-                  ),
-                ]}
+                customers={customers}
                 data={x}
-                products={products}
                 updateGrass={updateData}
                 closeForm={closeForm}
               >
                 <GrassDetail
                   grassId={x.id}
                   products={products}
-                  updateTotal={(total, qty) => {
-                    x.total = total;
-                    x.qty = qty;
-                  }}
+                  updateTotal={(total, qty) => grasses.update(x.id, {...x, total: x.total+total, qty: x.qty + qty})}
                 />
               </GrassForm>
             ) : (
@@ -214,7 +202,7 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
           <View>
             <Text>
               <strong>
-                {FormatNumber(grasses.items.reduce((a, b) => a + b.total, 0))}
+                {FormatNumber(grasses.items.reduce((a, b) => a + (b.total - b.totalDiv), 0))}
               </strong>
             </Text>
           </View>
@@ -266,7 +254,7 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
           <span
             style={{ textAlign: "right", display: "block", fontWeight: 700 }}
           >
-            {FormatNumber(x.totalDiv + x.total)}
+            {FormatNumber(x.total)}
           </span>
         </View>
         <View width={{ base: "47%", M: "10%" }}>
@@ -280,7 +268,7 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
           <span
             style={{ textAlign: "right", display: "block", fontWeight: 700 }}
           >
-            {FormatNumber(x.total)}
+            {FormatNumber(x.total - x.totalDiv)}
           </span>
         </View>
       </>
