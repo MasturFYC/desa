@@ -35,7 +35,7 @@ type paymentProps = {
   customerId: number;
 };
 
-const PaymentPage: NextPage<paymentProps> = (props) => {
+const PelupasantPage: NextPage<paymentProps> = (props) => {
   let { customerId } = props;
   let [selectedData, setSelectedData] = useState<iLunas>({ ...initLunas, customerId: customerId });
   let [isOpen, setIsOpen] = useState<boolean>(false);
@@ -225,4 +225,4 @@ function TableHead(): JSX.Element {
   </thead>)
 }
 
-export default PaymentPage;
+export default PelupasantPage;

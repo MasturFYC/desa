@@ -27,6 +27,7 @@ const initStockDetail: iStockDetail = {
   unitName: "",
   realQty: 0,
   price: 0,
+  discount: 0,
   subtotal: 0,
 };
 
@@ -103,6 +104,9 @@ const StockDetail: NextPage<StockDetailProps> = ({
             <View width={"20%"}>QTY / UNIT</View>
             <View width="10%">
               <span style={{ textAlign: "right", display: "block" }}>HARGA</span>
+            </View>
+            <View width="10%">
+              <span style={{ textAlign: "right", display: "block" }}>DICOUNT</span>
             </View>
             <View width="10%" paddingEnd={"size-100"}>
               <span style={{ textAlign: "right", display: "block" }}>SUBTOTAL</span>
@@ -188,6 +192,11 @@ const StockDetail: NextPage<StockDetailProps> = ({
         <View width={"10%"} isHidden={{ base: true, M: false }}>
           <span style={{ textAlign: "right", display: "block" }}>
             {FormatNumber(x.price)}
+          </span>
+        </View>
+        <View width={"10%"} isHidden={{ base: true, M: false }}>
+          <span style={{ textAlign: "right", display: "block" }}>
+            {FormatNumber(x.discount)}
           </span>
         </View>
         <View width={{ base: "47%", M: "10%" }} paddingEnd={"size-100"}>

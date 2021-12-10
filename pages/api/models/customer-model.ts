@@ -26,7 +26,6 @@ const apiCustomer: apiFunction = {
     WHERE c.customer_type = ${'Pabrik'}::cust_type
     order by c.name`;
 
-    //      console.log(query.sql, query.values)
 
     return await db
       .query(query)
@@ -61,7 +60,6 @@ const apiCustomer: apiFunction = {
     FROM customers AS c
     WHERE c.id = ${id}`;
 
-    //      console.log(query.sql, query.values)
 
     return await db
       .query(query)
@@ -75,7 +73,6 @@ const apiCustomer: apiFunction = {
     FROM customers AS c
     ORDER BY c.name`;
 
-    //      console.log(query.sql, query.values)
 
     return await db
       .query(query)
@@ -91,7 +88,6 @@ const apiCustomer: apiFunction = {
     WHERE POSITION(${name} IN LOWER(c.name)) > 0
     ORDER BY c.name`;
 
-    //      console.log(query.sql, query.values)
 
     return await db
       .query(query)

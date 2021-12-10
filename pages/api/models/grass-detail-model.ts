@@ -79,7 +79,6 @@ const apiGrassDetail: apiFunction = {
       )
       RETURNING *`;
 
-    //console.log(query.sql, query.values)
 
     return await db
       .query(query)

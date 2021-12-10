@@ -16,8 +16,9 @@ const apiStockDetail: apiFunction = {
   getByStock: async (stockId: number) => {
 
     const query = sql`SELECT
-      c.stock_id, c.id, c.unit_id, c.product_id, c.qty, c.content, c.unit_name, c.real_qty, c.price, c.subtotal,
-    p.name as "productName", p.spec
+      c.stock_id, c.id, c.unit_id, c.product_id, c.qty, c.content,
+      c.unit_name, c.real_qty, c.price, c.subtotal, c.discount, 
+      p.name as "productName", p.spec
     FROM stock_details AS c
     INNER JOIN products as p ON p.id = c.product_id
     WHERE c.stock_id = ${stockId}
@@ -49,7 +50,8 @@ const apiStockDetail: apiFunction = {
         qty = ${p.qty},
         content = ${p.content},
         unit_name = ${p.unitName},
-        price = ${p.price}
+        price = ${p.price},
+        discount = ${p.discount}
       WHERE id = ${p.id}
       RETURNING *
     `;
@@ -64,7 +66,7 @@ const apiStockDetail: apiFunction = {
 
     const query = sql`
       INSERT INTO stock_details (
-        stock_id, unit_id, product_id, qty, content, unit_name, price
+        stock_id, unit_id, product_id, qty, content, unit_name, price, discount
       ) VALUES (
         ${p.stockId},
         ${p.unitId},
@@ -72,12 +74,11 @@ const apiStockDetail: apiFunction = {
         ${p.qty},
         ${p.content},
         ${p.unitName},
-        ${p.price}
+        ${p.price},
+        ${p.discount}
       )
       RETURNING *
     `;
-
-    //console.log(query.sql, query.values)
 
     return await db
       .query(query)

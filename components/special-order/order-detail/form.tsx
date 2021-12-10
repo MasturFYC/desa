@@ -136,7 +136,7 @@ const SpecialDetailForm: NextPage<SpecialDetailFormProps> = ({
               let p = products.getItem(+e);
               if (p && p.units) {
 
-                let u = p.units[0];
+                let u = p.units.filter(f => f.isDefault)[0] || p.units[0];
                 if(u) {
                 
                 setOrderDetail((o) => ({

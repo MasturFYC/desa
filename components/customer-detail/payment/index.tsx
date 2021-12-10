@@ -31,7 +31,8 @@ type paymentProps = {
   customerId: number;
 };
 
-const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
+export default function PaymentPage (props: paymentProps) {
+  let { customerId } = props;
   let [selectedPaymentId, setSelectedPaymentId] = useState<number>(-1);
 
   let payments = useAsyncList<iPayment>({
@@ -175,5 +176,3 @@ const PaymentPage: NextPage<paymentProps> = ({ customerId }) => {
     );
   }
 };
-
-export default PaymentPage;

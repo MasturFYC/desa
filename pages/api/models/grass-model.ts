@@ -87,7 +87,6 @@ const apiGrass: apiFunction = {
 
   update: async (id: number, p: iGrass) => {
 
-    console.log(p)
     const query = sql`
       UPDATE grass SET
         order_date = to_timestamp(${dateParam(p.orderDate)}, ${hour24Format}),

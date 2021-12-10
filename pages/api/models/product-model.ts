@@ -32,7 +32,6 @@ const apiProduct: apiFunction = {
     FROM products AS c
     WHERE c.id = ${id}`;
 
-    //      console.log(query.sql, query.values)
 
     return await db
       .query(query)
@@ -56,7 +55,6 @@ const apiProduct: apiFunction = {
     FROM products AS c
     order by c.name`;
 
-    //      console.log(query.sql, query.values)
 
     return await db
       .query(query)
@@ -67,7 +65,7 @@ const apiProduct: apiFunction = {
   listWithUnit: async () => {
 
     const queryUnit = sql`select
-      u.product_id as "productId", u.id, u.name, u.content, u.price, u.buy_price as "buyPrice"
+      u.product_id as "productId", u.id, u.name, u.content, u.price, u.buy_price "buyPrice", is_default "isDefault"
       from units as u
       where u.product_id = c.id
       order by u.content DESC`
@@ -78,7 +76,6 @@ const apiProduct: apiFunction = {
     FROM products AS c
     order by c.name`;
 
-    //      console.log(query.sql, query.values)
 
     return await db
       .query(query)
@@ -102,7 +99,6 @@ const apiProduct: apiFunction = {
     order by c.name`;
 
 
-    //      console.log(query.sql, query.values)
 
     return await db
       .query(query)
@@ -162,7 +158,6 @@ const apiProduct: apiFunction = {
       RETURNING *
     `;
 
-//    console.log(query.sql, query.values);
 
     return await db
       .query(query)

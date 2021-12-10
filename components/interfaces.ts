@@ -88,7 +88,8 @@ export interface iUnit {
   price: number,
   buyPrice: number,
   margin: number,
-  product?: iProduct
+  product?: iProduct,
+  isDefault?: boolean,
 }
 
 export interface iOrder {
@@ -115,6 +116,7 @@ export interface iOrderDetail {
   unitName: string;
   realQty: number;
   price: number;
+  discount: number;
   buyPrice: number;
   subtotal: number;
   unit?: iUnit
@@ -212,6 +214,7 @@ export interface iStockDetail {
   unitName: string;
   realQty: number;
   price: number;
+  discount: number;
   subtotal: number;
   unit?: iUnit
   product?: iProduct;

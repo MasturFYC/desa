@@ -14,24 +14,21 @@ type PaymentFormProps = {
   closeForm: () => void;
 };
 
-const KasbonForm: NextPage<PaymentFormProps> = ({
-  data,
-  updatePayment,
-  closeForm,
-}) => {
+export default function PaymentForm(props: PaymentFormProps) {
+  let { data, updatePayment, closeForm } = props;
   let [payment, setPayment] = React.useState<iPayment>({} as iPayment);
   let [message, setMessage] = useState<string>("");
 
   const isTotalValid = React.useMemo(
     () => payment && payment.total && payment.total > 0,
     [payment]
-  )
+  );
 
   const isDescriptionValid = React.useMemo(
     () => payment && payment.descriptions && payment.descriptions.length > 0,
     [payment]
-  )
-  
+  );
+
   React.useEffect(() => {
     let isLoaded = false;
 
@@ -95,10 +92,7 @@ const KasbonForm: NextPage<PaymentFormProps> = ({
   };
 
   return (
-    <View
-      paddingY={"size-100"}
-      paddingX={{ base: "size-100", M: "size-1000" }}
-    >
+    <View paddingY={"size-100"} paddingX={{ base: "size-100", M: "size-1000" }}>
       <Form onSubmit={handleSubmit}>
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <TextField
@@ -139,8 +133,11 @@ const KasbonForm: NextPage<PaymentFormProps> = ({
           marginTop={"size-200"}
         >
           <View flex>
-            <Button type={"submit"} variant="cta"
-            isDisabled={isTotalValid <= 0 || isDescriptionValid === ""}>
+            <Button
+              type={"submit"}
+              variant="cta"
+              isDisabled={isTotalValid <= 0 || isDescriptionValid === ""}
+            >
               Save
             </Button>
             <Button
@@ -167,6 +164,4 @@ const KasbonForm: NextPage<PaymentFormProps> = ({
       </Form>
     </View>
   );
-};
-
-export default KasbonForm;
+}

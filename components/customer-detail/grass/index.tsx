@@ -42,7 +42,7 @@ type GrassProps = {
   customerId: number;
 };
 
-const Grass: NextPage<GrassProps> = (props: GrassProps) => {
+export default function Grass (props: GrassProps) {
   let { customerId } = props;
   let [selectedGrassId, setSelectedGrassId] = useState<number>(-1);
 
@@ -275,5 +275,3 @@ const Grass: NextPage<GrassProps> = (props: GrassProps) => {
     );
   }
 };
-
-export default Grass;

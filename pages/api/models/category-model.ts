@@ -17,7 +17,7 @@ const apiCategory: apiFunction = {
   getProducts: async (id: number) => {
 
     const queryUnit = sql`select
-      u.product_id as "productId", u.id, u.name, u.content, u.price, u.buy_price as "buyPrice"
+      u.product_id as "productId", u.id, u.name, u.content, u.price, u.buy_price as "buyPrice", is_default "isDefault"
       from units as u
       where u.product_id = c.id
       order by u.content`

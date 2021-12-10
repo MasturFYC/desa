@@ -17,7 +17,7 @@ const apiOrderDetail: apiFunction = {
 
     const query = sql`SELECT
     c.order_id, c.id, c.product_id, c.qty, c.unit_id, c.content,
-    c.unit_name, c.real_qty, c.buy_price, c.price, c.subtotal,
+    c.unit_name, c.real_qty, c.buy_price, c.price, c.discount, c.subtotal,
     p.name as "productName", p.spec
     FROM order_details AS c
     INNER JOIN products as p ON p.id = c.product_id
@@ -51,6 +51,7 @@ const apiOrderDetail: apiFunction = {
         content = ${p.content},
         unit_name = ${p.unitName},
         price = ${p.price},
+        discount = ${p.discount},
         buy_price = ${p.buyPrice}
       WHERE id = ${p.id}
       RETURNING *
@@ -66,7 +67,7 @@ const apiOrderDetail: apiFunction = {
 
     const query = sql`
       INSERT INTO order_details (
-        order_id, unit_id, product_id, qty, content, unit_name, price, buy_price
+        order_id, unit_id, product_id, qty, content, unit_name, price, discount, buy_price
       ) VALUES (
         ${p.orderId},
         ${p.unitId},
@@ -75,12 +76,12 @@ const apiOrderDetail: apiFunction = {
         ${p.content},
         ${p.unitName},
         ${p.price},
+        ${p.discount},
         ${p.buyPrice}
       )
       RETURNING *
     `;
 
-    //console.log(query.sql, query.values)
 
     return await db
       .query(query)

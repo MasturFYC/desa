@@ -119,26 +119,26 @@ begin
 end; $$;
 ```
 ```sh
-CREATE OR REPLACE FUNCTION public.grass_detail_after_delete_func()
- RETURNS trigger
- LANGUAGE plpgsql
-AS $$
+    CREATE OR REPLACE FUNCTION public.grass_detail_after_delete_func()
+    RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
 
-begin
+    begin
 
-    update products set
-        stock = stock - OLD.real_qty
-        where id = OLD.product_id;
+        update products set
+            stock = stock - OLD.real_qty
+            where id = OLD.product_id;
 
-    update grass set
-        qty = qty - OLD.real_qty,
-        total = total - OLD.subtotal
-    WHERE id = NEW.grass_id;
+        update grass set
+            qty = qty - OLD.real_qty,
+            total = total - OLD.subtotal
+        WHERE id = NEW.grass_id;
 
 
-    RETURN OLD;
+        RETURN OLD;
 
-end; $$;
+    end; $$;
 ```
 ```sh
 CREATE OR REPLACE FUNCTION public.grass_detail_before_insert_update_func()
@@ -169,6 +169,7 @@ create trigger grass_detail_after_update_trig
 create trigger grass_detail_after_delete_trig
     after delete on grass_details for each row
     execute function grass_detail_after_delete_func();
+
 ```
 ```sh
 CREATE OR REPLACE FUNCTION public.grass_after_delete_func() RETURNS trigger
@@ -216,7 +217,7 @@ BEGIN
             customer_id, descriptions, 
             ref_id, payment_date, total
         ) VALUES (
-            part_id, concat('Bagi hasil dengan ', cname, ' (', to_char(qty, 'L9G999'), '-kg)'),
+            part_id, concat('Bagi hasil dengan ', cname, '(', to_char(qty, 'L9G999'), ' kg)'),
             grass_id, pay_date, total_div
         );
 
@@ -257,7 +258,7 @@ BEGIN
 
         UPDATE payments SET
             total = total_div,
-            descriptions = concat('Bagi hasil dengan ', cname, ' (', to_char(qty, 'L9G999'), ' kg)'),
+            descriptions = concat('Bagi hasil dengan ', cname, '(', to_char(qty, 'L9G999'), ' kg)'),
             payment_date = pay_date,
             customer_id = part_id
         WHERE ref_id = grass_id;
@@ -268,7 +269,7 @@ BEGIN
                 customer_id, descriptions, 
                 ref_id, payment_date, total
             ) VALUES (
-                part_id, concat('Bagi hasil dengan ', cname, ' (', to_char(qty, 'L9G999'), ' kg)'),
+                part_id, concat('Bagi hasil dengan ', cname, '(', to_char(qty, 'L9G999'), ' kg)'),
                 grass_id, pay_date, total_div
             );
 
@@ -529,6 +530,114 @@ begin
 
 end;
 
+$$;
+
+```
+```sh
+alter table units add column set_default boolean default false;
+
+CREATE OR REPLACE FUNCTION public.set_default_unit(prod_id integer, unit_id integer)
+    RETURNS boolean
+ LANGUAGE plpgsql
+AS $$
+
+begin
+
+    update units set is_default = false
+    where product_id = prod_id;
+    update units set is_default = true
+    where product_id = prod_id and id = unit_id;
+
+    return true;
+
+end;
+$$;
+```
+```sh
+alter table order_details add column discount decimal(12,2) not null default 0;
+alter table stock_details add column discount decimal(12,2) not null default 0;
+```
+```sh
+CREATE OR REPLACE FUNCTION public.od_before_insert_func()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $$
+
+begin
+
+        --raise notice 'value: %', NEW.subtotal;
+        NEW.real_qty = NEW.qty * NEW.content;
+        NEW.subtotal = NEW.qty * (NEW.price - NEW.discount);
+
+        RETURN NEW;
+
+end; $$;
+
+```
+
+```sh
+CREATE OR REPLACE FUNCTION public.sd_before_insert_func()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $$
+
+begin
+
+        --raise notice 'value: %', NEW.subtotal;
+        NEW.real_qty = NEW.qty * NEW.content;
+        NEW.subtotal = NEW.qty * (NEW.price - NEW.discount);
+
+        RETURN NEW;
+
+end; $$;
+
+```
+
+```sh
+CREATE OR REPLACE FUNCTION public.lunas_delete_func()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $$
+
+BEGIN
+
+    update orders set
+      lunas_id = 0
+      where customer_id = OLD.customer_id
+      and lunas_id = OLD.id;
+
+    update special_orders set
+      lunas_id = 0
+      where customer_id = OLD.customer_id
+      and lunas_id = OLD.id;
+
+    update payments set
+      lunas_id = 0
+      where customer_id = OLD.customer_id
+      and lunas_id = OLD.id;
+
+    update special_payments set
+      lunas_id = 0
+      where customer_id = OLD.customer_id
+      and lunas_id = OLD.id;
+
+    update kasbons set
+      lunas_id = 0
+      where customer_id = OLD.customer_id
+      and lunas_id = OLD.id;
+
+    update grass set
+      lunas_id = 0
+      where customer_id = OLD.customer_id
+      and lunas_id = OLD.id;
+
+    delete from kasbons
+      where ref_lunas_id = OLD.id
+      AND customer_id = OLD.customer_id;
+
+    RETURN OLD;
+
+END;
 $$;
 
 ```

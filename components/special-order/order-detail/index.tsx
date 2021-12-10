@@ -23,6 +23,7 @@ const initOrderDetail: iSpecialDetail = {
   id: 0,
   unitId: 0,
   productId: 0,
+  discount: 0,
   qty: 1,
   content: 0,
   unitName: "",
@@ -117,8 +118,7 @@ const SpecialDetail: NextPage<SpecialDetailProps> = ({
                 selectedColor={'6px solid green'}
                 key={x.id}
               >
-                {renderDetails(x, isNew)}
-                {selectedDetailId === x.id && (
+                {selectedDetailId === x.id ? (
 
                   <OrderDetailForm
                     products={products}
@@ -126,7 +126,7 @@ const SpecialDetail: NextPage<SpecialDetailProps> = ({
                     updateDetail={updateOrderDetail}
                     closeForm={closeForm}
                   />
-                )}
+                ): renderDetails(x, isNew)}
               </Div>
             )
           )}

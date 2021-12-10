@@ -151,8 +151,8 @@ export default function GrassForm(props: GrassFormProps) {
           <ComboBox
             flex
             width={{ base: "auto", M: "28%" }}
-            label={"Pelanggan"}
-            placeholder={"e.g. pilih pelanggan"}
+            label={"Bagi hasil dengan"}
+            placeholder={"e.g. pilih partner"}
             defaultItems={[
               { id: 0, name: "None", customerType: customerType.PABRIK },
               ...customers.items.filter(

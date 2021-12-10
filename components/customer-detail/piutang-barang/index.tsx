@@ -126,16 +126,16 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
           columnGap="size-100"
         >
           <View width={"5%"}>ID#</View>
-          <View flex>Keterangan</View>
-          <View width={"20%"}>Tanggal</View>
+          <View flex>KETERANGAN</View>
+          <View width={"20%"}>TANGGAL</View>
           <View width="10%">
-            <span style={{ textAlign: "right", display: "block" }}>Total</span>
+            <span style={{ textAlign: "right", display: "block" }}>TOTAL</span>
           </View>
           <View width="10%">
-            <span style={{ textAlign: "right", display: "block" }}>Bayar</span>
+            <span style={{ textAlign: "right", display: "block" }}>BAYAR</span>
           </View>
           <View width="10%">
-            <span style={{ textAlign: "right", display: "block" }}>Piutang</span>
+            <span style={{ textAlign: "right", display: "block" }}>PIUTANG</span>
           </View>
         </Flex>
       </Div>

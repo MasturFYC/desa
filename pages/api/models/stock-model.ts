@@ -26,8 +26,6 @@ const apiStock: apiFunction = {
     WHERE POSITION(${name} IN LOWER(c.stock_num)) > 0
     ORDER BY c.stock_num`;
 
-    //      console.log(query.sql, query.values)
-
     return await db
       .query(query)
       .then((data) => [data.rows, undefined])

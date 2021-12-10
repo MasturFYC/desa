@@ -37,6 +37,10 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
     () => detail && detail.qty && detail.qty > 0,
     [detail]
   );
+  const isPriceValid = React.useMemo(
+    () => detail && detail.price && detail.price > 0,
+    [detail]
+  );
 
   const isUnitValid = React.useMemo(
     () => detail && detail.unitId && detail.unitId > 0,
@@ -119,6 +123,7 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <ComboBox
             autoFocus
+            isRequired
             flex
             validationState={isProductValid ? "valid" : "invalid"}
             label={"Nama Barang"}
@@ -130,8 +135,7 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
 
               let p = products.getItem(+e);
               if (p && p.units) {
-                //setUnits(p.units);
-                let u = p.units[0];
+                let u = p.units.filter(f => f.isDefault)[0] || p.units[0];
                 if (u) {
                   setDetail((o) => ({
                     ...o,
@@ -155,7 +159,8 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
             {(item) => <Item>{item.name}</Item>}
           </ComboBox>
           <NumberField
-            isReadOnly
+            validationState={isPriceValid ? "valid" : "invalid"}
+            isRequired
             hideStepper={true}
             width={"auto"}
             label={"Harga"}
@@ -168,6 +173,7 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <NumberField
             flex
+            isRequired
             validationState={isQtyValid ? "valid" : "invalid"}
             hideStepper={true}
             width={"auto"}
@@ -184,6 +190,7 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
             value={detail.qty}
           />
           <ComboBox
+            isRequired
             validationState={isUnitValid ? "valid" : "invalid"}
             label={"Unit"}
             defaultItems={
@@ -231,6 +238,7 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <View flex>
             <Button variant="cta" 
+            isDisabled = {isPriceValid <= 0 || isUnitValid <= 0 || isQtyValid <= 0 || isProductValid <= 0}
             onPress={(e) => postGrassDetail(detail.id === 0 ? "POST" : "PUT")}>
               Save
             </Button>

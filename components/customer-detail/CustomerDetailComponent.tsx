@@ -135,11 +135,13 @@ const CustomerDetailComponent: NextPage = () => {
           {customerId > 0 && <CustomerPiutang customerId={customerId} />}
         </View>
       )}
+      {customerId > 0 && <View>
       {tabId === 1 && <PiutangBarang customerId={customerId} />}
       {tabId === 2 && <Kasbon customerId={customerId} />}
       {tabId === 3 && <Grass customerId={customerId} />}
       {tabId === 4 && <Payment customerId={customerId} />}
       {tabId === 5 && <Pelunasan customerId={customerId} /> }
+      </View>}
     </Layout>
   );
 };

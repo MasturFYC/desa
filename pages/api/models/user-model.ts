@@ -19,8 +19,6 @@ const apiUser: apiFunction = {
       FROM users
       WHERE email = ${email} AND password = ${password}`;
 
-    //      console.log(query.sql, query.values)
-
     return await db
       .query(query)
       .then((data) => [data.rows[0], undefined])

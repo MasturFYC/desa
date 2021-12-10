@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { FormatDate, FormatNumber } from "@lib/format";
 import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
@@ -16,11 +16,6 @@ interface transactionDetail {
   cred: number;
   saldo: number;
 }
-type TransactionProps = {
-  customerId: number;
-  lunasId?: number | null;
-  handlePiutang?: (remainPayment: number) => void
-};
 
 type columnType = {
   id: number;
@@ -28,7 +23,14 @@ type columnType = {
   className?: string;
 };
 
+type TransactionProps = {
+  customerId: number;
+  lunasId?: number | null;
+  handlePiutang?: (remainPayment: number) => void
+};
+
 export default function CustomerTransaction(props: TransactionProps) {
+  
   let { customerId, lunasId = 0, handlePiutang } = props;
 
   let columns: columnType[] = [
@@ -61,23 +63,27 @@ export default function CustomerTransaction(props: TransactionProps) {
         body: JSON.stringify({ id: customerId, lunasId: lunasId })
       });
       let json = await res.json();
+
+      if(res.status === 200) {
+        handlePiutang && handlePiutang(json.reduce((a: number, b: transactionDetail) => a + b.debt - b.cred, 0));        
+      }
       return { items: json };
     },
     getKey: (item: transactionDetail) => item.id,
   });
 
-  useEffect(() => {
-    let isLoaded = false;
+  // useEffect(() => {
+  //   let isLoaded = false;
 
-    if (!isLoaded && handlePiutang) {
-      handlePiutang(payments.items.reduce((a, b) => a + b.debt - b.cred, 0));
-    }
+  //   if (!isLoaded && handlePiutang) {
+  //     handlePiutang(payments.items.reduce((a, b) => a + b.debt - b.cred, 0));
+  //   }
 
-    return () => { isLoaded = true; }
-  }, [payments, handlePiutang])
+  //   return () => { isLoaded = true; }
+  // }, [payments, handlePiutang])
 
   return (
-    <>
+    <Fragment>
       {payments.isLoading && <WaitMe />}
       <table aria-label={"table transaction"}>
         <thead aria-label={"table transaction head"}>
@@ -139,7 +145,7 @@ export default function CustomerTransaction(props: TransactionProps) {
         }
      `}</style>
       </table>
-    </>
+    </Fragment>
   );
 }
 

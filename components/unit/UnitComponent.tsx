@@ -11,6 +11,7 @@ import { FormatNumber } from "@lib/format";
 import WaitMe from "@components/ui/wait-me";
 import PinAdd from "@spectrum-icons/workflow/Add";
 import dynamic from "next/dynamic";
+import { Checkbox } from "@react-spectrum/checkbox";
 
 const UnitForm = dynamic(() => import("./form"), {
   ssr: false
@@ -144,6 +145,15 @@ const UnitComponent: NextPage<UnitComponentProps> = (props) => {
                 <View flex paddingY={6}>
                   Harga Jual: <strong>{FormatNumber(x.price)}</strong>
                 </View>)}
+                {x.id > 0 && (
+                <View flex paddingY={6}>
+                  <Checkbox isSelected={x.isDefault} onChange={(e)=> {
+                    units.items.map(f => {
+                      units.update(f.id, {...f, isDefault: x.id === f.id ? e : false})
+                    })
+                    updateUnits(x.productId, x.id)
+                  }}>Set as default</Checkbox>
+                </View>)}
             </Flex>
             {selectedId === x.id && (
                 <View paddingX={{ base: 0, M: "size-1000" }}>
@@ -162,6 +172,24 @@ const UnitComponent: NextPage<UnitComponentProps> = (props) => {
       <div style={{ marginBottom: '24px' }} />
     </Fragment>
   );
+
+  async function updateUnits(prodId: number, unitId: number) {
+    const url = `/api/unit/set-default/${prodId}/${unitId}`;
+    const fetchOptions = {
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      }
+    };
+
+    const res = await fetch(url, fetchOptions);
+    const json = await res.json();
+
+    if (res.status === 200) {
+      console.log('Set default unit success.')
+    } else {
+      console.log('Data unit tidak dapat diupdate, mungkin nama unit sama.')
+    }    
+  }
 };
 
 export default UnitComponent;

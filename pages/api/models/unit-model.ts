@@ -6,6 +6,7 @@ import db, { sql, nestQuery } from "../config";
 type apiReturn = Promise<any[] | (readonly iUnit[] | undefined)[]>;
 
 interface apiFunction {
+  setDefault: (productId: number, unitId: number) => apiReturn;
   list: (productId: number) => apiReturn;
   find: (name: string | string[]) => apiReturn;
   getUnit: (id: number) => apiReturn;
@@ -15,10 +16,20 @@ interface apiFunction {
 }
 
 const apiUnit: apiFunction = {
+
+  setDefault: async (productId: number, unitId: number) => {
+    const query = sql`select set_default_unit(${productId}, ${unitId})`;
+
+    return await db
+      .query(query)
+      .then((data) => [data.rows[0], undefined])
+      .catch((error) => [undefined, error]);
+  },
+
   getUnit: async (id: number) => {
 
     const query = sql`select
-      u.product_id, u.id, u.name, u.content, u.price, u.buy_price, u.margin
+      u.product_id, u.id, u.name, u.content, u.price, u.buy_price, u.margin, is_default
       from units as u
       where u.id = ${id}`
 
@@ -31,12 +42,10 @@ const apiUnit: apiFunction = {
   list: async (productId: number) => {
 
     const query = sql`SELECT
-    u.product_id, u.id, u.name, u.content, u.price, u.buy_price, u.margin
+    u.product_id, u.id, u.name, u.content, u.price, u.buy_price, u.margin, is_default
     FROM units AS u
     where (u.product_id = ${productId})
     order by u.content`;
-
-    //      console.log(query.sql, query.values)
 
     return await db
       .query(query)
@@ -47,7 +56,7 @@ const apiUnit: apiFunction = {
   find: async (name: string | string[]) => {
 
     const query = sql`select
-      u.product_id , u.id, u.name, u.content, u.price, u.buy_price, u.margin
+      u.product_id , u.id, u.name, u.content, u.price, u.buy_price, u.margin, is_default
       from units as u
       where POSITION(${name} IN LOWER(u.name)) > 0
       order by u.name`

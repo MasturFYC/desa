@@ -64,8 +64,7 @@ const apiSpecialDetail: apiFunction = {
 
   insert: async (p: iSpecialDetail) => {
 
-    console.log(p);
-    
+   
     const query = sql`
       INSERT INTO special_details (
         order_id, unit_id, product_id, qty, content, unit_name, price, buy_price
@@ -81,8 +80,6 @@ const apiSpecialDetail: apiFunction = {
       )
       RETURNING *
     `;
-
-    //console.log(query.sql, query.values)
 
     return await db
       .query(query)

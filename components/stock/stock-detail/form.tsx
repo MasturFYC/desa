@@ -126,7 +126,7 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
             let p = products.items.filter((o) => o.id === +e)[0];
             if (p && p.units) {
               //setUnits(p.units);
-              let u = p.units[0];
+              let u = p.units.filter(f => f.isDefault)[0] || p.units[0];
               if(u) {
               setDetail((o) => ({
                 ...o,

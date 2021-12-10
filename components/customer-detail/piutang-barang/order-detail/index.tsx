@@ -28,6 +28,7 @@ const initOrderDetail: iOrderDetail = {
   unitName: "",
   realQty: 0,
   price: 0,
+  discount: 0,
   buyPrice: 0,
   subtotal: 0,
 };
@@ -68,13 +69,13 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
       case "POST":
         {
           orderDetails.append(p);
-          updateTotal(p.orderId, p.qty * p.price);
+          updateTotal(p.orderId, p.qty * (p.price - p.discount));
         }
         break;
       case "PUT":
         {
           orderDetails.update(p.id, p);
-          updateTotal(p.orderId, p.qty * p.price - detail.subtotal);
+          updateTotal(p.orderId, (p.qty * (p.price - p.discount)) - detail.subtotal);
         }
         break;
       case "DELETE":
@@ -100,6 +101,9 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
             <View width={"20%"}>QTY/UNIT</View>
             <View width="10%">
               <span style={{ textAlign: "right", display: "block" }}>HARGA</span>
+            </View>
+            <View width="10%">
+              <span style={{ textAlign: "right", display: "block" }}>DISCOUNT</span>
             </View>
             <View width="10%">
               <span style={{ textAlign: "right", display: "block" }}>SUBTOTAL</span>
@@ -178,6 +182,11 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
         <View width={"10%"} isHidden={{ base: true, M: false }}>
           <span style={{ textAlign: "right", display: "block" }}>
             {FormatNumber(x.price)}
+          </span>
+        </View>
+        <View width={"10%"} isHidden={{ base: true, M: false }}>
+          <span style={{ textAlign: "right", display: "block" }}>
+            {FormatNumber(x.discount)}
           </span>
         </View>
         <View width={{ base: "47%", M: "10%" }}>

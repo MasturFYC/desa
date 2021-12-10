@@ -42,8 +42,6 @@ const apiSupplier: apiFunction = {
     FROM suppliers AS c
     WHERE c.id = ${supplierId}`;
 
-    //      console.log(query.sql, query.values)
-
     return await db
       .query(query)
       .then((data) => [data.rows[0], undefined])
@@ -56,8 +54,6 @@ const apiSupplier: apiFunction = {
       c.id, c.name, c.sales_name, c.street, c.city, c.phone, c.cell, c.email
     FROM suppliers AS c
     ORDER BY c.name`;
-
-    //      console.log(query.sql, query.values)
 
     return await db
       .query(query)
@@ -73,8 +69,6 @@ const apiSupplier: apiFunction = {
     FROM suppliers AS c
     WHERE POSITION(${name} IN LOWER(c.name)) > 0
     ORDER BY c.name`;
-
-    //      console.log(query.sql, query.values)
 
     return await db
       .query(query)

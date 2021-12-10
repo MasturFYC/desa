@@ -110,6 +110,7 @@ const OrderForm: NextPage<OrderFormProps> = ({
             Close
           </Button>
         </View>
+        <View flex><strong>#{order.id}</strong></View>
         {order.id > 0 && (
           <View>
             <Button type={"button"} variant="negative"

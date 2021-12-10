@@ -38,6 +38,11 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
     [orderDetail]
   );
 
+  const isDiscValid = React.useMemo(
+    () => orderDetail && orderDetail.discount && orderDetail.discount >= 0,
+    [orderDetail]
+  );
+
   const isUnitValid = React.useMemo(
     () => orderDetail && orderDetail.unitId && orderDetail.unitId > 0,
     [orderDetail]
@@ -128,7 +133,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
               let p = products.getItem(+e);
               if (p && p.units) {
                 //setUnits(p.units);
-                let u = p.units[0];
+                let u = p.units.filter((f) => f.isDefault)[0] || p.units[0];
                 if (u) {
                   setOrderDetail((o) => ({
                     ...o,
@@ -136,7 +141,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
                     price: u.price,
                     content: u.content,
                     buyPrice: u.buyPrice,
-                    subtotal: u.price * o.qty,
+                    subtotal: (u.price - o.discount) * o.qty,
                     realQty: o.qty * u.content,
                     unitName: u.name,
                     productName: p.name,
@@ -150,18 +155,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
           >
             {(item) => <Item>{item.name}</Item>}
           </ComboBox>
-          <NumberField
-            isReadOnly
-            hideStepper={true}
-            width={"auto"}
-            label={"Harga"}
-            onChange={(e) =>
-              setOrderDetail((o) => ({ ...o, price: e, subtotal: e * o.qty }))
-            }
-            value={orderDetail.price}
-          />
-        </Flex>
-        <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
+
           <NumberField
             flex
             validationState={isQtyValid ? "valid" : "invalid"}
@@ -173,7 +167,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
               setOrderDetail((o) => ({
                 ...o,
                 qty: e,
-                subtotal: e * o.price,
+                subtotal: e * (o.price - o.discount),
                 realQty: e * o.content,
               }))
             }
@@ -201,7 +195,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
                       price: u.price,
                       content: u.content,
                       buyPrice: u.buyPrice,
-                      subtotal: u.price * o.qty,
+                      subtotal: (u.price - o.discount) * o.qty,
                       realQty: u.content * o.qty,
                       unitName: u.name,
                     }));
@@ -212,6 +206,30 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
           >
             {(item) => <Item>{item.name}</Item>}
           </ComboBox>
+        </Flex>
+        <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
+          <NumberField
+            isReadOnly
+            hideStepper={true}
+            width={"auto"}
+            label={"Harga"}
+            onChange={(e) =>
+              setOrderDetail((o) => ({ ...o, price: e}))
+            }
+            value={orderDetail.price}
+          />
+
+          <NumberField
+            validationState={orderDetail.discount >= 0 ? "valid" :"invalid"}
+            hideStepper={true}
+            width={"auto"}
+            label={"Discount"}
+            onChange={(e) =>
+              setOrderDetail((o) => ({ ...o, discount: e, subtotal: (o.price - e) * o.qty }))
+            }
+            value={orderDetail.discount}
+          />
+
           <NumberField
             flex
             isReadOnly
@@ -219,9 +237,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
             width={"auto"}
             label={"Subtotal"}
             value={orderDetail.subtotal}
-            onChange={(e) =>
-              setOrderDetail((o) => ({ ...o, subtotal: e }))
-            }
+            onChange={(e) => setOrderDetail((o) => ({ ...o, subtotal: e }))}
           />
         </Flex>
         <Flex
@@ -234,7 +250,13 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
             <Button
               type={"submit"}
               variant="cta"
-              isDisabled={orderDetail.subtotal <= 0}
+              isDisabled={orderDetail.subtotal <= 0 ||
+                isProductValid === 0 ||
+                orderDetail.discount < 0 ||
+                isUnitValid === 0 ||
+                isQtyValid <= 0 ||
+                (orderDetail.price - orderDetail.discount) < orderDetail.buyPrice
+              }
             >
               Save
             </Button>

@@ -39,7 +39,6 @@ const apiLunas: apiFunction = {
   
   delete: async (id: number) => {
 
-    console.log(id)
     const query = sql`
     DELETE FROM lunas WHERE id = ${id}
     RETURNING id`;

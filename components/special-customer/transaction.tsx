@@ -14,14 +14,15 @@ interface transactionDetail {
   cred: number;
   saldo: number;
 }
-type TransactionProps = {
-  customerId: number;
-};
 
 type columnType = {
   id: number;
   name: string;
   className?: string;
+};
+
+type TransactionProps = {
+  customerId: number;
 };
 
 export default function CustomerTransaction(props: TransactionProps) {

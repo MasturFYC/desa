@@ -69,8 +69,6 @@ const apiSpecialPayment: apiFunction = {
 
   update: async (id: number, p: iSpecialPayment) => {
 
-    console.log(p)
-
     const query = sql`
       UPDATE special_payments SET
       order_id = ${p.orderId},
