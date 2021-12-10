@@ -9,8 +9,6 @@ import { Form } from "@react-spectrum/form";
 import { TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
 import { ComboBox, Item } from "@react-spectrum/combobox";
-import customer from "@components/customer";
-import { Provider } from "@react-spectrum/provider";
 
 
 export interface CustomerOrder extends iOrder {

@@ -19,6 +19,7 @@ import { FormatDate, FormatNumber } from "@lib/format";
 import Div from "@components/ui/Div";
 
 const GrassDetail = dynamic(() => import("./grass-detail"), { ssr: false });
+const GrassCost = dynamic(() => import("../../grass-cost/grass-cost"), { ssr: false });
 
 const GrassForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -42,7 +43,7 @@ type GrassProps = {
   customerId: number;
 };
 
-export default function Grass (props: GrassProps) {
+export default function Grass(props: GrassProps) {
   let { customerId } = props;
   let [selectedGrassId, setSelectedGrassId] = useState<number>(-1);
 
@@ -179,11 +180,15 @@ export default function Grass (props: GrassProps) {
                 updateGrass={updateData}
                 closeForm={closeForm}
               >
-                <GrassDetail
-                  grassId={x.id}
-                  products={products}
-                  updateTotal={(total, qty) => grasses.update(x.id, {...x, total: x.total+total, qty: x.qty + qty})}
-                />
+                <View>
+                  <GrassDetail
+                    grassId={x.id}
+                    products={products}
+                    updateTotal={(total, qty) => grasses.update(x.id, { ...x, total: x.total + total, qty: x.qty + qty })}
+                  />
+                  <View marginY={'size-200'}><strong>Biaya Operasional</strong></View>
+                  <GrassCost grassId={x.id} />
+                </View>
               </GrassForm>
             ) : (
               renderPembelian({ x })

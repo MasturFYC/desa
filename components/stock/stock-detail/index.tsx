@@ -73,15 +73,15 @@ const StockDetail: NextPage<StockDetailProps> = ({
       case "POST":
         {
           stockDetails.append(p);
-          updateTotal(p.stockId, p.qty * p.price);
+          updateTotal(p.stockId, p.qty * (p.price - p.price));
         }
         break;
       case "PUT":
         {
           stockDetails.update(p.id, p);
-          updateTotal(p.stockId, p.qty * p.price - detail.subtotal);
+          updateTotal(p.stockId, (p.qty * (p.price - p.discount)) - detail.subtotal);
         }
-        break;
+        break; 
       case "DELETE":
         {
           stockDetails.remove(p.id);

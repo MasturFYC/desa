@@ -77,7 +77,7 @@ export default function Div(props: DivLinkProps) {
           };
           border-right: 1px solid #c8cfdf;
           border-left: ${isSelected ? selectedColor : "1px solid #c8cfdf"};
-          color: #333;
+          // color: #333;
           border-bottom: ${isHeader
             ? "1px solid #c8cfdf"
             : isFooter

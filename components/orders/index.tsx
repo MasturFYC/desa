@@ -244,7 +244,9 @@ const OrderComponent: NextPage = () => {
                   />
                 </OrderForm>
               ) : (
-                renderCustomerOrder({ x })
+                  <div key={x.id} style={{ color: selectedOrderId >= 0  ? '#bbb' : '#000'}}>
+                <RenderCustomerOrder x={x} />
+                  </div>
               )}
             </Div>
           )
@@ -266,7 +268,7 @@ const OrderComponent: NextPage = () => {
     </Layout>
   );
 
-  function renderCustomerOrder({ x }: { x: CustomerOrder }) {
+  function RenderCustomerOrder({ x }: { x: CustomerOrder }) {
     return (
       <Fragment>
         <Flex
@@ -285,7 +287,7 @@ const OrderComponent: NextPage = () => {
                   setSelectedOrderId(x.id);
                 }}
               >
-                <span style={{ fontWeight: 700 }}>
+                <span style={{ fontWeight: 700, color: selectedOrderId >= 0 ? "#bbb" : "#333" }}>
                   {x.id === 0 ? "Piutang Baru" : x.descriptions}
                 </span>
               </ActionButton>
@@ -294,7 +296,7 @@ const OrderComponent: NextPage = () => {
             <View width={{ base: "50%", M: "25%" }}><Link 
             href={'/customer/[id]'}
             as={`/customer/${x.customerId}`}
-            passHref><a>{x.name}</a></Link></View>
+              passHref><a style={{ color: selectedOrderId >= 0 ? "#bbb" : "#000" }}>{x.name}</a></Link></View>
           </Flex>
           <Flex direction={"row"} width={{ base: "auto", M: "30%" }} columnGap={"size-50"}>
             <Span width={"33.3%"} isNumber >{FormatNumber(x.total)}</Span>

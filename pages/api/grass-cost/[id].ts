@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import api from '@model/grass-model';
+import api from '@model/grass-cost-model';
 
-export default async function grassApi(
+export default async function grassCostApi(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -27,7 +27,7 @@ export default async function grassApi(
     case 'GET':
     default: {
       const id: number = req.query.id ? +req.query.id : 0;
-      result = await api.getGrass(id);
+      result = await api.getByGrass(id);
     }
       break;
   }
@@ -37,8 +37,8 @@ export default async function grassApi(
   if (data) {
     res.status(200).json(data);
   } else {
-    console.log("GRASS Transaction: ", req.method, error);
-    res.status(404).json({ message: 'GRASS tidak ditemukan.' });
+    console.log("GRASS COST Transaction: ", req.method, error);
+    res.status(404).json({ message: 'GRASS COST tidak ditemukan.' });
   }
 
 }

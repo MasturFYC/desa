@@ -8,7 +8,7 @@ import { NumberField } from "@react-spectrum/numberfield";
 import { AsyncListData } from "@react-stately/data";
 import { ComboBox, Item } from "@react-spectrum/combobox";
 import { Form } from "@react-spectrum/form";
-
+ 
 export type StockDetailFormProps = {
   products: AsyncListData<iProduct>;
   data: iStockDetail;
@@ -30,6 +30,11 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
     () => detail && detail.productId && detail.productId > 0,
     [detail]
   )
+  const isDiscValid = React.useMemo(
+    () => detail && detail.discount && detail.discount >= 0,
+    [detail]
+  );
+
   const isUnitValid = React.useMemo(
     () => detail && detail.unitId && detail.unitId > 0,
     [detail]
@@ -133,7 +138,7 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
                 unitId: u.id,
                 price: u.buyPrice,
                 content: u.content,
-                subtotal: u.buyPrice * o.qty,
+                subtotal: (u.buyPrice - o.discount) * o.qty,
                 unitName: u.name,
                 productName: p.name,
                 spec: p.spec,
@@ -147,60 +152,77 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
         >
           {(item) => <Item>{item.name}</Item>}
         </ComboBox>
-        <NumberField
-          hideStepper={true}
-          width={"auto"}
-          label={"Harga"}
-          onChange={(e) =>
-            setDetail((o) => ({ ...o, price: e, subtotal: e * o.qty }))
-          }
-          value={detail.price}
-        />
-      </Flex>
-      <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
-        <NumberField
-          flex
-          hideStepper={true}
-          width={"auto"}
-          validationState={isQtyValid ? "valid" : "invalid"}
-          label={"Qty"}
-          minValue={0}
-          onChange={(e) =>
-            setDetail((o) => ({ ...o, qty: e, subtotal: e * o.price }))
-          }
-          value={detail.qty}
-        />
-        <ComboBox
-          label={"Unit"}
-          validationState={isUnitValid ? "valid" : "invalid"}
-          defaultItems={
-            products.getItem(detail.productId)
-              ? products.getItem(detail.productId).units
-              : []
-          }
-          selectedKey={detail.unitId}
-          onSelectionChange={(e) => {
-            let us = products.getItem(detail.productId).units;
-            if (us) {
-              let s = us.filter((o) => o.id === +e);
-              if (s) {
-                let u = s[0];
-                if (u) {
-                  setDetail((o) => ({
-                    ...o,
-                    unitId: u.id,
-                    price: u.buyPrice,
-                    content: u.content,
-                    subtotal: u.buyPrice * o.qty,
-                    unitName: u.name,
-                  }));
+
+          <NumberField
+            hideStepper={true}
+            width={"size-1200"}
+            validationState={isQtyValid ? "valid" : "invalid"}
+            label={"Qty"}
+            minValue={0}
+            onChange={(e) =>
+              setDetail((o) => ({ 
+                ...o, 
+                qty: e, 
+                subtotal: e * (o.price - o.discount),
+                realQty: e * o.content,
+              }))
+            }
+            value={detail.qty}
+          />
+          <ComboBox
+            width={'size-1600'}
+            label={"Unit"}
+            validationState={isUnitValid ? "valid" : "invalid"}
+            defaultItems={
+              products.getItem(detail.productId)
+                ? products.getItem(detail.productId).units
+                : []
+            }
+            selectedKey={detail.unitId}
+            onSelectionChange={(e) => {
+              let us = products.getItem(detail.productId).units;
+              if (us) {
+                let s = us.filter((o) => o.id === +e);
+                if (s) {
+                  let u = s[0];
+                  if (u) {
+                    setDetail((o) => ({
+                      ...o,
+                      unitId: u.id,
+                      price: u.buyPrice,
+                      content: u.content,
+                      subtotal: (u.buyPrice - o.discount) * o.qty,
+                      realQty: u.content * o.qty,
+                      unitName: u.name,
+                    }));
+                  }
                 }
               }
+            }}
+          >
+            {(item) => <Item>{item.name}</Item>}
+          </ComboBox>
+      </Flex>
+      <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
+          <NumberField
+            hideStepper={true}
+            width={"auto"}
+            label={"Harga"}
+            onChange={(e) =>
+              setDetail((o) => ({ ...o, price: e, subtotal: (e - o.discount) * o.qty }))
             }
-          }}
-        >
-          {(item) => <Item>{item.name}</Item>}
-        </ComboBox>
+            value={detail.price}
+          />
+          <NumberField
+            hideStepper={true}
+            validationState={detail.discount >= 0 ? "valid" : "invalid"}
+            width={"auto"}
+            label={"Discount"}
+            onChange={(e) =>
+              setDetail((o) => ({ ...o, discount: e, subtotal: (o.price - e) * o.qty }))
+            }
+            value={detail.discount}
+          />
         <NumberField
           flex
           isReadOnly

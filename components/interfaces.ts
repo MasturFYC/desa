@@ -275,3 +275,14 @@ export interface iLunas {
   createdAt: string;
   updatedAt?: string;
 }
+
+export type grassCostType = {
+  grassId: number;
+  id: number;
+  memo: string;
+  qty: number;
+  price: number;
+  subtotal: number;
+  createdAt: string;
+  updatedAt: string;
+}

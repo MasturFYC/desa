@@ -48,7 +48,7 @@ type PiutangBarangProps = {
 const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
   let [showDetail, setShowDetail] = useState<boolean>(false);
   let [selectedOrderId, setSelectedOrderId] = useState<number>(-1);
- // let [detailId, setDetailId] = useState<number>(0);
+  // let [detailId, setDetailId] = useState<number>(0);
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
@@ -69,7 +69,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
   });
 
   const closeForm = () => {
-    if(selectedOrderId === 0) {
+    if (selectedOrderId === 0) {
       orders.remove(0);
     }
     setSelectedOrderId(-1);
@@ -109,8 +109,8 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
       <Button
         variant={"cta"}
         onPress={() => {
-          if(!orders.getItem(0)) {
-            orders.insert(0, {...initOrder, customerId: customerId});
+          if (!orders.getItem(0)) {
+            orders.insert(0, { ...initOrder, customerId: customerId });
           }
           setSelectedOrderId(0);
         }}
@@ -155,9 +155,11 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
                     updateTotal={updateTotal}
                     orderId={x.id}
                   />
-                  </OrderForm>
+                </OrderForm>
               ) : (
-                renderPiutang({ x })
+                <div key={x.id} style={{ color: selectedOrderId >= 0 ? '#bbb' : '#000' }}>
+                  <RenderPiutang x={x} />
+                </div>
               )}
             </Div>
           )
@@ -179,10 +181,10 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
     </Fragment>
   );
 
-  function renderPiutang({ x }: { x: iOrder }) {
+  function RenderPiutang({ x }: { x: iOrder }) {
     return (
       <Fragment>
-        <Flex          
+        <Flex
           marginX={"size-100"}
           direction={"row"}
           //direction={{base:"column", M:"row"}}
@@ -199,7 +201,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
                 setSelectedOrderId(x.id);
               }}
             >
-              <span style={{ fontWeight: 700 }}>
+              <span style={{ fontWeight: 700, color: selectedOrderId >= 0 ? '#bbb' : '#000' }}>
                 {x.id === 0 ? "Piutang Baru" : x.descriptions}
               </span>
             </ActionButton>
@@ -216,7 +218,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
           {x.id > 0 && renderDetail(x)}
         </Flex>
         {/* {detailId === x.id && showDetail && ( */}
-          {/* <OrderDetail
+        {/* <OrderDetail
             products={products}
             updateTotal={updateTotal}
             orderId={x.id}
@@ -242,7 +244,8 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
         </View>
         <View width={{ base: "47%", M: "10%" }}>
           <span
-            style={{ textAlign: "right", display: "block", fontWeight: 700 }}
+            style={{ textAlign: "right", display: "block", fontWeight: 700,
+              color: selectedOrderId >= 0 ? '#bbb' : '#000' }}
           >
             {FormatNumber(x.remainPayment)}
           </span>

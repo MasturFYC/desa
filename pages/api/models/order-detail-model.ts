@@ -10,7 +10,7 @@ interface apiFunction {
   update: (id: number, data: iOrderDetail) => apiReturn;
   insert: (data: iOrderDetail) => apiReturn;
 }
-
+ 
 const apiOrderDetail: apiFunction = {
 
   getByOrder: async (orderId: number) => {
