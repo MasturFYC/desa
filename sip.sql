@@ -2,13 +2,13 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.5 (Debian 13.5-0+deb11u1)
+-- Dumped from database version 13.5 (Ubuntu 13.5-2.pgdg20.04+1)
 -- Dumped by pg_dump version 13.5 (Ubuntu 13.5-2.pgdg20.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'SQL_ASCII';
+SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
@@ -1299,7 +1299,7 @@ begin
     if OLD.product_id = NEW.product_id then
 
       update products set
-      stock = stock - OLD.real_qty + NEW.real_qty
+      stock = stock + OLD.real_qty - NEW.real_qty
       where id = NEW.product_id;
     
     else
@@ -2248,10 +2248,9 @@ COPY public.categories (id, name, created_at, updated_at) FROM stdin;
 --
 
 COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
-1	Dhoni Armadi	Ds. Telukagung	Indramayu	085-5556-65656	Rumput Laut
-3	CV. PURNAMA SEJAHTERA	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	Pabrik
-4	Joni Armadi	Ds. Telukagung	Indramayu	085-5556-65656	Rumput Laut
-2	Agung Priatna	RT. 14 / 06 Bloak Sindu Praja	Ds. Plumbon	085-5556-65656	Bandeng
+5	Agung	Blok Sindupraja RT.01 - Telukagung	Indramayu	08782897771	Rumput Laut
+6	Dhoni	RT. 02 Blok Sindupraja Ds. Telukagung	Indramayu	08782897771	Rumput Laut
+7	PT. MAKMUR SEJATI	Cakung Jakbar	Jakarta	08256478798	Pabrik
 \.
 
 
@@ -2260,13 +2259,7 @@ COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
 --
 
 COPY public.grass (customer_id, id, descriptions, order_date, total, qty, total_div, lunas_id, partner_id, cost) FROM stdin;
-2	56	Rumput Laut	2021-12-02 22:22:00	550000.00	200.00	250000.00	0	1	0.00
-4	196	Pembelian Rumput Laut	2021-12-11 16:24:00	4445000.00	1500.00	2220000.00	0	2	77500.00
-1	173	Pembelian Rumput Laut	2021-12-10 13:56:00	117000.00	60.00	58500.00	0	2	0.00
-2	174	Pembelian Rumput Laut	2021-12-10 13:56:00	195000.00	100.00	0.00	0	0	0.00
-2	164	Rumput Laut	2021-12-06 10:55:00	375000.00	250.00	0.00	0	0	0.00
-2	175	Pembelian Rumput Laut	2021-12-10 13:56:00	1160900.00	602.00	1950.00	0	1	0.00
-2	50	Pembelian Rumput Laut	2021-11-28 08:16:00	77500.00	25.00	0.00	0	1	0.00
+5	208	Pembelian Rumput Laut	2021-12-11 23:11:00	865000.00	150.00	450000.00	105	6	77500.00
 \.
 
 
@@ -2275,12 +2268,8 @@ COPY public.grass (customer_id, id, descriptions, order_date, total, qty, total_
 --
 
 COPY public.grass_costs (grass_id, id, memo, qty, price, subtotal, created_at, updated_at, unit) FROM stdin;
-175	1	Kapal api	7.00	1500.00	10500.00	2021-12-11 11:41:00+07	2021-12-11 04:43:00+07	pcs
-175	3	Sega goreng	1.00	2500.00	2500.00	2021-12-11 11:53:00+07	2021-12-10 07:53:00+07	bks
-50	5	Sega goreng	5.00	12000.00	60000.00	2021-12-11 12:56:00+07	2021-12-11 12:57:45.048341+07	bks
-56	7		0.00	0.00	0.00	2021-12-11 13:16:00+07	2021-12-11 13:18:17.840331+07	
-196	37	kopi	1.00	15000.00	15000.00	2021-12-11 16:35:00+07	2021-12-11 16:41:45.431258+07	ls
-196	38	sega goreng	5.00	12500.00	62500.00	2021-12-11 16:35:00+07	2021-12-11 16:42:13.746842+07	bks
+208	45	kopi	1.00	15000.00	15000.00	2021-12-11 23:41:00+07	2021-12-11 23:41:58.542938+07	rent
+208	46	sega goreng	5.00	12500.00	62500.00	2021-12-11 23:41:00+07	2021-12-11 23:42:11.325425+07	bks
 \.
 
 
@@ -2289,12 +2278,8 @@ COPY public.grass_costs (grass_id, id, memo, qty, price, subtotal, created_at, u
 --
 
 COPY public.grass_details (grass_id, id, unit_id, qty, content, unit_name, real_qty, price, subtotal, buy_price, product_id) FROM stdin;
-174	163	23	100.00	1.00	pcs	100.00	1950.00	195000.00	1500.00	16
-175	164	23	2.00	1.00	pcs	2.00	1950.00	3900.00	1500.00	16
-175	165	24	200.00	3.00	kg	600.00	5850.00	1170000.00	4500.00	16
-173	168	24	20.00	3.00	kg	60.00	5850.00	117000.00	4500.00	16
-196	178	24	350.00	3.00	kg	1050.00	5850.00	2047500.00	4500.00	16
-196	179	27	450.00	1.00	kg	450.00	5500.00	2475000.00	0.00	23
+208	198	31	100.00	1.00	kg	100.00	6500.00	650000.00	5000.00	28
+208	199	35	50.00	1.00	kg	50.00	5850.00	292500.00	4500.00	30
 \.
 
 
@@ -2303,10 +2288,9 @@ COPY public.grass_details (grass_id, id, unit_id, qty, content, unit_name, real_
 --
 
 COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, total, lunas_id, ref_lunas_id) FROM stdin;
-163	2	Kasbon	2021-12-06 10:54:00	2021-12-13 10:54:00	100000.00	0	0
-31	2	Kasbon Beli Terpal	2021-12-17 00:00:00	2021-12-24 00:00:00	1500000.00	0	0
-37	2	Kasbon ewe	2021-11-25 13:01:00	2021-12-02 13:01:00	25000.00	0	0
-195	4	Kasbon	2021-12-11 16:39:00	2021-12-18 16:39:00	5000000.00	0	0
+204	5	Tandur	2021-12-11 22:46:00	2021-12-18 22:46:00	5000000.00	105	0
+212	5	Saldo piutang pelunasan ID #105	2021-12-12 00:36:00	2021-12-19 00:36:00	4799500.00	107	105
+214	5	Saldo piutang pelunasan ID #107	2021-12-12 00:36:00	2021-12-19 00:36:00	500.00	0	107
 \.
 
 
@@ -2315,6 +2299,8 @@ COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, to
 --
 
 COPY public.lunas (id, customer_id, remain_payment, descriptions, created_at, updated_at) FROM stdin;
+105	5	4799500.00	x-203265	2021-12-12 00:36:00+07	2021-12-12 00:38:50.864783+07
+107	5	500.00	d2654	2021-12-12 00:36:00+07	2021-12-12 00:42:02.777136+07
 \.
 
 
@@ -2323,15 +2309,9 @@ COPY public.lunas (id, customer_id, remain_payment, descriptions, created_at, up
 --
 
 COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_qty, price, subtotal, buy_price, product_id, discount) FROM stdin;
-46	111	21	1.00	1.00	zak	1.00	325000.00	325000.00	250000.00	15	0.00
-46	114	17	1.00	1.00	pcs	1.00	39000.00	39000.00	30000.00	1	0.00
-49	115	17	1.00	1.00	pcs	1.00	39000.00	39000.00	30000.00	1	0.00
-49	157	1	1.00	1.00	btl	1.00	15000.00	15000.00	10000.00	7	0.00
-162	160	1	2.00	1.00	btl	2.00	15000.00	30000.00	10000.00	7	0.00
-36	167	2	1.00	10.00	pak	10.00	130000.00	100000.00	100000.00	7	30000.00
-46	112	1	1.00	1.00	btl	1.00	15000.00	15000.00	10000.00	7	0.00
-32	87	21	1.00	1.00	zak	1.00	325000.00	300000.00	250000.00	15	25000.00
-162	169	25	1.00	12.00	ls	12.00	150000.00	150000.00	120000.00	7	0.00
+201	188	33	5.00	1.00	btl	5.00	32500.00	162500.00	25000.00	29	0.00
+201	189	28	2.00	1.00	btl	2.00	26000.00	52000.00	20000.00	27	0.00
+215	202	33	1.00	1.00	btl	1.00	32500.00	32500.00	25000.00	29	0.00
 \.
 
 
@@ -2340,11 +2320,8 @@ COPY public.order_details (order_id, id, unit_id, qty, content, unit_name, real_
 --
 
 COPY public.orders (id, customer_id, order_date, total, payment, remain_payment, descriptions, lunas_id) FROM stdin;
-36	1	2021-11-25 12:15:00	100000.00	50000.00	50000.00	Utang Pupuk dan Obat	0
-46	1	2021-11-28 02:56:00	379000.00	0.00	379000.00	Penjualan Umum	0
-49	2	2021-11-28 08:04:00	54000.00	0.00	54000.00	Pembelian Barang	0
-32	2	2021-11-17 15:38:00	300000.00	30000.00	270000.00	Utang Obat	0
-162	2	2021-12-06 10:55:00	180000.00	55000.00	125000.00	Pembelian Barang	0
+201	5	2021-12-11 22:44:00	214500.00	0.00	214500.00	Utang Obat	105
+215	5	2021-12-12 01:17:00	32500.00	0.00	32500.00	Penjualan Umum	0
 \.
 
 
@@ -2353,13 +2330,8 @@ COPY public.orders (id, customer_id, order_date, total, payment, remain_payment,
 --
 
 COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total, lunas_id) FROM stdin;
-176	1	Bagi hasil dengan Agung Priatna(    602 kg)	175	2021-12-10 13:56:00	1950.00	0
-57	1	Bagi hasil dengan Agung Priatna(    200 kg)	56	2021-12-02 22:22:00	250000.00	0
-197	2	Bagi hasil dengan Joni Armadi (  1,500 kg )	196	2021-12-11 16:24:00	2220000.00	0
-177	2	Bagi hasil dengan Dhoni Armadi (     60 kg)	173	2021-12-10 13:56:00	58500.00	0
-165	2	Cicilan	0	2021-12-06 10:55:00	700000.00	0
-33	2	Cicilan Bayar Obat	0	2021-11-18 11:55:00	25000.00	0
-125	2	Cicilan	0	2021-12-06 01:13:00	500000.00	0
+211	6	Bagi hasil dengan Agung (    150 kg )	208	2021-12-11 23:11:00	450000.00	0
+213	5	Cicilan	0	2021-12-12 00:37:00	4799000.00	107
 \.
 
 
@@ -2368,11 +2340,10 @@ COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total
 --
 
 COPY public.products (id, name, spec, price, stock, first_stock, unit, update_notif, category_id) FROM stdin;
-1	EM 4 Perikanan	1 ltr	30000.00	143.00	100.00	pcs	t	1
-7	Abachel	250cc	10000.00	79.00	90.00	btl	t	1
-15	Pakan Bandeng	Pelet KW1	250000.00	111.00	110.00	zak	t	1
-16	Rumput Laut	KW-1	1500.00	172.00	20.00	kg	t	2
-23	Rumput Laut KW-2	\N	3500.00	450.00	0.00	kg	t	2
+28	Rumput Laut KW-1	\N	5000.00	1000.00	1000.00	kg	f	2
+30	Rumput Laut KW-2	\N	4500.00	50.00	50.00	kg	t	2
+29	Abachel	\N	25000.00	144.00	0.00	btl	f	1
+27	EM4	1 ltr	20000.00	142.00	72.00	btl	t	1
 \.
 
 
@@ -2381,10 +2352,8 @@ COPY public.products (id, name, spec, price, stock, first_stock, unit, update_no
 --
 
 COPY public.special_details (order_id, id, product_id, unit_id, qty, unit_name, price, subtotal, content, real_qty, buy_price) FROM stdin;
-104	153	16	23	25.00	pcs	1950.00	48750.00	1.00	25.00	1500.00
-104	154	16	23	100.00	pcs	1950.00	195000.00	1.00	100.00	1500.00
-106	155	16	23	10.00	pcs	1950.00	19500.00	1.00	10.00	1500.00
-109	156	16	24	100.00	kg	5850.00	585000.00	3.00	300.00	4500.00
+210	200	28	31	100.00	kg	6500.00	650000.00	1.00	100.00	5000.00
+210	201	30	35	50.00	kg	5850.00	292500.00	1.00	50.00	4500.00
 \.
 
 
@@ -2393,9 +2362,7 @@ COPY public.special_details (order_id, id, product_id, unit_id, qty, unit_name, 
 --
 
 COPY public.special_orders (id, customer_id, created_at, updated_at, packaged_at, shipped_at, driver_name, police_number, street, city, phone, total, cash, payments, remain_payment, descriptions, lunas_id, surat_jalan) FROM stdin;
-104	3	2021-12-04 01:29:00	2021-12-04 23:12:28.012161	2021-12-04 01:29:00	2021-12-04 01:29:00	Udin	-5665656	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	243750.00	43750.00	200000.00	0.00	\N	0	-
-106	3	2021-12-06 00:00:00	2021-12-04 23:13:35.145055	2021-12-04 01:29:00	2021-12-04 01:29:00	tttt	werwerwer	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	19500.00	0.00	19500.00	0.00	\N	0	-
-109	3	2021-12-07 00:00:00	2021-12-09 12:09:04.354374	2021-12-07 00:00:00	2021-12-07 00:00:00	Warim	E-1025-GH	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	585000.00	0.00	0.00	585000.00	\N	0	-ss
+210	7	2021-12-11 23:26:00	2021-12-11 23:27:01.481268	2021-12-11 23:26:00	2021-12-11 23:26:00	Rasoni	E-56598-FF	Cakung Jakbar	Jakarta	08256478798	942500.00	0.00	0.00	942500.00	\N	0	x-5565-555
 \.
 
 
@@ -2404,8 +2371,6 @@ COPY public.special_orders (id, customer_id, created_at, updated_at, packaged_at
 --
 
 COPY public.special_payments (customer_id, order_id, id, descriptions, payment_at, nominal, pay_num, lunas_id) FROM stdin;
-3	106	107	Angsuran piutang dagang #106	2021-12-06 00:00:00	19500.00	xc/2656/155464	0
-3	104	105	Angsuran piutang dagang #104	2021-12-05 00:00:00	200000.00	qweqwewqe qweqwe	0
 \.
 
 
@@ -2414,14 +2379,9 @@ COPY public.special_payments (customer_id, order_id, id, descriptions, payment_a
 --
 
 COPY public.stock_details (stock_id, id, product_id, unit_id, qty, content, unit_name, real_qty, price, subtotal, discount) FROM stdin;
-4	94	15	21	3.00	1.00	zak	3.00	250000.00	750000.00	0.00
-11	92	7	1	4.00	1.00	btl	4.00	10000.00	40000.00	0.00
-11	95	1	17	2.00	1.00	pcs	2.00	30000.00	60000.00	0.00
-29	96	7	1	3.00	1.00	btl	3.00	10000.00	30000.00	0.00
-4	97	1	17	50.00	1.00	pcs	50.00	30000.00	1500000.00	0.00
-12	91	7	2	1.00	10.00	pak	10.00	100000.00	100000.00	0.00
-12	90	15	21	10.00	1.00	zak	10.00	250000.00	2500000.00	0.00
-33	98	1	17	3.00	1.00	pcs	3.00	30000.00	90000.00	0.00
+51	184	27	29	2.00	24.00	dus	48.00	480000.00	950000.00	5000.00
+51	186	29	34	5.00	30.00	pak	150.00	750000.00	3750000.00	0.00
+53	187	27	29	1.00	24.00	dus	24.00	480000.00	480000.00	0.00
 \.
 
 
@@ -2430,16 +2390,8 @@ COPY public.stock_details (stock_id, id, product_id, unit_id, qty, content, unit
 --
 
 COPY public.stock_payments (id, stock_id, pay_num, pay_date, nominal, descriptions) FROM stdin;
-24	11	x-0001	2021-11-23 03:16:00	35000.00	Bayar Stock Pembelian #BG-562987
-23	11	x-0001	2021-11-23 03:08:00	50000.00	Bayar Stock Pembelian #BG-562987
-25	12	x-65000	2021-11-23 03:25:00	510000.00	Bayar Stock Pembelian #CV/3-985441
-26	4	cp-004	2021-11-23 03:27:00	50000.00	Bayar Stock Pembelian #x-10256559
-27	11	x63332	2021-11-23 03:32:00	10000.00	Bayar Stock Pembelian #BG-562987
-30	29	x9898	2021-11-23 03:39:00	10000.00	Bayar Stock Pembelian #ssssss
-31	29	x-695554	2021-11-23 13:40:00	15000.00	Bayar Stock Pembelian #ssssss
-32	4	c-6522	2021-11-23 14:38:00	1250000.00	Bayar Stock Pembelian #x-10256559
-46	33	ww	2021-11-25 11:54:00	25000.00	Bayar Stock Pembelian #dddd
-47	33	ewqewe	2021-11-25 11:56:00	5000.00	Bayar Stock Pembelian #dddd
+52	51	x-750	2021-12-11 21:15:00	500000.00	Bayar Stock Pembelian #x-002
+54	53	x-23654	2021-12-11 21:58:00	480000.00	Bayar Stock Pembelian #x-2255
 \.
 
 
@@ -2448,11 +2400,8 @@ COPY public.stock_payments (id, stock_id, pay_num, pay_date, nominal, descriptio
 --
 
 COPY public.stocks (id, supplier_id, stock_num, stock_date, total, cash, payments, remain_payment, descriptions) FROM stdin;
-29	6	ssssss	2021-11-23 03:38:00	30000.00	5000.00	25000.00	0.00	\N
-4	2	x-10256559	2021-11-22 20:49:00	2250000.00	700000.00	1300000.00	250000.00	test
-12	5	CV/3-985441	2021-11-22 21:14:00	2600000.00	300000.00	510000.00	1790000.00	\N
-11	4	BG-562987	2021-11-22 21:04:00	100000.00	5000.00	95000.00	0.00	Jatuh tempo tanggal 8-10-2021
-33	1	dddd	2021-11-23 14:41:00	90000.00	50000.00	30000.00	10000.00	\N
+51	1	x-002	2021-12-11 21:04:00	4700000.00	60000.00	500000.00	4140000.00	\N
+53	1	x-2255	2021-12-11 21:57:00	480000.00	0.00	480000.00	0.00	\N
 \.
 
 
@@ -2461,11 +2410,11 @@ COPY public.stocks (id, supplier_id, stock_num, stock_date, total, cash, payment
 --
 
 COPY public.suppliers (id, name, sales_name, street, city, phone, cell, email) FROM stdin;
-1	CV. Karya Baru	Mu'in	\N	Indramayu	qweqweqwe	\N	\N
 2	CV. Marga Mekar	Mastur	Jl. Jend. Sudirman No. 155	Indramayu qwewqe	0856232154	5646565	mastur.st12@gmail.com
 5	CV. Sejahtera	Sumarno, Sp.d	\N	qweqwe	\N	\N	\N
 4	Gudang Garam, PT	Dhoni	qweqwewe	Jakartra	\N	\N	\N
 6	Inti Persada, PT	qweqwe	eqweeeee	Indramayu	\N	\N	\N
+1	CV. Karya Baru	Mu'in	\N	Indramayu	08782897771	\N	\N
 \.
 
 
@@ -2474,17 +2423,15 @@ COPY public.suppliers (id, name, sales_name, street, city, phone, cell, email) F
 --
 
 COPY public.units (product_id, id, name, content, price, buy_price, margin, is_default) FROM stdin;
-23	27	kg	1.00	5500.00	0.00	0.5714	f
-15	22	pak	3.00	950025.00	750000.00	0.2667	f
-15	21	zak	1.00	325000.00	250000.00	0.3000	t
-16	23	pcs	1.00	1950.00	1500.00	0.3000	f
-16	24	kg	3.00	5850.00	4500.00	0.3000	t
-7	1	btl	1.00	15000.00	10000.00	0.5000	f
-7	2	pak	10.00	130000.00	100000.00	0.3000	f
-7	25	ls	12.00	150000.00	120000.00	0.2500	t
-1	19	ls	12.00	468000.00	360000.00	0.3000	f
-1	17	pcs	1.00	39000.00	30000.00	0.3000	f
-1	20	pak	3.00	99999.00	90000.00	0.1111	t
+27	29	dus	24.00	624000.00	480000.00	0.3000	f
+27	30	ls	12.00	312000.00	240000.00	0.3000	f
+27	28	btl	1.00	26000.00	20000.00	0.3000	t
+28	32	ball	40.00	260000.00	200000.00	0.3000	f
+28	31	kg	1.00	6500.00	5000.00	0.3000	t
+29	34	pak	30.00	975000.00	750000.00	0.3000	f
+29	33	btl	1.00	32500.00	25000.00	0.3000	t
+30	36	ball	40.00	234000.00	180000.00	0.3000	f
+30	35	kg	1.00	5850.00	4500.00	0.3000	t
 \.
 
 
@@ -2499,14 +2446,14 @@ SELECT pg_catalog.setval('public.categories_id_seq', 6, true);
 -- Name: customer_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.customer_seq', 4, true);
+SELECT pg_catalog.setval('public.customer_seq', 7, true);
 
 
 --
 -- Name: grass_costs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.grass_costs_id_seq', 38, true);
+SELECT pg_catalog.setval('public.grass_costs_id_seq', 46, true);
 
 
 --
@@ -2520,35 +2467,35 @@ SELECT pg_catalog.setval('public.grass_detail_seq', 9, true);
 -- Name: lunas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.lunas_id_seq', 104, true);
+SELECT pg_catalog.setval('public.lunas_id_seq', 107, true);
 
 
 --
 -- Name: order_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_detail_seq', 179, true);
+SELECT pg_catalog.setval('public.order_detail_seq', 202, true);
 
 
 --
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 197, true);
+SELECT pg_catalog.setval('public.order_seq', 215, true);
 
 
 --
 -- Name: product_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.product_seq', 26, true);
+SELECT pg_catalog.setval('public.product_seq', 30, true);
 
 
 --
 -- Name: seq_stock; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.seq_stock', 47, true);
+SELECT pg_catalog.setval('public.seq_stock', 54, true);
 
 
 --
@@ -2562,7 +2509,7 @@ SELECT pg_catalog.setval('public.seq_supplier', 40, true);
 -- Name: unit_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.unit_seq', 27, true);
+SELECT pg_catalog.setval('public.unit_seq', 36, true);
 
 
 --
