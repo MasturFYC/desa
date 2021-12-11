@@ -281,6 +281,7 @@ export type grassCostType = {
   id: number;
   memo: string;
   qty: number;
+  unit: string;
   price: number;
   subtotal: number;
   createdAt: string;

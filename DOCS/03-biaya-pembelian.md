@@ -6,10 +6,11 @@ create table grass_costs (
     id serial not null,
     memo varchar(128) not null,
     qty decimal(12,2) not null default 0,
+    unit varchar(6) not null,
     price decimal(12,2) not null default 0,
     subtotal decimal(12,2) not null default 0,
     created_at timestamp with time zone not null default now(),
-    update_at timestamp with time zone not null default now()
+    updated_at timestamp with time zone not null default now()
 );
 ```
 ```sh
@@ -45,7 +46,8 @@ AS $$
 begin
 
     update grass set
-        total = total - NEW.subtotal
+        total = total - NEW.subtotal,
+        cost = cost  + NEW.subtotal
         where id = NEW.grass_id;
 
     RETURN NEW;
@@ -61,7 +63,8 @@ AS $$
 begin
 
     update grass set
-        total = total - NEW.subtotal + OLD.subtotal
+        total = total - NEW.subtotal + OLD.subtotal,
+        cost = cost + NEW.subtotal - OLD.subtotal
         where id = NEW.grass_id;
 
     RETURN NEW;
@@ -79,7 +82,8 @@ AS $$
 begin
 
     update grass set
-        total = total + OLD.subtotal
+        total = total + OLD.subtotal,
+        cost = cost - OLD.subtotal
         where id = OLD.grass_id;
 
     RETURN OLD;

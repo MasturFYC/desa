@@ -14,7 +14,7 @@ const apgrassCrossType: apiFunction = {
   getByGrass: async (grassId: number) => {
 
     const query = sql`SELECT
-      grass_id, id, memo, qty, price, subtotal, created_at, updated_at
+      grass_id, id, memo, qty, unit, price, subtotal, created_at, updated_at
     FROM grass_costs
     WHERE grass_id = ${grassId}
     ORDER BY id`;
@@ -42,6 +42,7 @@ const apgrassCrossType: apiFunction = {
         grass_id = ${p.grassId},
         memo = ${p.memo},
         qty = ${p.qty},
+        unit = ${p.unit},
         price = ${p.price},
         updated_at = to_timestamp(${dateParam(p.updatedAt)}, ${hour24Format})
       WHERE id = ${p.id}
@@ -57,12 +58,13 @@ const apgrassCrossType: apiFunction = {
   insert: async (p: grassCostType) => {
 
     const query = sql`
-      INSERT INTO grass (
-        grass_id, memo, qty, price, created_at
+      INSERT INTO grass_costs (
+        grass_id, memo, qty, unit, price, created_at
       ) VALUES (
         ${p.grassId},
         ${p.memo},
         ${p.qty},
+        ${p.unit},
         ${p.price},
         to_timestamp(${dateParam(p.createdAt)}, ${hour24Format})
       )

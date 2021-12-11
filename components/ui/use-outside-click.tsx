@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 
-function useComponentVisible<T extends HTMLElement = HTMLElement>(initialIsVisible: boolean, callback: () => void) {
+function useComponentVisible<T extends HTMLElement = HTMLElement>(initialIsVisible: boolean, callback: (isCanceled?: boolean) => void) {
   const [isComponentVisible, setIsComponentVisible] = useState(initialIsVisible);
   const ref = useRef<T>(null);
 
   const handleHideDropdown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
-      callback();
+      callback(true);
     }
   };
 

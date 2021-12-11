@@ -187,11 +187,15 @@ export default function Grass(props: GrassProps) {
                     updateTotal={(total, qty) => grasses.update(x.id, { ...x, total: x.total + total, qty: x.qty + qty })}
                   />
                   <View marginY={'size-200'}><strong>Biaya Operasional</strong></View>
-                  <GrassCost grassId={x.id} />
+                  <GrassCost grassId={x.id}
+                    updateTotal={(total) => grasses.update(x.id, { ...x, total: x.total + total })}
+                  />
                 </View>
               </GrassForm>
             ) : (
-              renderPembelian({ x })
+              <div key={x.id} style={{ color: selectedGrassId >= 0  ? '#bbb' : 'inherit'}}>
+              {renderPembelian({ x })}
+              </div>
             )}
           </Div>
         ))}
@@ -235,7 +239,7 @@ export default function Grass(props: GrassProps) {
                 setSelectedGrassId(x.id);
               }}
             >
-              <span style={{ fontWeight: 700, textAlign: "left" }}>
+              <span style={{ fontWeight: 700, textAlign: "left", color: selectedGrassId >= 0  ? '#bbb' : 'inherit' }}>
                 {x.id === 0 ? "Pembelian Baru" : x.descriptions}
               </span>
             </ActionButton>

@@ -7,11 +7,12 @@ const GrassCostList = dynamic(() => import("./grass-cost-list"), { ssr: false })
 
 
 type GrassCostProps = {
-  grassId: number
+  grassId: number;
+  updateTotal?: (total: number) => void;
 }
 
 function GrassCost(props: GrassCostProps): JSX.Element {
-  let {grassId} = props;
+  let {grassId, updateTotal} = props;
 
   let costs = useAsyncList<grassCostType>({
     async load({ signal }) {
@@ -28,7 +29,7 @@ function GrassCost(props: GrassCostProps): JSX.Element {
   });
 
   return (
-    <GrassCostList costs={costs} grassId={grassId} />
+    <GrassCostList costs={costs} grassId={grassId} updateTotal={updateTotal} />
   )
 
 }

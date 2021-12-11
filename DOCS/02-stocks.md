@@ -18,5 +18,5 @@ begin
 
         RETURN NEW;
 
-end; $$
+end; $$;
 ```
