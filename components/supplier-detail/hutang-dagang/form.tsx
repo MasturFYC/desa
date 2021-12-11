@@ -52,7 +52,7 @@ const StockForm: NextPage<StockFormProps> = ({
   let [stock, setStock] = React.useState<iStock>({} as iStock);
   let [message, setMessage] = useState<string>("");
   const [open, setOpen] = React.useState(false);
-  
+
   const isStockNumValid = React.useMemo(
     () => stock && stock.stockNum && stock.stockNum.length > 0,
     [stock]
@@ -89,7 +89,7 @@ const StockForm: NextPage<StockFormProps> = ({
         supplierName: stock.supplierName
       });
       //console.log(stock)
-      if(stock.id > 0) {
+      if (stock.id > 0) {
         closeForm();
       }
       //} else {
@@ -196,7 +196,7 @@ const StockForm: NextPage<StockFormProps> = ({
               isDisabled={isStockNumValid === "" || stock.cash < 0}>
               Save
             </Button>
-            <Button
+           <Button
               type={"button"}
               variant="secondary"
               marginStart={"size-100"}
@@ -209,7 +209,10 @@ const StockForm: NextPage<StockFormProps> = ({
             >
               Close
             </Button>
+          </View> <View flex>
+            <span style={{ fontWeight: 700 }}>#{stock.id}</span>
           </View>
+
           {stock.id > 0 && (
             <View>
               <Button
@@ -263,7 +266,7 @@ const StockForm: NextPage<StockFormProps> = ({
             hideStepper={true}
             width={"auto"}
             label={"Bayar"}
-            validationState={stock.cash >=0 ? "valid" :"invalid"}
+            validationState={stock.cash >= 0 ? "valid" : "invalid"}
             onChange={(e) => setStock((o) => ({
               ...o,
               cash: e,

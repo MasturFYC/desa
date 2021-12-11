@@ -7,7 +7,6 @@ import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
-import { Divider } from "@react-spectrum/divider";
 import {  SearchField} from "@react-spectrum/searchfield";
 
 import {
@@ -16,10 +15,13 @@ import {
   iProduct,
   iSupplier
 } from "@components/interfaces";
-import { FormatDate, FormatNumber } from "@lib/format";
+import { FormatNumber } from "@lib/format";
 import Layout from "@components/layout";
 import Head from "next/head";
-import SpanLink from "@components/ui/span-link";
+
+const RenderStock = dynamic(() => import("@components/stock/RenderStock"), {
+  ssr: false,
+});
 
 const siteTitle = "Stock"
 
@@ -120,8 +122,9 @@ const StockComponent: NextPage = () => {
     switch (method) {
       case "POST":
         {
-          stocks.insert(0, p);
-          stocks.remove(0);
+          stocks.update(0, p);
+          setStockId(p.id);
+          //stocks.remove(0);
         }
         break;
       case "PUT":
@@ -183,41 +186,87 @@ const StockComponent: NextPage = () => {
           onSubmit={() => searchData()}
         />
       </Flex>
-      <View backgroundColor="gray-100" paddingY={"size-50"}>
-        <Flex direction={"row"} columnGap={"size-50"} marginX={"size-100"}>
-          <View width={{ base: "5%", M: "5%" }}>#ID</View>
-          <View flex>FAKTUR</View>
-          <View width={{ base: "50%", M: "15%" }}>TANGGAL</View>
-          <View width={{ base: "50%", M: "15%" }}>SUPPLIER</View>
-          <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>TOTAL</span></View>
-          <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>BAYAR</span></View>
-          <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>ANGSURAN</span></View>
-          <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>UTANG</span></View>
-        </Flex>
-      </View>
-      <Divider size="S" />
-      {(products.isLoading || stocks.isLoading) && <WaitMe />}
-      {stocks &&
-        stocks.items.map((item, i) => (
-          stockId === item.id ?
-            <View key={item.id} backgroundColor={"gray-100"} paddingX={"size-200"} borderWidth={"thin"} borderColor={"gray-300"}
-              borderStartColor={"indigo-400"} borderStartWidth={"thickest"}>
-              <StockForm
-                updateData={updateData}
-                updateTotal={updateTotal}
-                data={item}
-                closeForm={closeForm}
-                suppliers={suppliers}
-                products={products} />
-            </View> :
-            <RenderStock key={item.id} index={i} item={item}>
-              <SpanLink
-                onClick={() => setStockId(item.id)}
-              ><span>{item.id === 0 ? '---' : item.stockNum}</span></SpanLink>
-            </RenderStock>
-        ))
-      }
-      <br />
+      <table>
+        <thead>
+          <tr>
+            <th className={'text-left'}>#ID</th>
+            <th className={'text-left'}>FAKTUR</th>
+            <th className={'text-left'}>TANGGAL</th>
+            <th className={'text-left'}>SUPPLIER</th>
+            <th className={'text-right'}>TOTAL</th>
+            <th className={'text-right'}>BAYAR</th>
+            <th className={'text-right'}>ANGSURAN</th>
+            <th className={'text-right'}>UTANG</th>
+          </tr>
+        </thead>
+        <tbody>
+          {(products.isLoading || stocks.isLoading) && <tr><td colSpan={7}><WaitMe /></td></tr>}
+          {stocks && stocks.items.map((item, index) =>
+            item.id === stockId ? (
+              <tr key={item.id}>
+                <td colSpan={8}>
+                  <StockForm
+                    updateData={updateData}
+                    updateTotal={updateTotal}
+                    data={item}
+                    closeForm={closeForm}
+                    suppliers={suppliers}
+                    products={products} />
+                </td>
+              </tr>
+            )
+              : (
+                <RenderStock key={item.id} item={item} index={index} isStock>
+                  <Link href={`#`} as={'/stock/'} passHref><a onClick={() => setStockId(item.id)}>{item.id === 0 ? '---' : item.stockNum}</a></Link>
+                </RenderStock>
+              ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <th className={'text-left'} colSpan={4}>TOTAL: {stocks.items.length} items</th>
+            <th className={'text-right'}>{FormatNumber(stocks.items.reduce((a, b) => a + b.total, 0))}</th>
+            <th className={'text-right'}>{FormatNumber(stocks.items.reduce((a, b) => a + b.cash, 0))}</th>
+            <th className={'text-right'}>{FormatNumber(stocks.items.reduce((a, b) => a + b.payments, 0))}</th>
+            <th className={'text-right'}>{FormatNumber(stocks.items.reduce((a, b) => a + b.remainPayment, 0))}</th>
+          </tr>
+        </tfoot>
+      </table>
+      <style jsx>{`
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          border: 2px solid #cecece;
+          margin-bottom: 24px;
+        }
+        thead th {
+          font-size: 95%;
+          font-weight: 600;
+          border-bottom: 1px solid #cecece ;
+          background-color: #fdf0e9;
+        }
+        tfoot th {
+          font-weight: 700;
+          border-top: 1px solid #cecece ;
+          background-color: #dfe9f0;
+        }
+        .text-left {
+          text-align: left;
+        }
+        .text-right {
+          text-align: right;
+        }
+        .text-bold {
+          font-weight: 700;
+        }
+        th {
+          border-left: 1px dashed #cecece ;
+          padding: 3px 6px;
+        }
+        td {
+          padding: 0px 12px 24px;
+          background-color: #dfe9f0;
+        }
+        `}</style>
     </Layout>
   );
 
@@ -227,32 +276,6 @@ const StockComponent: NextPage = () => {
     }
     setStockId(-1)
   }
-}
-
-type RenderStockProps = {
-  index: number,
-  item: iStock,
-  children: JSX.Element
-}
-function RenderStock({ index, item, children }: RenderStockProps) {
-  return (
-    <View backgroundColor={index % 2 === 0 ? "gray-50" : "gray-75"} paddingY={"size-50"}>
-      <Flex direction={"row"} columnGap={"size-50"} marginX={"size-100"}>
-        <View width={{ base: "5%", M: "5%" }}>{item.id}</View>
-        <View flex>{children}</View>
-        <View width={{ base: "50%", M: "15%" }}>{FormatDate(item.stockDate)}</View>
-        <View width={{ base: "50%", M: "15%" }}>
-          <Link href={'/supplier/[id]'} as={`/supplier/${item.supplierId}`} passHref>
-            <a style={{ textDecoration: "none", fontWeight: 700 }}>{item.supplierName}</a>
-          </Link>
-        </View>
-        <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.total)}</span></View>
-        <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.cash)}</span></View>
-        <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.payments)}</span></View>
-        <View width={{ base: "50%", M: "10%" }}><span style={{ textAlign: "right", display: "block" }}>{FormatNumber(item.remainPayment)}</span></View>
-      </Flex>
-    </View>
-  )
 }
 
 export default StockComponent;

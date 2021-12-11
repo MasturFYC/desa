@@ -187,6 +187,7 @@ const CustomerComponent: NextPage = () => {
         ]
         .map((x, i) => (
           <View
+            marginBottom={'size-50'}
             key={x.id}>
               <div style={{
                 padding: "12px 6px",

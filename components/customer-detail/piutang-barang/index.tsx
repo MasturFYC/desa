@@ -58,7 +58,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
     },
     getKey: (item: iProduct) => item.id,
   });
-
+ 
   let orders = useAsyncList<iOrder>({
     async load({ signal }) {
       let res = await fetch(`/api/customer/order/${customerId}`, { signal });
@@ -145,12 +145,13 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
           (x, i) => (
             <Div key={x.id} index={i} isSelected={selectedOrderId === x.id} selectedColor={"6px solid dodgerblue"} >
               {selectedOrderId === x.id ? (
-                <OrderForm
+                <OrderForm                  
                   data={x}
                   updateOrder={updateOrder}
                   closeForm={closeForm}
                 >
                   <OrderDetail
+                    isLunas={x.lunasId > 0}
                     products={products}
                     updateTotal={updateTotal}
                     orderId={x.id}

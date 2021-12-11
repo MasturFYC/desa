@@ -94,7 +94,7 @@ const OrderForm: NextPage<OrderFormProps> = ({
   }
 
   return (<View paddingX={{ base: "size-50", M: "size-100" }}>
-    <Form onSubmit={handleSubmit}>
+    <Form onSubmit={handleSubmit} isDisabled={order.lunasId > 0}>
       <Flex direction="row" gap="size-100" marginBottom={"size-100"}>
         <View flex>
           <Button type={"submit"} variant="cta"

@@ -34,12 +34,14 @@ const initOrderDetail: iOrderDetail = {
 };
 
 type OrderDetailProps = {
+  isLunas?: boolean,
   products: AsyncListData<iProduct>;
   orderId: number;
   updateTotal: (orderId: number, subtotal: number) => void;
 };
 
 const OrderDetail: NextPage<OrderDetailProps> = ({
+  isLunas,
   products,
   orderId,
   updateTotal,
@@ -124,6 +126,7 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
                 {selectedDetailId === x.id && (
 
                   <OrderDetailForm
+                    isLunas={isLunas}
                     products={products}
                     data={x}
                     updateDetail={updateOrderDetail}
@@ -147,6 +150,7 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
       >
         {x.id > 0 && <View width={"5%"}>{x.id}</View>}
         <View flex={{ base: "50%", M: 1 }}>
+          {isLunas ? <span>{x.productName}</span> :
           <ActionButton
             flex
             height={"auto"}
@@ -166,7 +170,7 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
                 {x.productName} - {x.spec}
               </span>
             )}
-          </ActionButton>
+          </ActionButton>}
         </View>
         {x.id > 0 && renderDetail(x)}
       </Flex>

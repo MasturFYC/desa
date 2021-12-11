@@ -238,6 +238,7 @@ const OrderComponent: NextPage = () => {
                   closeForm={closeForm}
                 >
                   <OrderDetail
+                    isLunas={x.lunasId > 0}
                     products={products}
                     updateTotal={updateTotal}
                     orderId={x.id}
@@ -278,7 +279,7 @@ const OrderComponent: NextPage = () => {
         >
           <Flex flex direction={"row"} width={{ base: "auto", M: "60%" }} columnGap={"size-50"}>
             <View width={"7%"}>{x.id}</View>
-            <View flex>
+            <View flex>              
               <ActionButton
                 flex
                 height={"auto"}

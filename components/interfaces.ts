@@ -92,7 +92,7 @@ export interface iUnit {
   isDefault?: boolean,
 }
 
-export interface iOrder {
+export type iOrder = {
   id: number;
   lunasId: number;
   customerId: number;

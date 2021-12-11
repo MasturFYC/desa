@@ -387,3 +387,38 @@ create trigger grass_detail_after_delete_trig
     execute function grass_detail_after_delete_func();
 
 ```
+```sh
+CREATE or replace FUNCTION public.spd_aft_update_func() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+begin
+
+    update special_orders set
+    total = total + NEW.subtotal - OLD.subtotal
+    where id = NEW.order_id;
+
+    if OLD.product_id = NEW.product_id then
+
+      update products set
+      stock = stock + OLD.real_qty - NEW.real_qty
+      where id = NEW.product_id;
+    
+    else
+
+      update products set
+      stock = stock - NEW.real_qty
+      where id = NEW.product_id;
+
+      update products set
+      stock = stock + OLD.real_qty
+      where id = OLD.product_id;
+
+    end if;
+
+    return NEW;
+
+end;
+
+$$;
+```

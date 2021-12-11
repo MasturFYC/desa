@@ -73,7 +73,7 @@ const StockDetail: NextPage<StockDetailProps> = ({
       case "POST":
         {
           stockDetails.append(p);
-          updateTotal(p.stockId, p.qty * (p.price - p.price));
+          updateTotal(p.stockId, p.qty * (p.price - p.discount));
         }
         break;
       case "PUT":

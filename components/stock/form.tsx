@@ -93,11 +93,13 @@ const StockForm: NextPage<StockFormProps> = ({
     const json = await res.json();
 
     if (res.status === 200) {
-      updateStock(stock.id === 0 ? "POST" : "PUT", {
+      updateStock(method, {
         ...json,
         supplierName: stock.supplierName
       });
-      closeForm();
+      if(method === 'PUT') {
+        closeForm();
+      }
     } else {
       console.log(json.message);
       setMessage("Data stock tidak bisa dipost, lihat log.");
@@ -114,6 +116,7 @@ const StockForm: NextPage<StockFormProps> = ({
   };
 
   const reUpdateStock = (stockId: number, subtotal: number) => {
+    console.log(stock.id, subtotal, stock.payments)
     updateTotal(stock.id, subtotal, stock.payments);
   }
 
@@ -142,6 +145,7 @@ const StockForm: NextPage<StockFormProps> = ({
   const closePayment = () => {
     setOpen(false)
   }
+
   const updatePayment = (method: string, data: iStockPayment) => {
     const test = {
       ...stock,
@@ -185,7 +189,7 @@ const StockForm: NextPage<StockFormProps> = ({
           </Dialog>
         )}
       </DialogContainer>
-      <Form onSubmit={submitForm} marginY={"size-100"}>
+      <Form onSubmit={submitForm} marginBottom={"size-100"}>
         <Flex
           direction="row"
           gap="size-100"
@@ -208,6 +212,9 @@ const StockForm: NextPage<StockFormProps> = ({
             >
               Close
             </Button>
+          </View>
+          <View flex>
+            <span style={{fontWeight: 700}}>#{stock.id}</span>
           </View>
           {stock.id > 0 && (
             <View>

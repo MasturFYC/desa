@@ -5,7 +5,7 @@ import db, { sql } from "../config";
 
 type apiReturn = Promise<any[] | (readonly iOrder[] | undefined)[]>;
 
-interface apiFunction {
+type apiFunction = {
   list: () => apiReturn;
   search: (name: string) => apiReturn;
   getByCustomer: (customerId: number, lunasId?: number | null ) => apiReturn;
@@ -18,7 +18,10 @@ interface apiFunction {
 const apiOrder: apiFunction = {
   getOrder: async (id: number) => {
 
-    const query = sql`SELECT c.id, c.customer_id, c.order_date, c.total, c.payment, c.remain_payment, c.descriptions
+    const query = sql`SELECT 
+      c.id, c.customer_id, c.order_date,
+      c.total, c.payment, c.remain_payment,
+      c.descriptions, lunas_id
     FROM orders AS c
     WHERE c.id = ${id}`;
 
@@ -34,14 +37,14 @@ const apiOrder: apiFunction = {
 
     const query = id === 0 ? sql`SELECT
       c.id, c.customer_id, c.order_date, c.total, c.payment,
-      c.remain_payment, c.descriptions, cust.name
+      c.remain_payment, c.descriptions, cust.name, lunas_id
     FROM orders AS c
     inner join customers cust on cust.id = c.customer_id
     WHERE POSITION(${name} IN LOWER(cust.name)) > 0 OR POSITION(${name} IN LOWER(c.descriptions)) > 0
     ORDER BY cust.name` :
       sql`SELECT
       c.id, c.customer_id, c.order_date, c.total, c.payment,
-      c.remain_payment, c.descriptions, cust.name
+      c.remain_payment, c.descriptions, cust.name, lunas_id
     FROM orders AS c
     inner join customers cust on cust.id = c.customer_id
     WHERE c.id = ${id}`;
@@ -56,7 +59,7 @@ const apiOrder: apiFunction = {
 
     const query = sql`SELECT
       c.id, c.customer_id, c.order_date, c.total, c.payment,
-      c.remain_payment, c.descriptions, cust.name
+      c.remain_payment, c.descriptions, cust.name, lunas_id
     FROM orders AS c
     inner join customers cust on cust.id = c.customer_id
     ORDER BY c.id DESC`;
@@ -69,7 +72,7 @@ const apiOrder: apiFunction = {
 
   getByCustomer: async (customerId: number, lunasId: number | undefined | null = 0) => {
 
-    const query = sql`SELECT c.id, c.customer_id, c.order_date, c.total, c.payment, c.remain_payment, c.descriptions
+    const query = sql`SELECT c.id, c.customer_id, c.order_date, c.total, c.payment, c.remain_payment, c.descriptions, lunas_id
     FROM orders AS c
     WHERE c.customer_id = ${customerId} and c.lunas_id = ${lunasId}
     ORDER BY c.id DESC`;

@@ -3,7 +3,6 @@ import React, { Fragment, useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
-import { NextPage } from "next";
 import { ActionButton, Button } from '@react-spectrum/button';
 import { Flex } from '@react-spectrum/layout';
 import { Text } from '@react-spectrum/text';
@@ -93,10 +92,10 @@ export default function PaymentPage (props: paymentProps) {
           columnGap="size-50"
         >
           <View width={"5%"}>ID#</View>
+          <View width={"20%"}>Tanggal</View>
           <View flex width={{ base: "50%" }}>
             Keterangan
           </View>
-          <View width={"20%"}>Tanggal</View>
           <View width="15%">
             <span style={{ textAlign: "right", display: "block" }}>Total</span>
           </View>
@@ -145,6 +144,9 @@ export default function PaymentPage (props: paymentProps) {
         wrap={"wrap"}
       >
         <View width={"5%"}>{x.id}</View>
+        <View width={{ base: "40%", M: "20%" }}>
+          {FormatDate(x.paymentDate)}
+        </View>
         <View flex width={{ base: "50%", M: "auto" }}>
           {x.refId > 0 
           ? x.descriptions
@@ -161,9 +163,6 @@ export default function PaymentPage (props: paymentProps) {
             </span>
           </ActionButton>
           }
-        </View>
-        <View width={{ base: "40%", M: "20%" }}>
-          {FormatDate(x.paymentDate)}
         </View>
         <View width={{ base: "48%", M: "15%" }}>
           <span

@@ -10,18 +10,15 @@ import { AsyncListData } from "@react-stately/data";
 import { ComboBox, Item } from "@react-spectrum/combobox";
 
 export type OrderDetailFormProps = {
+  isLunas?: boolean,
   products: AsyncListData<iProduct>;
   data: iOrderDetail;
   updateDetail: (method: string, data: iOrderDetail) => void;
   closeForm: () => void;
 };
 
-const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
-  products,
-  data,
-  updateDetail,
-  closeForm,
-}) => {
+const OrderDetailForm: NextPage<OrderDetailFormProps> = (props: OrderDetailFormProps) => {
+  let {products, data, updateDetail, closeForm, isLunas } = props;
   let [orderDetail, setOrderDetail] = React.useState<iOrderDetail>(
     {} as iOrderDetail
   );
@@ -117,7 +114,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
 
   return (
     <View paddingY={"size-100"} paddingX={{ base: "size-100", M: "size-1000" }}>
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} isDisabled={isLunas}>
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
           <ComboBox
             autoFocus
@@ -255,7 +252,8 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
                 orderDetail.discount < 0 ||
                 isUnitValid === 0 ||
                 isQtyValid <= 0 ||
-                (orderDetail.price - orderDetail.discount) < orderDetail.buyPrice
+                (orderDetail.price - orderDetail.discount) < orderDetail.buyPrice ||
+                isLunas
               }
             >
               Save
@@ -265,6 +263,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = ({
               variant="secondary"
               marginStart={"size-100"}
               onPress={() => closeForm()}
+              isDisabled={false}
             >
               Cancel
             </Button>

@@ -23,13 +23,8 @@ type OrderFormProps = {
   children: JSX.Element
 };
 
-const OrderForm: NextPage<OrderFormProps> = ({
-  customerList,
-  data,
-  updateOrder,
-  closeForm,
-  children
-}) => {
+function OrderForm(props: OrderFormProps) {
+  let { customerList, data, updateOrder, closeForm, children } = props;
   let [order, setOrder] = React.useState<CustomerOrder>({} as CustomerOrder);
   let [message, setMessage] = useState<string>('');
 
@@ -74,8 +69,8 @@ const OrderForm: NextPage<OrderFormProps> = ({
     const json = await res.json();
 
     if (res.status === 200) {
-      updateOrder(order.id === 0 ? 'POST' : 'PUT', {...json, name: customerList.getItem(order.customerId).name});
-      if(order.id > 0) {
+      updateOrder(order.id === 0 ? 'POST' : 'PUT', { ...json, name: customerList.getItem(order.customerId).name });
+      if (order.id > 0) {
         closeForm();
       }
     } else {
@@ -112,11 +107,11 @@ const OrderForm: NextPage<OrderFormProps> = ({
   }
 
   return (<View paddingX={{ base: "size-50", M: "size-100" }}>
-    <Form onSubmit={handleSubmit}>
+    <Form onSubmit={handleSubmit} isDisabled={order.lunasId > 0}>
       <Flex direction="row" gap="size-100" marginBottom={"size-100"}>
         <View flex>
           <Button type={"submit"} variant="cta"
-          isDisabled={isDescriptionValid === "" || isCustomerIdValid === 0 || order.payment < 0}          
+            isDisabled={isDescriptionValid === "" || isCustomerIdValid === 0 || order.payment < 0 || order.lunasId > 0}
           >
             Save
           </Button>
@@ -125,6 +120,7 @@ const OrderForm: NextPage<OrderFormProps> = ({
             variant="secondary"
             marginStart={"size-100"}
             onPress={() => closeForm()}
+            isDisabled={false}
           >
             Close
           </Button>
@@ -178,38 +174,37 @@ const OrderForm: NextPage<OrderFormProps> = ({
         </ComboBox>
       </Flex>
 
-        <Flex direction={{ base: "column", M: "row" }} columnGap={"size-100"}>
-          <NumberField
-            flex
-            isReadOnly
-            hideStepper={true}
-            width={"auto"}
-            label={"Total"}
-            onChange={(e) => setOrder((o) => ({ ...o, total: e }))}
-            value={order.total} />
-          <NumberField
-            flex
-            hideStepper={true}
-            width={"auto"}
-            label={"Bayar"}
-            value={order.payment}
-            //minValue={0}
-            validationState={order.payment >= 0 ? "valid" : "invalid"}
-            onChange={(e) =>
-              setOrder((o) => ({ ...o, payment: e, remainPayment: o.total - e }))
-            } />
-          <NumberField
-            flex
-            isReadOnly
-            hideStepper={true}
-            width={"auto"}
-            label={"Piutang"}
-            onChange={(e) => setOrder((o) => ({ ...o, remainPayment: e }))}
-            value={order.remainPayment} />
-        </Flex>
-      
-    </Form>
+      <Flex direction={{ base: "column", M: "row" }} columnGap={"size-100"}>
+        <NumberField
+          flex
+          isReadOnly
+          hideStepper={true}
+          width={"auto"}
+          label={"Total"}
+          onChange={(e) => setOrder((o) => ({ ...o, total: e }))}
+          value={order.total} />
+        <NumberField
+          flex
+          hideStepper={true}
+          width={"auto"}
+          label={"Bayar"}
+          value={order.payment}
+          //minValue={0}
+          validationState={order.payment >= 0 ? "valid" : "invalid"}
+          onChange={(e) =>
+            setOrder((o) => ({ ...o, payment: e, remainPayment: o.total - e }))
+          } />
+        <NumberField
+          flex
+          isReadOnly
+          hideStepper={true}
+          width={"auto"}
+          label={"Piutang"}
+          onChange={(e) => setOrder((o) => ({ ...o, remainPayment: e }))}
+          value={order.remainPayment} />
+      </Flex>
 
+    </Form>
     {order.id > 0 && children}
   </View>
   );
