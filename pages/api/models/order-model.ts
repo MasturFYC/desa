@@ -6,7 +6,7 @@ import db, { sql } from "../config";
 type apiReturn = Promise<any[] | (readonly iOrder[] | undefined)[]>;
 
 type apiFunction = {
-  list: () => apiReturn;
+  list: (isLunas?: number | null) => apiReturn;
   search: (name: string) => apiReturn;
   getByCustomer: (customerId: number, lunasId?: number | null ) => apiReturn;
   getOrder: (id: number) => apiReturn;
@@ -55,13 +55,14 @@ const apiOrder: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  list: async() => {
+  list: async (isLunas?: number | null | undefined) => {
 
     const query = sql`SELECT
       c.id, c.customer_id, c.order_date, c.total, c.payment,
       c.remain_payment, c.descriptions, cust.name, lunas_id
     FROM orders AS c
     inner join customers cust on cust.id = c.customer_id
+    WHERE c.lunas_id = 0 OR 1 = ${isLunas ? isLunas === 1 ? 1 : 0 : 0}
     ORDER BY c.id DESC`;
 
     return await db

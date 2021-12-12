@@ -5,7 +5,9 @@ export default async function stockApi(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const result = await api.list();
+
+  const {ls} = req.query;
+  const result = await api.list(ls ? +ls : 0);
   const [data, error] = result;
 
   if (data) {

@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useState } from "react";
 import { FormatDate, FormatNumber } from "@lib/format";
 import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
@@ -21,6 +21,8 @@ type columnType = {
   id: number;
   name: string;
   className?: string;
+  align: 'start' | 'center' | 'end';
+  width: string
 };
 
 type TransactionProps = {
@@ -30,26 +32,17 @@ type TransactionProps = {
 };
 
 export default function CustomerTransaction(props: TransactionProps) {
-  
+
   let { customerId, lunasId = 0, handlePiutang } = props;
 
   let columns: columnType[] = [
-    { id: 0, name: "REF ID#" },
-    {
-      id: 1,
-      name: "TGL TRANSAKSI"
-    },
-    {
-      id: 2,
-      name: "MEMO"
-    },
-    {
-      id: 3,
-      name: "KETERANGAN"
-    },
-    { id: 4, name: "DEBIT", className: "tnumber" },
-    { id: 5, name: "CREDIT", className: "tnumber" },
-    { id: 6, name: "SALDO", className: "tnumber" },
+    { id: 0, name: "REF-ID#", align: 'start', width: '9%' },
+    { id: 1, name: "TANGGAL", align: 'start', width: '13%' },
+    { id: 2, name: "MEMO", align: 'start', width: '26%' },
+    { id: 3, name: "KETERANGAN", align: 'start', width: '16%' },
+    { id: 4, name: "DEBIT", className: "tnumber", align: 'end', width: '12%' },
+    { id: 5, name: "CREDIT", className: "tnumber", align: 'end', width: '12%' },
+    { id: 6, name: "SALDO", className: "tnumber", align: 'end', width: '12%' },
   ];
 
   let payments = useAsyncList<transactionDetail>({
@@ -64,13 +57,14 @@ export default function CustomerTransaction(props: TransactionProps) {
       });
       let json = await res.json();
 
-      if(res.status === 200) {
-        handlePiutang && handlePiutang(json.reduce((a: number, b: transactionDetail) => a + b.debt - b.cred, 0));        
+      if (res.status === 200) {
+        handlePiutang && handlePiutang(json.reduce((a: number, b: transactionDetail) => a + b.debt - b.cred, 0));
       }
       return { items: json };
     },
     getKey: (item: transactionDetail) => item.id,
   });
+
 
   // useEffect(() => {
   //   let isLoaded = false;
@@ -82,8 +76,7 @@ export default function CustomerTransaction(props: TransactionProps) {
   //   return () => { isLoaded = true; }
   // }, [payments, handlePiutang])
 
-  return (
-    <Fragment>
+  return (<Fragment>
       {payments.isLoading && <WaitMe />}
       <table aria-label={"table transaction"}>
         <thead aria-label={"table transaction head"}>
@@ -92,8 +85,7 @@ export default function CustomerTransaction(props: TransactionProps) {
           </tr>
         </thead>
         <tbody aria-label={"table transaction body"}>
-          {payments && payments.items.map((item, i) => (
-            <TabelRow key={i + '-' + item.id + '-' + item.idx} item={item} i={i} />
+          {payments && payments.items.map((item, i) => (            <TabelRow key={i + '-' + item.id + '-' + item.idx} item={item} i={i} />
           ))}
         </tbody>
         <tfoot aria-label={"table transaction footer"}>
@@ -131,6 +123,7 @@ export default function CustomerTransaction(props: TransactionProps) {
           margin-top: 12px;
           margin-bottom: 24px;
           border-collapse: collapse;
+          //table-layout:fixed;
           // border: 1px solid #999;
           // border-radius: 6px;
         }
@@ -145,8 +138,8 @@ export default function CustomerTransaction(props: TransactionProps) {
         }
      `}</style>
       </table>
-    </Fragment>
-  );
+      
+    </Fragment>);
 }
 
 type TableRowProps = {
@@ -163,7 +156,7 @@ function TabelRow(props: TableRowProps): JSX.Element {
     onMouseEnter={() => setTrHovered(true)}
     onMouseLeave={() => setTrHovered(false)}
     className={trHovered ? 'trHovered' : (i % 2 === 0 ? 'tr-even' : 'tr-odd')}>
-    <td>{item.id}</td>
+    <td>{item.idx}</td>
     <td>{FormatDate(item.trxDate)}</td>
     <td>{item.descriptions}</td>
     <td>{item.idx === 2 || item.idx === 4 ? <>{FormatNumber(item.qty)} {item.unit} x {FormatNumber(item.price)}</> : '-'}</td>
@@ -171,6 +164,9 @@ function TabelRow(props: TableRowProps): JSX.Element {
     <td className="tnumber">{FormatNumber(item.cred)}</td>
     <td className="tnumber ttotal">{FormatNumber(item.saldo)}</td>
     <style jsx>{`
+        .td-id {
+          max-width: 64px;
+        }
         td {
           padding: 3px 6px;
         }

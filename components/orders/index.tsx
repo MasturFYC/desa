@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import React, { Fragment, useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import { View } from "@react-spectrum/view";
+import { Checkbox } from "@react-spectrum/checkbox";
 import { SearchField } from "@react-spectrum/searchfield";
 import { ActionButton, Button } from "@react-spectrum/button";
 import { Flex } from "@react-spectrum/layout";
@@ -52,6 +53,8 @@ const initOrder: CustomerOrder = {
 const OrderComponent: NextPage = () => {
   let [txtSearch, setTxtSearch] = useState<string>("");
   let [selectedOrderId, setSelectedOrderId] = useState<number>(-1);
+  let [isLunas, setIsLunas] = useState<boolean>(false);
+  let [isReload, setIsReload] = useState<boolean>(false);
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
@@ -188,7 +191,21 @@ const OrderComponent: NextPage = () => {
             Penjualan Baru
           </Button>
         </View>
-        <SearchField
+        <View>
+          <Checkbox
+            isSelected={isLunas}
+            aria-label={"Show all orders"}
+            onChange={(e) => {
+
+              if (e != isLunas) {
+                setIsLunas(!isLunas);
+                reloadOrder(e);
+              }
+            }}
+          >
+            Show all stocks
+          </Checkbox>
+        </View>        <SearchField
           aria-label="Search orders"
           placeholder="e.g. kosim"
           width="auto"
@@ -309,6 +326,31 @@ const OrderComponent: NextPage = () => {
     );
   }
 
+  async function reloadOrder(all: boolean) {
+    setIsReload(true);
+
+    const url = `/api/orders/list/?ls=${all ? 1 : 0}`;
+    const fetchOptions = {
+      method: "GET",
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
+    };
+
+    const res = await fetch(url, fetchOptions);
+    const json = await res.json();
+
+    if (res.status === 200) {
+      orders.setSelectedKeys("all");
+      orders.removeSelectedItems();
+      orders.append(...json);
+    } else {
+      console.log(json.message);
+      alert("Data tidak ditemukan.");
+    }
+
+    setIsReload(false);
+  }
 };
 
 export default OrderComponent;

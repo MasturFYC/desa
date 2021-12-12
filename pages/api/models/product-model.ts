@@ -140,12 +140,9 @@ const apiProduct: apiFunction = {
   },
 
   insert: async (p: iProduct) => {
-    
 
-    const query = sql`
-      INSERT INTO products (
-        category_id, name, spec, price, stock, first_stock, unit
-      ) VALUES (
+    const prepareSQl = sql`
+      SELECT * FROM insert_product_func(
         ${p.categoryId},
         ${p.name},
         ${isNullOrEmpty(p.spec)},
@@ -153,14 +150,30 @@ const apiProduct: apiFunction = {
         ${p.firstStock},
         ${p.firstStock},
         ${p.unit}
-      )
-      on conflict (name) do nothing
-      RETURNING *
+        );
     `;
+
+   // console.log(prepareSQl.values)    
+
+    // const query = sql`
+    //   INSERT INTO products (
+    //     category_id, name, spec, price, stock, first_stock, unit
+    //   ) VALUES (
+    //     ${p.categoryId},
+    //     ${p.name},
+    //     ${isNullOrEmpty(p.spec)},
+    //     ${p.price},
+    //     ${p.firstStock},
+    //     ${p.firstStock},
+    //     ${p.unit}
+    //   )
+    //   on conflict (name) do nothing
+    //   RETURNING *
+    // `;
 
 
     return await db
-      .query(query)
+      .query(prepareSQl)
       .then((data) => [data.rows[0], undefined])
       .catch((error) => [undefined, error]);
   },

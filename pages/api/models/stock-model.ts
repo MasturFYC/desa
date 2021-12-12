@@ -6,7 +6,7 @@ import db, { sql } from "../config";
 type apiReturn = Promise<any[] | (readonly iStock[] | undefined)[]>;
 
 interface apiFunction {
-  list: () => apiReturn;
+  list: (isLunas?: number | null) => apiReturn;
   find: (name: string | string[]) => apiReturn;
   getBySupplier: (supplierId: number) => apiReturn;
   getStock: (id: number) => apiReturn;
@@ -45,13 +45,14 @@ const apiStock: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 
-  list: async () => {
+  list: async (isLunas: number | undefined | null) => {
 
     const query = sql`SELECT
       c.id, c.supplier_id, c.stock_num, c.stock_date, c.total, c.cash, c.payments, c.remain_payment, c.descriptions,
       s.name as "supplierName"
     FROM stocks AS c
     inner join suppliers s on s.id = c.supplier_id
+    WHERE c.remain_payment > 0 OR 1 = ${isLunas ? isLunas === 1 ? 1 : 0 : 0}
     ORDER BY c.id DESC`;
 
     return await db

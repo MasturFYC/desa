@@ -1,5 +1,18 @@
 ```sh
-CREATE OR REPLACE FUNCTION public.customer_get_transaction_detail(cust_id integer, lunasid integer) RETURNS TABLE(id integer, idx integer, trx_date timestamp without time zone, descriptions character varying, title character varying, qty numeric, unit character varying, price numeric, debt numeric, cred numeric, saldo numeric)
+CREATE OR REPLACE FUNCTION public.customer_get_transaction_detail(cust_id integer, lunasid integer)
+    RETURNS TABLE(
+        id integer,
+        idx integer,
+        trx_date timestamp without time zone,
+        descriptions character varying,
+        title character varying,
+        qty numeric,
+        unit character varying,
+        price numeric,
+        debt numeric,
+        cred numeric,
+        saldo numeric
+    )
     LANGUAGE plpgsql
     AS $$
 
@@ -76,12 +89,14 @@ begin
 
     )
 
-    select t.id, t.idx, t.trx_date,
+    select ROW_NUMBER() OVER (ORDER BY t.id, t.idx)::integer,
+        t.id,
+        t.trx_date,
         t.descriptions, t.title, t.qty, t.unit, t.price,
-        t.debt,
-        t.cred,
+        t.debt::decimal(12,2),
+        t.cred::decimal(12,2),
         sum(t.debt - t.cred)
-        over (order by t.id, t.idx rows between unbounded preceding and current row) as saldo
+        over (order by t.id, t.idx rows between unbounded preceding and current row)::decimal(12,2) as saldo
     from trx t
     order by t.id, t.idx;
 

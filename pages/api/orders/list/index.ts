@@ -1,13 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { iCustomer } from '@components/interfaces';
-import order from '@model/order-model';
+import api from '@model/order-model';
 
 export default async function ordersApi(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
 
-  const result = await order.list();
+  const { ls } = req.query;
+  const result = await api.list(ls ? +ls : 0);
   const [data, error] = result;
 
   if (data) {

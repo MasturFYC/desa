@@ -15,7 +15,7 @@ const apiGrassDetail: apiFunction = {
 
   getByGrass: async (grassId: number) => {
 
-    const query = sql`SELECT
+    const query = sql<iGrassDetail>`SELECT
       c.grass_id, c.id, c.unit_id, c.qty, c.content, c.unit_name,
       c.real_qty, c.price, c.subtotal, c.buy_price, c.product_id,
       p.name as "productName", p.spec
@@ -41,7 +41,7 @@ const apiGrassDetail: apiFunction = {
   },
 
   update: async (id: number, p: iGrassDetail) => {
-    const query = sql`
+    const query = sql<iGrassDetail>`
       UPDATE grass_details SET
         grass_id = ${p.grassId},
         unit_id = ${p.unitId},
@@ -63,7 +63,7 @@ const apiGrassDetail: apiFunction = {
 
   insert: async (p: iGrassDetail) => {
 
-    const query = sql`
+    const query = sql<iGrassDetail>`
       INSERT INTO grass_details (
         grass_id, unit_id, qty, content, unit_name,
         price,  buy_price, product_id

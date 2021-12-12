@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
+import { Checkbox } from "@react-spectrum/checkbox";
 import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
 import {  SearchField} from "@react-spectrum/searchfield";
@@ -44,10 +45,12 @@ const initStock: iStock = {
 const StockComponent: NextPage = () => {
   let [stockId, setStockId] = useState<number>(-1);
   let [txtSearch, setTxtSearch] = useState<string>("");
+  let [isLunas, setIsLunas] = useState<boolean>(false);
+  let [isReload, setIsReload] = useState<boolean>(false);
 
   let stocks = useAsyncList<iStock>({
     async load({ signal }) {
-      let res = await fetch('/api/stock', {
+      let res = await fetch(`/api/stock/?ls=${isLunas?1:0}`, {
         signal,
         headers: {
           'Content-type': 'application/json; charset=UTF-8'
@@ -87,67 +90,6 @@ const StockComponent: NextPage = () => {
     getKey: (item: iProduct) => item.id,
   });
 
-  const searchData = async () => {
-    const txt = txtSearch.toLocaleLowerCase();
-    const url = `/api/stock/search/${txt}`;
-    const fetchOptions = {
-      method: "GET",
-      headers: {
-        "Content-type": "application/json; charset=UTF-8",
-      },
-    };
-
-    await fetch(url, fetchOptions)
-      .then(async (response) => {
-        if (response.ok) {
-          return response.json().then((data) => data);
-        }
-        return response.json().then((error) => {
-          return Promise.reject(error);
-        });
-      })
-      .then((data) => {
-        stocks.setSelectedKeys("all");
-        stocks.removeSelectedItems();
-        stocks.insert(0, ...data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-
-  const updateData = (method: string, p: iStock) => {
-
-    switch (method) {
-      case "POST":
-        {
-          stocks.update(0, p);
-          setStockId(p.id);
-          //stocks.remove(0);
-        }
-        break;
-      case "PUT":
-        {
-          stocks.update(stockId, p);
-        }
-        break;
-      case "DELETE":
-        {
-          stocks.remove(stockId);
-        }
-        break;
-    }
-  };
-
-  const updateTotal = (stockId: number, subtotal: number, payments: number) => {
-    let o = stocks.getItem(stockId);
-    let total = o.total + subtotal;
-    let remain = total - o.cash - payments;
-    stocks.update(stockId, { ...o, payments: payments, total: total, remainPayment: remain });
-  };
-
-
   return (
     <Layout activeMenu={"Pembelian (Stock)"}>
       <Head>
@@ -172,6 +114,21 @@ const StockComponent: NextPage = () => {
           >
             Stock Baru
           </Button>
+        </View>
+        <View>
+          <Checkbox
+            isSelected={isLunas}
+            aria-label={"Show all orders"}
+            onChange={(e) => {
+
+              if(e != isLunas) {
+                setIsLunas(!isLunas);
+                reloadOrder(e);
+              }
+            }}
+          >
+            Show all stocks
+          </Checkbox>
         </View>
         <SearchField
           alignSelf="center"
@@ -276,6 +233,95 @@ const StockComponent: NextPage = () => {
     }
     setStockId(-1)
   }
+
+
+  async function searchData  () {
+    const txt = txtSearch.toLocaleLowerCase();
+    const url = `/api/stock/search/${txt}`;
+    const fetchOptions = {
+      method: "GET",
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
+    };
+
+    await fetch(url, fetchOptions)
+      .then(async (response) => {
+        if (response.ok) {
+          return response.json().then((data) => data);
+        }
+        return response.json().then((error) => {
+          return Promise.reject(error);
+        });
+      })
+      .then((data) => {
+        stocks.setSelectedKeys("all");
+        stocks.removeSelectedItems();
+        stocks.insert(0, ...data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+
+  function updateData (method: string, p: iStock) {
+
+    switch (method) {
+      case "POST":
+        {
+          stocks.update(0, p);
+          setStockId(p.id);
+          //stocks.remove(0);
+        }
+        break;
+      case "PUT":
+        {
+          stocks.update(stockId, p);
+        }
+        break;
+      case "DELETE":
+        {
+          stocks.remove(stockId);
+        }
+        break;
+    }
+  };
+
+  function updateTotal (stockId: number, subtotal: number, payments: number) {
+    let o = stocks.getItem(stockId);
+    let total = o.total + subtotal;
+    let remain = total - o.cash - payments;
+    stocks.update(stockId, { ...o, payments: payments, total: total, remainPayment: remain });
+  };
+
+
+  async function reloadOrder(all: boolean) {
+    setIsReload(true);
+
+    const url = `/api/stock/?ls=${all?1:0}`;
+    const fetchOptions = {
+      method: "GET",
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
+    };
+
+    const res = await fetch(url, fetchOptions);
+    const json = await res.json();
+
+    if (res.status === 200) {
+      stocks.setSelectedKeys("all");
+      stocks.removeSelectedItems();
+      stocks.append(...json);
+    } else {
+      console.log(json.message);
+      alert("Data tidak ditemukan.");
+    }
+
+    setIsReload(false);
+  }
+
 }
 
 export default StockComponent;
