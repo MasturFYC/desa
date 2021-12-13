@@ -1,4 +1,3 @@
-```sh
 CREATE OR REPLACE FUNCTION public.customer_get_transaction_detail(cust_id integer, lunasid integer)
     RETURNS TABLE(
         id integer,
@@ -104,9 +103,7 @@ end;
 
 $$;
 
-```
 
-```sh
 CREATE or replace FUNCTION public.piutang_balance_func(cust_id integer, lunasid integer) RETURNS TABLE(id integer, descriptions character varying, debt numeric, cred numeric, saldo numeric)
     LANGUAGE plpgsql
     AS $$
@@ -153,9 +150,8 @@ begin
  end;
 
  $$;
-```
 
-```sh
+
 CREATE or replace FUNCTION public.sip_cust_balance_detail(cust_id integer, lunasid integer) RETURNS TABLE(id integer, customer_id integer, descriptions character varying, trx_date timestamp without time zone, debt numeric, cred numeric, saldo numeric)
     LANGUAGE plpgsql
     AS $$
@@ -210,4 +206,3 @@ begin
 end;
 
 $$;
-```

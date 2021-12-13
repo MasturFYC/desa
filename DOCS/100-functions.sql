@@ -1,5 +1,3 @@
-
-```sh
 CREATE OR REPLACE FUNCTION public.grass_detail_after_update_func()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -30,9 +28,7 @@ begin
     RETURN NEW;
 
 end; $$;
-```
 
-```sh
 CREATE OR REPLACE FUNCTION public.grass_detail_after_insert_func()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -52,11 +48,8 @@ begin
     RETURN NEW;
 
 end; $$;
-```
 
-
-```sh
-    CREATE OR REPLACE FUNCTION public.grass_detail_after_delete_func()
+CREATE OR REPLACE FUNCTION public.grass_detail_after_delete_func()
     RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -76,8 +69,7 @@ end; $$;
         RETURN OLD;
 
     end; $$;
-```
-```sh
+
 CREATE OR REPLACE FUNCTION public.grass_detail_before_insert_update_func()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -91,9 +83,7 @@ BEGIN
     RETURN NEW;
 
 END; $$;
-```
 
-```sh
 CREATE OR REPLACE FUNCTION public.grass_after_delete_func() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -106,8 +96,7 @@ BEGIN
   RETURN OLD;
 
 END; $$;
-```
-```sh
+
 CREATE OR REPLACE FUNCTION public.grass_after_insert_func() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -149,8 +138,7 @@ BEGIN
 
 END; 
 $$;
-```
-```sh
+
 CREATE or replace FUNCTION public.grass_after_update_func() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -207,17 +195,21 @@ BEGIN
     RETURN NEW;
 
 END; $$;
-```
 
 
-```sh
 
 CREATE OR REPLACE FUNCTION public.product_get_transaction_detail(prod_id integer)
- RETURNS TABLE(id integer, trx_date character varying, faktur character varying,
- name character varying, real_qty numeric, unit_name character varying, debt numeric,
- cred numeric, saldo numeric)
- LANGUAGE plpgsql
-AS $$
+ RETURNS TABLE(
+    id integer,
+    trx_date character varying,
+    faktur character varying,
+    name character varying,
+    real_qty numeric,
+    unit_name character varying,
+    debt numeric,
+    cred numeric,
+    saldo numeric
+) LANGUAGE plpgsql AS $$
 
 begin
 
@@ -283,9 +275,7 @@ end;
 
 $$;
 
-```
 
-```sh
 CREATE OR REPLACE FUNCTION public.set_default_unit(prod_id integer, unit_id integer)
     RETURNS boolean
  LANGUAGE plpgsql
@@ -303,9 +293,7 @@ begin
 end;
 $$;
 
-```
 
-```sh
 CREATE OR REPLACE FUNCTION public.od_before_insert_func()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -321,8 +309,7 @@ begin
 
 end; $$;
 
-```
-```sh
+
 CREATE OR REPLACE FUNCTION public.lunas_delete_func()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -369,25 +356,24 @@ BEGIN
 END;
 $$;
 
-```
-
-```sh
 
 create trigger grass_detail_before_insert_trig
     before insert or update on grass_details for each row
     execute function grass_detail_before_insert_update_func();
+
 create trigger grass_detail_after_insert_trig
     after insert on grass_details for each row
     execute function grass_detail_after_insert_func();
+
 create trigger grass_detail_after_update_trig
     after update on grass_details for each row
     execute function grass_detail_after_update_func();
+
 create trigger grass_detail_after_delete_trig
     after delete on grass_details for each row
     execute function grass_detail_after_delete_func();
 
-```
-```sh
+
 CREATE or replace FUNCTION public.spd_aft_update_func() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -421,4 +407,3 @@ begin
 end;
 
 $$;
-```
