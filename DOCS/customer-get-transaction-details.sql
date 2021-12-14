@@ -2,7 +2,7 @@ CREATE OR REPLACE FUNCTION public.customer_get_transaction_detail(cust_id intege
     RETURNS TABLE(
         id integer,
         idx integer,
-        trx_date timestamp without time zone,
+        trx_date timestamp with time zone,
         descriptions character varying,
         title character varying,
         qty numeric,

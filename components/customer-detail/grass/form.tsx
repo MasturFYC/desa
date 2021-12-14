@@ -193,7 +193,7 @@ export default function GrassForm(props: GrassFormProps) {
           <View padding={"size-200"}>
             <Flex flex direction={{base: 'column', M: 'row'}} gap={"size-300"}>
               <View flex>
-                <View>Total sebelum dibagi: <strong>{FormatNumber(grass.total)}</strong></View>
+                <View>Total setelah dipotong biaya: <strong>{FormatNumber(grass.total)}</strong></View>
               </View>
 
               <View flex>

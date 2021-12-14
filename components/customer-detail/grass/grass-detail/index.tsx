@@ -86,7 +86,6 @@ export default function GrassDetail(props: GrassDetailProps): JSX.Element {
         }
         break;
     }
-    
   };
 
   return (
@@ -105,7 +104,9 @@ export default function GrassDetail(props: GrassDetailProps): JSX.Element {
             <span style={{ textAlign: "right", display: "block" }}>HARGA</span>
           </View>
           <View width="10%">
-            <span style={{ textAlign: "right", display: "block" }}>SUBTOTAL</span>
+            <span style={{ textAlign: "right", display: "block" }}>
+              SUBTOTAL
+            </span>
           </View>
         </Flex>
         <Divider size={"S"} />
@@ -133,6 +134,16 @@ export default function GrassDetail(props: GrassDetailProps): JSX.Element {
             </Div>
           )
         )}
+      <Flex direction={"row"} flex marginTop={'size-50'}>
+        <View flex>Total:</View>
+        <View marginEnd={'size-100'}>
+          <strong>
+            {FormatNumber(
+              grassDetails.items.reduce((a, b) => a + b.subtotal, 0)
+            )}
+          </strong>
+        </View>
+      </Flex>
     </Fragment>
   );
 

@@ -4,14 +4,14 @@ const numberFormat = new Intl.NumberFormat("id-ID", {
   maximumFractionDigits: 2
 });
 
-const dateFormat = new Intl.DateTimeFormat("id-ID", {
-  year: "numeric",
-  month: "short",
+const dateFormat = (month?: "numeric" | "2-digit" | "long" | "short" | "narrow" | undefined) => new Intl.DateTimeFormat("id-ID", {
+  year: 'numeric',
+  month: month,
   day: "2-digit"
 });
 
-export const FormatDate = (e: string) => {
-  return dateFormat.format(new Date(e));
+export const FormatDate = (e: string, options: "numeric" | "2-digit" | "long" | "short" | "narrow" | undefined = 'short') => {
+  return dateFormat(options).format(new Date(e));
 }
 
 export const FormatNumber = (e: number) => {
