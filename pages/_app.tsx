@@ -10,6 +10,7 @@ import fetchJson from "@lib/fetch-json";
 
 export default function MyApp(props: AppProps) {
   const { Component, pageProps } = props;
+
   return (
     <Fragment>
       <Head>
@@ -20,7 +21,6 @@ export default function MyApp(props: AppProps) {
           name="viewport"
         />
       </Head>
-      <I18nProvider locale="id-ID">
       <SSRProvider>
         <Provider theme={defaultTheme}
           colorScheme="light">
@@ -33,11 +33,12 @@ export default function MyApp(props: AppProps) {
               },
             }}
           >
-            <Component {...pageProps} />
+            <I18nProvider locale="id-ID">
+              <Component {...pageProps} />
+            </I18nProvider>
           </SWRConfig>
         </Provider>
       </SSRProvider>
-      </I18nProvider>
     </Fragment>
   );
 }

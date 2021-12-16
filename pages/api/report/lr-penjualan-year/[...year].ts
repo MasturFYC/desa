@@ -5,11 +5,11 @@ export default async function productApi(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  let {date} = req.query;
-  let startDate = date[0];
-  let endDate = date[1];
+  let {year} = req.query;
+  let y = +year[0];
+  let m = year[1] ? +year[1] : 0;
 
-  let result = await api.getLRPenjualanToko(startDate,endDate);
+  let result = await api.getLRPenjualanByYear(y,m);
   const [data, error] = result;
 
   if (data) {

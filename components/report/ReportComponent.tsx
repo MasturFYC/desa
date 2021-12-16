@@ -2,12 +2,12 @@ import Head from "next/head";
 import dynamic from "next/dynamic";
 import React, { useState } from "react";
 import Layout from "@components/layout";
-import { dateOnly, dateParam } from "@components/interfaces";
+import { dateParam } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
 import { Item, TabList, Tabs } from "@react-spectrum/tabs";
-import { TextField } from "@react-spectrum/textfield";
-import ReportLrPenjualanProcut from "./lr-penjualan-product";
+import { FilterForm, FormFilterType } from "./filter-form";
+import { FilterTab, FilterTabType } from "./lr-penjualan-year";
 
 const siteTitle = "Laporan";
 
@@ -16,24 +16,48 @@ type tabContent = {
   name: string;
 };
 
-const ReportLrPenjualanToko = dynamic(() => import("./lr-penjualan-toko"), {
-  ssr: false,
-});
-const ReportLrPenjualanProduct = dynamic(() => import("./lr-penjualan-product"), {
+const ReportLrPenjualanByDate = dynamic(() => import("./lr-penjualan-date"), {
   ssr: false,
 });
 
+ const ReportLrPenjualanByYear = dynamic(() => import("./lr-penjualan-year"), {
+   ssr: false,
+ });
+
 const tabs: tabContent[] = [
-  { id: 0, name: "Laba/Rugi Penjualan Toko" },
-  { id: 1, name: "Laba/Rugi Penjualan Produk" },
+  { id: 0, name: "Laba/Rugi Per Tanggal" },
+  { id: 1, name: "Laba/Rugi Tahunan" },
   { id: 2, name: "Piutang Pelanggan" },
   { id: 3, name: "Utang Usaha" },
 ];
 
-const ReportComponent: NextPage = () => {
-  let [startDate, setStartDate] = useState<string>(dateParam());
-  let [endDate, setEndDate] = useState<string>(dateParam());
+const months = [
+  { id: 0, name: 'All' },
+  { id: 1, name: 'Januari' },
+  { id: 2, name: 'Februari' },
+  { id: 3, name: 'Maret' },
+  { id: 4, name: 'April' },
+  { id: 5, name: 'Mei' },
+  { id: 6, name: 'Juni' },
+  { id: 7, name: 'Juli' },
+  { id: 8, name: 'Agustus' },
+  { id: 9, name: 'September' },
+  { id: 10, name: 'Oktober' },
+  { id: 11, name: 'Nopember' },
+  { id: 12, name: 'Desember' }
+];
 
+const ReportComponent: NextPage = () => {
+  let [filter, setFilter] = useState<FormFilterType>({
+    startDate: dateParam(),
+    endDate: dateParam(),
+    saleType: 0
+  });
+  let [filterTab, setFilterTab] = useState<FilterTabType>({
+    year: (new Date()).getFullYear(),
+    month: (new Date()).getMonth()+1,
+    monthName: months[(new Date()).getMonth() + 1].name
+  });
   let [tabId, setTabId] = React.useState(0);
 
 
@@ -56,40 +80,20 @@ const ReportComponent: NextPage = () => {
         <TabList>{(item: tabContent) => <Item>{item.name}</Item>}</TabList>
       </Tabs>
       <View>
-      {tabId === 0 && (
-          <ReportLrPenjualanToko startDate={startDate} endDate={endDate}>
-            {DateChild(startDate, setStartDate, endDate, setEndDate)}
-          </ReportLrPenjualanToko>
+        {tabId === 0 && (
+          <ReportLrPenjualanByDate filter={filter}>
+            <FilterForm filter={filter} setFilter={(e) => setFilter(e)} />
+          </ReportLrPenjualanByDate>
         )}
         {tabId === 1 && (
-          <ReportLrPenjualanProcut startDate={startDate} endDate={endDate}>
-            {DateChild(startDate, setStartDate, endDate, setEndDate)}
-          </ReportLrPenjualanProcut>
+          <ReportLrPenjualanByYear filter={filterTab} months={months}>
+            <FilterTab filter={filterTab} setFilter={(e) => setFilterTab(e)} months={months} />
+          </ReportLrPenjualanByYear>
         )}
-      </View>
+    </View>
     </Layout>
   );
 };
 
 export default ReportComponent;
-function DateChild(startDate: string, setStartDate: React.Dispatch<React.SetStateAction<string>>, endDate: string, setEndDate: React.Dispatch<React.SetStateAction<string>>) {
-  return <>
-    <TextField
-      type={"date"}
-      width={"auto"}
-      placeholder={"e.g. dd/mm/yyyy"}
-      labelPosition={"side"}
-      label={"Dari tanggal:"}
-      value={dateOnly(startDate)}
-      onChange={(e) => setStartDate(e)} />
-    <TextField
-      type={"date"}
-      width={"auto"}
-      placeholder={"e.g. dd/mm/yyyy"}
-      labelPosition={"side"}
-      label={"Sampai tanggal:"}
-      value={dateOnly(endDate)}
-      onChange={(e) => setEndDate(e)} />
-  </>;
-}
 

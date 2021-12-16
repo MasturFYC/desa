@@ -108,7 +108,7 @@ export default function GrassForm(props: GrassFormProps) {
           marginBottom={"size-100"}
         >
           <View flex>
-            <Button
+            <Button              
               type={"submit"}
               variant="cta"
               isDisabled={isDescriptionValid === ""}
@@ -139,8 +139,9 @@ export default function GrassForm(props: GrassFormProps) {
         </Flex>
 
         <Flex direction={{ base: "column", M: "row" }} columnGap={"size-200"}>
-          <TextField
+          <TextField            
             type={"date"}
+            autoFocus={grass.id === 0}
             width={'auto'}
             placeholder={"e.g. dd/mm/yyyy"}
             isRequired
@@ -149,7 +150,7 @@ export default function GrassForm(props: GrassFormProps) {
             onChange={(e) => setGrass((o) => ({ ...o, orderDate: e }))}
           />
           <ComboBox
-            flex
+            flex            
             width={{ base: "auto", M: "28%" }}
             label={"Bagi hasil dengan"}
             placeholder={"e.g. pilih partner"}

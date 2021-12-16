@@ -2,13 +2,13 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.5 (Ubuntu 13.5-2.pgdg20.04+1)
--- Dumped by pg_dump version 13.5 (Ubuntu 13.5-2.pgdg20.04+1)
+-- Dumped from database version 13.5 (Debian 13.5-0+deb11u1)
+-- Dumped by pg_dump version 13.5 (Debian 13.5-0+deb11u1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
+SET client_encoding = 'SQL_ASCII';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
@@ -225,55 +225,10 @@ $$;
 ALTER FUNCTION public.get_customer_div(customer_id integer) OWNER TO postgres;
 
 --
--- Name: get_product_profit_func(character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: get_profit_by_date_func(character varying, character varying, smallint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.get_product_profit_func(date_from character varying, date_to character varying) RETURNS TABLE(id integer, order_date timestamp with time zone, name character varying, spec character varying, buy_price numeric, sale_price numeric, discount numeric, profit numeric, qty numeric, unit character varying, subtotal numeric)
-    LANGUAGE plpgsql
-    AS $$
-
-  DECLARE startdate timestamp with time zone;
-  DECLARE enddate timestamp with time zone;
-
-BEGIN
-
-  select to_timestamp(concat(substring(date_from, 0, 11), ' 00:00:00'), 'YYYY-MM-DD HH24:MI')::timestamp with time zone into startdate;
-  select to_timestamp(concat(substring(date_to, 0, 11), ' 23:59:59'), 'YYYY-MM-DD HH24:MI')::timestamp with time zone into enddate;
-
-
-    -- raise notice '% - %', startdate, enddate;
-
-     return query with recursive trx as (
-       select
-        od.id, od.created_at order_date, dp.name, dp.spec,
-        d.buy_price, d.price sale_price, 0::decimal(12,2) discount,
-        d.price - d.buy_price as profit, 
-        d.qty, d.unit_name unit
-       from special_details d 
-       inner join products dp on dp.id = d.product_id
-       inner join special_orders od on od.id = d.order_id
-       where od.created_at >= startdate
-       and od.created_at <= enddate
-     )
-
-     select t.id, t.order_date, t.name, t.spec,
-     t.buy_price, t.sale_price, t.discount, t.profit,
-     t.qty, t.unit, (t.profit * t.qty)::decimal(12,2) subtotal
-     from trx t
-     order by t.id;
-
-END
-
-$$;
-
-
-ALTER FUNCTION public.get_product_profit_func(date_from character varying, date_to character varying) OWNER TO postgres;
-
---
--- Name: get_toko_profit_func(character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION public.get_toko_profit_func(date_from character varying, date_to character varying) RETURNS TABLE(id integer, order_date timestamp with time zone, name character varying, spec character varying, buy_price numeric, sale_price numeric, discount numeric, profit numeric, qty numeric, unit character varying, subtotal numeric)
+CREATE FUNCTION public.get_profit_by_date_func(date_from character varying, date_to character varying, sale_type smallint) RETURNS TABLE(id integer, order_date timestamp with time zone, name character varying, spec character varying, buy_price numeric, sale_price numeric, discount numeric, profit numeric, qty numeric, unit character varying, subtotal numeric)
     LANGUAGE plpgsql
     AS $$
 
@@ -288,9 +243,11 @@ BEGIN
 
     -- raise notice '% - %', date_from, date_to;
 
+    if sale_type = 1 then
+
      return query with recursive trx as (
        select
-        od.id, od.order_date, dp.name, dp.spec,
+        od.id, d.id idx, od.order_date, dp.name, dp.spec,
         d.buy_price, d.price sale_price, d.discount,
         d.price - d.buy_price - d.discount as profit, 
         d.qty, d.unit_name unit
@@ -305,6 +262,124 @@ BEGIN
      t.buy_price, t.sale_price, t.discount, t.profit,
      t.qty, t.unit, (t.profit * t.qty)::decimal(12,2) subtotal
      from trx t
+     order by t.id, t.idx;
+
+     elsif sale_type = 2 then
+
+     return query with recursive trx as (
+       select
+        od.id, d.id idx, od.created_at order_date, dp.name, dp.spec,
+        d.buy_price, d.price sale_price, 0::decimal(12,2) discount,
+        d.price - d.buy_price as profit, 
+        d.qty, d.unit_name unit
+       from special_details d 
+       inner join products dp on dp.id = d.product_id
+       inner join special_orders od on od.id = d.order_id
+       where od.created_at >= startdate
+       and od.created_at <= enddate
+     )
+
+     select t.id, t.order_date, t.name, t.spec,
+     t.buy_price, t.sale_price, t.discount, t.profit,
+     t.qty, t.unit, (t.profit * t.qty)::decimal(12,2) subtotal
+     from trx t
+     order by t.id, t.idx;
+
+     else
+
+
+     return query with recursive trx as (
+       select
+        od.id, d.id idx, od.order_date, dp.name, dp.spec,
+        d.buy_price, d.price sale_price, d.discount,
+        d.price - d.buy_price - d.discount as profit, 
+        d.qty, d.unit_name unit
+       from order_details d 
+       inner join products dp on dp.id = d.product_id
+       inner join orders od on od.id = d.order_id
+       where od.order_date >= startdate
+       and od.order_date <= enddate
+
+       union all
+
+       select
+        od.id, d.id idx, od.created_at order_date, dp.name, dp.spec,
+        d.buy_price, d.price sale_price, 0::decimal(12,2) discount,
+        d.price - d.buy_price as profit, 
+        d.qty, d.unit_name unit
+       from special_details d 
+       inner join products dp on dp.id = d.product_id
+       inner join special_orders od on od.id = d.order_id
+       where od.created_at >= startdate
+       and od.created_at <= enddate
+     )
+
+     select t.id, t.order_date, t.name, t.spec,
+     t.buy_price, t.sale_price, t.discount, t.profit,
+     t.qty, t.unit, (t.profit * t.qty)::decimal(12,2) subtotal
+     from trx t
+     order by t.id, t.idx;     
+
+     end if;
+
+END
+
+$$;
+
+
+ALTER FUNCTION public.get_profit_by_date_func(date_from character varying, date_to character varying, sale_type smallint) OWNER TO postgres;
+
+--
+-- Name: get_profit_by_month(smallint, smallint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_profit_by_month(p_year smallint, p_month smallint) RETURNS TABLE(id integer, order_date character varying, buy_price numeric, sale_price numeric, subtotal numeric, discount numeric, profit numeric)
+    LANGUAGE plpgsql
+    AS $$
+
+BEGIN
+
+     return query with recursive trx as (
+       select
+        EXTRACT(DAY FROM od.order_date)::integer id,
+        to_char(od.order_date, 'YYYY-MM-DD')::varchar(11) order_date,
+        (d.buy_price * d.qty)::decimal(12,2) buy_price,
+        (d.price * d.qty)::decimal(12,2) sale_price,
+        ((d.price - d.buy_price) * d.qty)::decimal(12,2) subtotal,
+        (d.discount * d.qty)::decimal(12,2) discount,
+        ((d.price - d.buy_price - d.discount) * d.qty)::decimal(12,2) as profit
+       from order_details d 
+       inner join products dp on dp.id = d.product_id
+       inner join orders od on od.id = d.order_id
+       where EXTRACT(YEAR FROM od.order_date) = p_year AND
+       (EXTRACT(MONTH FROM od.order_date) = p_month OR p_month = 0)
+       
+       union all
+
+      select
+        EXTRACT(DAY FROM od.created_at)::integer id,
+        to_char(od.created_at, 'YYYY-MM-DD')::varchar(11) order_date,
+        (d.buy_price * d.qty)::decimal(12,2) buy_price,
+        (d.price * d.qty)::decimal(12,2) sale_price,
+        ((d.price - d.buy_price) * d.qty)::decimal(12,2) subtotal,
+        0::decimal(12,2) discount,
+        ((d.price - d.buy_price) * d.qty)::decimal(12,2) as profit
+       from special_details d 
+       inner join products dp on dp.id = d.product_id
+       inner join special_orders od on od.id = d.order_id
+       where EXTRACT(YEAR FROM od.created_at) = p_year AND
+       (EXTRACT(MONTH FROM od.created_at) = p_month OR p_month = 0)
+
+     )
+
+     select t.id, t.order_date,
+        sum(t.buy_price),
+        sum(t.sale_price),
+        sum(t.subtotal),
+        sum(t.discount),
+        sum(t.profit)
+     from trx t
+     group by t.id, t.order_date
      order by t.id;
 
 END
@@ -312,7 +387,65 @@ END
 $$;
 
 
-ALTER FUNCTION public.get_toko_profit_func(date_from character varying, date_to character varying) OWNER TO postgres;
+ALTER FUNCTION public.get_profit_by_month(p_year smallint, p_month smallint) OWNER TO postgres;
+
+--
+-- Name: get_profit_by_year(smallint, smallint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_profit_by_year(p_year smallint, p_month smallint) RETURNS TABLE(id integer, buy_price numeric, sale_price numeric, subtotal numeric, discount numeric, profit numeric)
+    LANGUAGE plpgsql
+    AS $$
+
+BEGIN
+
+     return query with recursive trx as (
+       select
+        EXTRACT(MONTH FROM od.order_date)::integer id,
+        (d.buy_price * d.qty)::decimal(12,2) buy_price,
+        (d.price * d.qty)::decimal(12,2) sale_price,
+        ((d.price - d.buy_price) * d.qty)::decimal(12,2) subtotal,
+        (d.discount * d.qty)::decimal(12,2) discount,
+        ((d.price - d.buy_price - d.discount) * d.qty)::decimal(12,2) as profit
+       from order_details d 
+       inner join products dp on dp.id = d.product_id
+       inner join orders od on od.id = d.order_id
+       where EXTRACT(YEAR FROM od.order_date) = p_year AND
+       (EXTRACT(MONTH FROM od.order_date) = p_month OR p_month = 0)
+
+       union all
+
+       select
+        EXTRACT(MONTH FROM od.created_at)::integer id,
+        (d.buy_price * d.qty)::decimal(12,2) buy_price,
+        (d.price * d.qty)::decimal(12,2) sale_price,
+        ((d.price - d.buy_price) * d.qty)::decimal(12,2) subtotal,
+        0::decimal(12,2) discount,
+        ((d.price - d.buy_price) * d.qty)::decimal(12,2) as profit
+       from special_details d 
+       inner join products dp on dp.id = d.product_id
+       inner join special_orders od on od.id = d.order_id
+       where EXTRACT(YEAR FROM od.created_at) = p_year AND
+       (EXTRACT(MONTH FROM od.created_at) = p_month OR p_month = 0)
+
+     )
+
+     select t.id,
+        sum(t.buy_price),
+        sum(t.sale_price),
+        sum(t.subtotal),
+        sum(t.discount),
+        sum(t.profit)
+     from trx t
+     group by t.id
+     order by t.id;
+
+END
+
+$$;
+
+
+ALTER FUNCTION public.get_profit_by_year(p_year smallint, p_month smallint) OWNER TO postgres;
 
 --
 -- Name: grass_after_delete_func(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -2398,9 +2531,7 @@ COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
 --
 
 COPY public.grass (customer_id, id, descriptions, order_date, total, qty, total_div, lunas_id, partner_id, cost) FROM stdin;
-4	196	Pembelian Rumput Laut	2021-12-11 16:24:00+07	4395000.00	1500.00	0.00	0	0	127500.00
-1	173	Pembelian Rumput Laut	2021-12-10 13:56:00+07	117000.00	60.00	58500.00	0	2	0.00
-2	201	Pembelian Rumput Laut	2021-12-14 09:33:00+07	4300000.00	1750.00	2150000.00	0	4	0.00
+2	206	Pembelian Rumput Laut	2021-12-16 02:21:00+07	9887500.00	3250.00	0.00	0	0	0.00
 \.
 
 
@@ -2409,9 +2540,6 @@ COPY public.grass (customer_id, id, descriptions, order_date, total, qty, total_
 --
 
 COPY public.grass_costs (grass_id, id, memo, qty, price, subtotal, created_at, updated_at, unit) FROM stdin;
-196	37	kopi	1.00	15000.00	15000.00	2021-12-11 16:35:00+07	2021-12-11 16:41:45.431258+07	ls
-196	38	sega goreng	5.00	12500.00	62500.00	2021-12-11 16:35:00+07	2021-12-11 16:42:13.746842+07	bks
-196	39	gorengan	25.00	2000.00	50000.00	2021-12-11 17:00:00+07	2021-12-11 17:00:56.489258+07	pcs
 \.
 
 
@@ -2420,11 +2548,8 @@ COPY public.grass_costs (grass_id, id, memo, qty, price, subtotal, created_at, u
 --
 
 COPY public.grass_details (grass_id, id, unit_id, qty, content, unit_name, real_qty, price, subtotal, buy_price, product_id) FROM stdin;
-173	168	24	20.00	3.00	kg	60.00	5850.00	117000.00	4500.00	16
-196	178	24	350.00	3.00	kg	1050.00	5850.00	2047500.00	4500.00	16
-196	179	27	450.00	1.00	kg	450.00	5500.00	2475000.00	0.00	23
-201	186	24	500.00	3.00	kg	1500.00	5850.00	2925000.00	4500.00	16
-201	188	27	250.00	1.00	kg	250.00	5500.00	1375000.00	0.00	23
+206	190	24	750.00	3.00	kg	2250.00	5850.00	4387500.00	4500.00	16
+206	191	27	1000.00	1.00	kg	1000.00	5500.00	5500000.00	3500.00	23
 \.
 
 
@@ -2483,11 +2608,9 @@ COPY public.orders (id, customer_id, order_date, total, payment, remain_payment,
 --
 
 COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total, lunas_id) FROM stdin;
-177	2	Bagi hasil dengan Dhoni Armadi (     60 kg)	173	2021-12-10 13:56:00+07	58500.00	0
 165	2	Cicilan	0	2021-12-06 10:55:00+07	700000.00	0
 33	2	Cicilan Bayar Obat	0	2021-11-18 11:55:00+07	25000.00	0
 125	2	Cicilan	0	2021-12-06 01:13:00+07	500000.00	0
-202	4	Bagi hasil dengan Agung Priatna (  1,750 kg )	201	2021-12-14 09:33:00+07	2150000.00	0
 \.
 
 
@@ -2499,8 +2622,8 @@ COPY public.products (id, name, spec, price, stock, first_stock, unit, update_no
 1	EM 4 Perikanan	1 ltr	30000.00	143.00	100.00	pcs	t	1
 7	Abachel	250cc	10000.00	79.00	90.00	btl	t	1
 15	Pakan Bandeng	Pelet KW1	250000.00	111.00	110.00	zak	t	1
-16	Rumput Laut	KW-1	1500.00	670.00	20.00	kg	t	2
-23	Rumput Laut KW-2	\N	3500.00	-50.00	0.00	kg	t	2
+23	Rumput Laut KW-2	\N	3500.00	900.00	0.00	kg	t	2
+16	Rumput Laut	KW-1	1500.00	250.00	0.00	kg	t	2
 \.
 
 
@@ -2509,12 +2632,8 @@ COPY public.products (id, name, spec, price, stock, first_stock, unit, update_no
 --
 
 COPY public.special_details (order_id, id, product_id, unit_id, qty, unit_name, price, subtotal, content, real_qty, buy_price) FROM stdin;
-104	153	16	23	25.00	pcs	1950.00	48750.00	1.00	25.00	1500.00
-104	154	16	23	100.00	pcs	1950.00	195000.00	1.00	100.00	1500.00
-106	155	16	23	10.00	pcs	1950.00	19500.00	1.00	10.00	1500.00
-109	156	16	24	100.00	kg	5850.00	585000.00	3.00	300.00	4500.00
-200	185	16	24	100.00	kg	5850.00	585000.00	3.00	300.00	4500.00
-200	189	23	27	750.00	kg	5000.00	3750000.00	1.00	750.00	3500.00
+207	192	23	27	100.00	kg	5500.00	550000.00	1.00	100.00	3500.00
+207	193	16	24	500.00	kg	1950.00	975000.00	1.00	500.00	1500.00
 \.
 
 
@@ -2523,10 +2642,7 @@ COPY public.special_details (order_id, id, product_id, unit_id, qty, unit_name, 
 --
 
 COPY public.special_orders (id, customer_id, created_at, updated_at, packaged_at, shipped_at, driver_name, police_number, street, city, phone, total, cash, payments, remain_payment, descriptions, lunas_id, surat_jalan) FROM stdin;
-104	3	2021-12-04 01:29:00+07	2021-12-04 23:12:28.012161	2021-12-04 01:29:00	2021-12-04 01:29:00	Udin	-5665656	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	243750.00	43750.00	200000.00	0.00	\N	0	-
-106	3	2021-12-06 00:00:00+07	2021-12-04 23:13:35.145055	2021-12-04 01:29:00	2021-12-04 01:29:00	tttt	werwerwer	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	19500.00	0.00	19500.00	0.00	\N	0	-
-109	3	2021-12-07 00:00:00+07	2021-12-09 12:09:04.354374	2021-12-07 00:00:00	2021-12-07 00:00:00	Warim	E-1025-GH	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	585000.00	0.00	0.00	585000.00	\N	0	-ss
-200	3	2021-12-14 16:31:00+07	2021-12-14 17:10:32.686992	2021-12-14 16:31:00	2021-12-14 16:31:00	wewe	wewe	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	4335000.00	0.00	0.00	4335000.00	\N	0	wqewqe
+207	3	2021-12-16 02:27:00+07	2021-12-16 02:27:39.445113	2021-12-16 02:27:00	2021-12-16 02:27:00	ddd	ddd	Jl. Jend. Sudirman No. 155	Indramayu	08532654125	1525000.00	0.00	0.00	1525000.00	\N	0	d
 \.
 
 
@@ -2535,8 +2651,6 @@ COPY public.special_orders (id, customer_id, created_at, updated_at, packaged_at
 --
 
 COPY public.special_payments (customer_id, order_id, id, descriptions, payment_at, nominal, pay_num, lunas_id) FROM stdin;
-3	106	107	Angsuran piutang dagang #106	2021-12-06 00:00:00	19500.00	xc/2656/155464	0
-3	104	105	Angsuran piutang dagang #104	2021-12-05 00:00:00	200000.00	qweqwewqe qweqwe	0
 \.
 
 
@@ -2611,11 +2725,11 @@ COPY public.units (product_id, id, name, content, price, buy_price, margin, is_d
 7	2	pak	10.00	130000.00	100000.00	0.3000	f
 7	25	ls	12.00	150000.00	120000.00	0.2500	t
 23	27	kg	1.00	5500.00	3500.00	0.5714	f
-16	23	pcs	1.00	1950.00	1500.00	0.3000	f
-16	24	kg	3.00	5850.00	4500.00	0.3000	t
 1	19	ls	12.00	468000.00	360000.00	0.3000	f
 1	17	pcs	1.00	39000.00	30000.00	0.3000	f
 1	20	pak	3.00	99999.00	90000.00	0.1111	t
+16	24	kg	1.00	1950.00	1500.00	0.3000	t
+16	28	ball	40.00	78000.00	60000.00	0.3000	f
 \.
 
 
@@ -2637,7 +2751,7 @@ SELECT pg_catalog.setval('public.customer_seq', 4, true);
 -- Name: grass_costs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.grass_costs_id_seq', 46, true);
+SELECT pg_catalog.setval('public.grass_costs_id_seq', 50, true);
 
 
 --
@@ -2658,14 +2772,14 @@ SELECT pg_catalog.setval('public.lunas_id_seq', 104, true);
 -- Name: order_detail_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_detail_seq', 189, true);
+SELECT pg_catalog.setval('public.order_detail_seq', 224, true);
 
 
 --
 -- Name: order_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.order_seq', 202, true);
+SELECT pg_catalog.setval('public.order_seq', 207, true);
 
 
 --
@@ -2693,7 +2807,7 @@ SELECT pg_catalog.setval('public.seq_supplier', 40, true);
 -- Name: unit_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.unit_seq', 27, true);
+SELECT pg_catalog.setval('public.unit_seq', 28, true);
 
 
 --

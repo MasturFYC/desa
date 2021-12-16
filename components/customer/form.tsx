@@ -7,7 +7,7 @@ import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { TextField } from "@react-spectrum/textfield";
 import { Picker } from "@react-spectrum/picker";
-import { ComboBox, Item } from "@react-spectrum/combobox";
+import { Item } from "@react-spectrum/combobox";
 
 type CustomerFormProps = {
   data: iCustomer;
