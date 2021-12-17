@@ -1,5 +1,5 @@
 import React, { Fragment, useState } from "react";
-import { FormatDate, FormatNumber } from "@lib/format";
+import { FormatNumber } from "@lib/format";
 import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { Flex } from "@react-spectrum/layout";
@@ -8,7 +8,8 @@ import SearchIcon from "@spectrum-icons/workflow/Search";
 import { ComboBox, Item } from "@react-spectrum/combobox";
 import { TextField } from "@react-spectrum/textfield";
 import Link from "next/link";
-import { reportLrToko, TableBodyReportByDate } from "./lr-penjualan-date";
+import { reportLrToko } from "./lr-penjualan-date";
+import { ReportPenjualanByDateType, TableDateOrder } from "./TableDateOrder";
 
 type columnType = {
   id: number;
@@ -113,7 +114,7 @@ export default function ReportLrPenjualanByYear(props: ReportProps) {
               padding: 6px;
               font-weight: 500;
               text-align: left;
-              font-size: 90%;
+              font-size: 90%;              
             }
             tfoot {
               background-color: #cfd9e9;
@@ -124,7 +125,6 @@ export default function ReportLrPenjualanByYear(props: ReportProps) {
             thead {
               background-color: #cdcdcd;
               color: #333;
-              border-bottom: 1px solid #999;
             }
             table {
               width: 100%;
@@ -189,7 +189,7 @@ function TabelRow(props: TableRowProps): JSX.Element {
         aria-label={"table transaction body tr"}
         onMouseEnter={() => setTrHovered(true)}
         onMouseLeave={() => setTrHovered(false)}
-        className={trHovered ? "trHovered" : i % 2 === 0 ? "tr-even" : "tr-odd"}
+        className={showDetail ? 'row-sel' : trHovered ? "trHovered" : i % 2 === 0 ? "tr-even" : "tr-odd"}
       >
         <td><Link href={'#'} passHref><a onClick={() => {
           let test = !showDetail;
@@ -227,19 +227,30 @@ function TabelRow(props: TableRowProps): JSX.Element {
       <style jsx>        
         {`
             th {
-              padding: 6px;
+              padding: 0px 6px;
               font-weight: 500;
               text-align: left;
               font-size: 90%;
-              border-bottom: 1px dashed #cecece;
+              border-bottom: 2px dashed darkgreen;
+              color: #999;
               background-color: #ececec;
             }
 
             .table-child {
-//               border-top: 2px solid red;
               padding: 0 0 0 6px;
-              background-color: green;
+              margin: 0;
+              background-color: darkgreen;
+              color: #000;
             }
+          .row-sel {
+            // border-bottom: 1px solid #cecece;
+            // border-left: 2px solid orange;
+            padding: 0 0 0 2px;
+            background-color: darkgreen;
+            color: #fff;
+            font-weight: 700
+          }
+          .row-sel a { color: #fff;}
 
           table {
             width: 100%;
@@ -327,7 +338,7 @@ function TabelRowDetail(props: TableDetailRowProps): JSX.Element {
         aria-label={"table transaction body tr"}
         onMouseEnter={() => setTrHovered(true)}
         onMouseLeave={() => setTrHovered(false)}
-        className={ trHovered ? "trHovered" : i % 2 === 0 ? "tr-even" : "tr-odd"}
+        className={showDetail ? 'row-sel' : trHovered ? "trHovered" : i % 2 === 0 ? "tr-even" : "tr-odd"}
       >
         <td><Link href={'#'} passHref><a onClick={() => {
           setShowDetail(!showDetail);
@@ -339,7 +350,7 @@ function TabelRowDetail(props: TableDetailRowProps): JSX.Element {
         <td className="tnumber">{FormatNumber(item.profit)}</td>
       </tr>
       {showDetail && <tr>
-        <td colSpan={6} className={'row-sel table-child'}>
+        <td colSpan={6} className={'table-child'}>
           <ReportPenjualanByDate startDate={item.orderDate} />
         </td>
       </tr>}
@@ -348,7 +359,18 @@ function TabelRowDetail(props: TableDetailRowProps): JSX.Element {
             .table-child {
               padding: 0 0 0 6px;
               margin: 0;
+              background-color: orange;
+              color: #000;
             }
+          .row-sel {
+            // border-bottom: 1px solid #cecece;
+            // border-left: 2px solid orange;
+            padding: 0 0 0 2px;
+            background-color: orange;
+            color: #fff;
+            font-weight: 700
+          }
+          .row-sel a { color: #fff;}
 
           .td-id {
             max-width: 64px;
@@ -371,10 +393,7 @@ function TabelRowDetail(props: TableDetailRowProps): JSX.Element {
           .tr-odd {
             background-color: #e9eff9;
           }
-          .row-sel {
-            background-color: orange;
-            border-bottom: 1px solid #cecece;
-          }
+
           .color-sel, .color-sel a  {
             color: #000;
           }
@@ -390,9 +409,11 @@ type ReportByDateProps = {
 
 function ReportPenjualanByDate(props: ReportByDateProps) {
   let { startDate } = props;
-  let reports = useAsyncList<reportLrToko>({
+  console.log(startDate)
+  
+  let reports = useAsyncList<ReportPenjualanByDateType>({
     async load({ signal }) {
-      let url: string = `/api/report/lr-penjualan-date/${startDate}/${startDate}/0`;
+      let url: string = `/api/report/lr-penjualan-date-order/${startDate}`;
       let res = await fetch(url, {
         signal,
         headers: {
@@ -403,14 +424,11 @@ function ReportPenjualanByDate(props: ReportByDateProps) {
 
       return { items: json };
     },
-    getKey: (item: reportLrToko) => item.id,
+    getKey: (item: ReportPenjualanByDateType) => item.id,
   });
 
   return (
-      <TableBodyReportByDate reports={reports.items} filter={{
-        startDate: startDate,
-        endDate: startDate,
-        saleType: 0
-      }} />
+      <TableDateOrder reports={reports.items} />
   );
 }
+
