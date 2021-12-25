@@ -39,7 +39,8 @@ function ShowInfo(props: productInfoProps) {
 
   let units = useAsyncList<iUnit>({
     async load({ signal }) {
-      let res = await fetch(`/api/unit/list/${product.id}`, {
+      let res = await fetch(`http://localhost:8000/units/products/${product.id}`, {
+//      let res = await fetch(`/api/unit/list/${product.id}`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
