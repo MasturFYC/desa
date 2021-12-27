@@ -2,12 +2,13 @@ import { useEffect } from "react";
 import Router from "next/router";
 import useSWR from "swr";
 import { iUserLogin } from "@components/interfaces";
+import { env } from 'process';
 
 export default function useUser({
   redirectTo = "",
   redirectIfFound = false,
 } = {}) {
-  const { data: user, mutate: mutateUser } = useSWR<iUserLogin>("/api/user");
+  const { data: user, mutate: mutateUser } = useSWR<iUserLogin>(env.apiKey + "/user");
 
   useEffect(() => {
     // if no redirect needed, just return (example: already on /dashboard)

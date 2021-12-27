@@ -2,6 +2,7 @@ import React, { Fragment, useState } from "react";
 import { FormatDate, FormatNumber } from "@lib/format";
 import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
+import { env } from 'process';
 
 interface transactionDetail {
   id: number;
@@ -47,7 +48,7 @@ export default function CustomerTransaction(props: TransactionProps) {
 
   let payments = useAsyncList<transactionDetail>({
     async load({ signal }) {
-      let res = await fetch(`/api/lunas/transactions`, {
+      let res = await fetch(`${env.apiKey}/lunas/transactions`, {
         method: 'POST',
         signal,
         headers: {

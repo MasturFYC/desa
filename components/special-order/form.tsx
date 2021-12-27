@@ -10,6 +10,7 @@ import { TextArea, TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
 import { ComboBox, Item } from "@react-spectrum/combobox";
 import { Divider } from "@react-spectrum/divider";
+import { env } from 'process';
 
 
 export interface CustomerSpecialOrder extends iSpecialOrder {
@@ -75,7 +76,7 @@ export default function SpecialOrderForm(props: SpecialOrderFormProps) {
 
 
   async function postOrder(method: string) {
-    const url = `/api/special-order/${order.id}`;
+    const url = `${env.apiKey}/special-order/${order.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -105,7 +106,7 @@ export default function SpecialOrderForm(props: SpecialOrderFormProps) {
 
 
   const deleteOrder = async () => {
-    const url = `/api/special-order/${order.id}`;
+    const url = `${env.apiKey}/special-order/${order.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

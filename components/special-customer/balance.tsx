@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FormatDate, FormatNumber } from "@lib/format";
 import { useAsyncList } from "@react-stately/data";
+import { env } from 'process';
 
 interface customerBalance {
   id: number;
@@ -40,7 +41,7 @@ export default function CustomerBalanceDetail({
 
   let payments = useAsyncList<customerBalance>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer/special-balance-detail/${customerId}`, {
+      let res = await fetch(`${env.apiKey}/customer/special-balance-detail/${customerId}`, {
         signal,
       });
       let json = await res.json();

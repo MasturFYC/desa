@@ -24,7 +24,7 @@ const ProductComponent: NextPage = () => {
 
   let categories = useAsyncList<iCategory>({
     async load({ signal }) {
-      let res = await fetch(`${process.env.pathKey}/api/category/`, {
+      let res = await fetch(`${process.env.apiKey}/category/`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -38,7 +38,7 @@ const ProductComponent: NextPage = () => {
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
-      let res = await fetch(`${process.env.pathKey}/api/product/`, {
+      let res = await fetch(`${process.env.apiKey}/product/`, {
         signal,
         method: "GET",
         headers: {

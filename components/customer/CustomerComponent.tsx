@@ -1,6 +1,7 @@
 import Head from "next/head";
 import dynamic from "next/dynamic";
 import router from "next/router";
+import { env } from 'process';
 import { Fragment, useState } from "react";
 import { useAsyncList } from "@react-stately/data";
 import Layout from "@components/layout";
@@ -39,7 +40,7 @@ const CustomerComponent: NextPage = () => {
 
   let customers = useAsyncList<iCustomer>({
     async load({ signal }) {
-      let res = await fetch('/api/customer', { signal });
+      let res = await fetch(env.apiKey + '/customer', { signal });
       let json = await res.json();
       return { items: json };
     },
@@ -51,7 +52,7 @@ const CustomerComponent: NextPage = () => {
     //customers.setFilterText(txtSearch);
     setCustomerSearch(txtSearch);
     // const txt = txtSearch.toLocaleLowerCase();
-    // const url = `/api/customer/search/${txt}`;
+    // const url = `${env.apiKey}/customer/search/${txt}`;
     // const fetchOptions = {
     //   method: "GET",
     //   headers: {
@@ -79,7 +80,7 @@ const CustomerComponent: NextPage = () => {
   };
 
   const deleteData = async (id: number) => {
-    const url = `/api/customer/${id}`;
+    const url = `${env.apiKey}/customer/${id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {
@@ -108,7 +109,7 @@ const CustomerComponent: NextPage = () => {
   };
 
   async function updateCustomer(method: string, id: number, p: iCustomer) {
-    const url = `/api/customer/${id}`;
+    const url = `${env.apiKey}/customer/${id}`;
     const fetchOptions = {
       method: method,
       headers: {

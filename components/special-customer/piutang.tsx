@@ -10,6 +10,7 @@ import { FormatNumber } from "@lib/format";
 import WaitMe from "@components/ui/wait-me";
 import Div from "@components/ui/Div";
 import Span from "@components/ui/SpanValue";
+import { env } from 'process';
 
 
 const CustomerBalanceDetail = dynamic(() => import("./balance"), {
@@ -31,7 +32,7 @@ const CustomerPiutang: NextPage<CustomerPiutangProps> = ({ customerId }) => {
 
   let payments = useAsyncList<iPiutang>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer/special-piutang/${customerId}`, { signal });
+      let res = await fetch(`${env.apiKey}/customer/special-piutang/${customerId}`, { signal });
       let json = await res.json();
       return { items: json };
     },

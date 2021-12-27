@@ -6,6 +6,7 @@ import { useAsyncList, AsyncListData } from "@react-stately/data";
 import { FormatNumber } from "@lib/format";
 import { Flex } from "@react-spectrum/layout";
 import { calculateStock } from "./calculateStock";
+import { env } from 'process';
 
 type productInfoProps = {
   product: iProduct;
@@ -39,7 +40,7 @@ function ShowInfo(props: productInfoProps) {
 
   let units = useAsyncList<iUnit>({
     async load({ signal }) {
-      let res = await fetch(`/api/unit/list/${product.id}`, {
+      let res = await fetch(`${env.apiKey}/unit/list/${product.id}`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -57,7 +58,7 @@ function ShowInfo(props: productInfoProps) {
 
   let stocks = useAsyncList<stockType>({
     async load({ signal }) {
-      let res = await fetch(`/api/product/transaction-by-id/${product.id}`, {
+      let res = await fetch(`${env.apiKey}/product/transaction-by-id/${product.id}`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",

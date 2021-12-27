@@ -51,7 +51,7 @@ module.exports = withBundleAnalyzer(withTM({
   reactStrictMode: true,
   basePath: '/yana',
   env: {
-	  pathKey: '/yana',
+	  apiKey: '/yana',
 	},
   webpack: (config) => {
     config.resolve.alias = {

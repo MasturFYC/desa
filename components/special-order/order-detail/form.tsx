@@ -12,7 +12,7 @@ import { Form } from "@react-spectrum/form";
 import { NumberField } from "@react-spectrum/numberfield";
 import { AsyncListData } from "@react-stately/data";
 import { ComboBox, Item } from "@react-spectrum/combobox";
-import { Text } from "@react-spectrum/text";
+import { env } from 'process';
 
 
 export type SpecialDetailFormProps = {
@@ -63,7 +63,7 @@ const SpecialDetailForm: NextPage<SpecialDetailFormProps> = ({
   async function postOrderDetail(method: string) {
     console.log(orderDetail);
     
-    const url = `/api/special-detail/${orderDetail.id}`;
+    const url = `${env.apiKey}/special-detail/${orderDetail.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -95,7 +95,7 @@ const SpecialDetailForm: NextPage<SpecialDetailFormProps> = ({
   };
 
   const deleteOrderDetail = async () => {
-    const url = `/api/special-detail/${orderDetail.id}`;
+    const url = `${env.apiKey}/special-detail/${orderDetail.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

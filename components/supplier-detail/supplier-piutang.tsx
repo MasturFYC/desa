@@ -11,6 +11,7 @@ import WaitMe from "@components/ui/wait-me";
 import dynamic from "next/dynamic";
 import Div from "@components/ui/Div";
 import Span from "@components/ui/SpanValue";
+import { env } from 'process';
 
 const SupplierBalanceDetail = dynamic(() => import("./supplier-balance"), {
   loading: () => <WaitMe />,
@@ -27,7 +28,7 @@ const SupplierPiutang: NextPage<SupplierPiutangProps> = ({ supplierId }) => {
 
   let payments = useAsyncList<iPiutang>({
     async load({ signal }) {
-      let res = await fetch(`/api/supplier/piutang/${supplierId}`, {
+      let res = await fetch(`${env.apiKey}/supplier/piutang/${supplierId}`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",

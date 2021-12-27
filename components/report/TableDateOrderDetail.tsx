@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FormatNumber } from "@lib/format";
 import { useAsyncList } from "@react-stately/data";
+import { env } from 'process';
 
 type TableDateOrderDetailType = {
   id: number;
@@ -34,7 +35,7 @@ export default function TableDateOrderDetail(props: TableDateOrderDetailProps): 
 
   let reports = useAsyncList<TableDateOrderDetailType>({
     async load({ signal }) {
-      let url: string = `/api/report/lr-penjualan-date-order-detail/${id}/${orderType}`;
+      let url: string = `${env.apiKey}/report/lr-penjualan-date-order-detail/${id}/${orderType}`;
       let res = await fetch(url, {
         signal,
         headers: {

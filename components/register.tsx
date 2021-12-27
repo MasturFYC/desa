@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import Link from 'next/link'
+import { env } from 'process';
 import React from 'react'
 import useUser from '../lib/use-user'
 import fetchJson from '../lib/fetch-json'
@@ -29,7 +29,7 @@ const RegisterComponent = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const url = `/api/register`
+    const url = `${env.apiKey}/register`
 
     const fetchOptions = {
       method: 'POST',
@@ -46,7 +46,7 @@ const RegisterComponent = () => {
     }
 
     try {
-      mutateUser(await fetchJson('/api/register', fetchOptions))
+      mutateUser(await fetchJson(env.apiKey + '/register', fetchOptions))
     } catch (error) {
       console.log(error)
       setMessage('Nama user dan email salah, atau sudah terdaftar.')

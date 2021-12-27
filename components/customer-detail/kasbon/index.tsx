@@ -4,7 +4,7 @@ import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
-
+import { env } from 'process';
 import { ActionButton, Button } from '@react-spectrum/button';
 import { Flex } from '@react-spectrum/layout';
 import { Text } from '@react-spectrum/text';
@@ -49,7 +49,7 @@ const KasbonPage: NextPage<KasbonProps> = ({ customerId }) => {
 
   let kasbons = useAsyncList<iKasbon>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer/kasbon/${customerId}`, { signal });
+      let res = await fetch(`${env.apiKey}/customer/kasbon/${customerId}`, { signal });
       let json = await res.json();
       return { items: json };
     },

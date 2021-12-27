@@ -10,7 +10,8 @@ import { Children, useState } from "react";
 import { TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
 import useClickOutside from "@components/ui/use-outside-click";
-import { mergeProps } from "@react-aria/utils";
+import { env } from 'process';
+
 
 const initData: grassCostType = {
   grassId: 0,
@@ -51,7 +52,7 @@ function GrassCostList(props: GrassCostListProps): JSX.Element {
   );
 
   async function removeCost(id: number, total: number) {
-    const url = `/api/grass-cost/${id}`;
+    const url = `${env.apiKey}/grass-cost/${id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {
@@ -73,7 +74,7 @@ function GrassCostList(props: GrassCostListProps): JSX.Element {
   }
 
   async function saveCost(p: grassCostType) {
-    const url = `/api/grass-cost/${p.id}`;
+    const url = `${env.apiKey}/grass-cost/${p.id}`;
     const fetchOptions = {
       method: p.id === 0 ? "POST" : "PUT",
       headers: {

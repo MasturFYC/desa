@@ -9,7 +9,7 @@ import { NumberField } from "@react-spectrum/numberfield";
 import { FormatNumber } from "@lib/format";
 import { AsyncListData } from "@react-stately/data";
 import { ComboBox, Item } from "@react-spectrum/combobox";
-import { x } from "pdfkit";
+import { env } from 'process';
 
 type GrassFormProps = {
   data: iGrass;
@@ -43,7 +43,7 @@ export default function GrassForm(props: GrassFormProps) {
 
   async function postData(method: string) {
 
-    const url = `/api/grass/${grass.id}`;
+    const url = `${env.apiKey}/grass/${grass.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -76,7 +76,7 @@ export default function GrassForm(props: GrassFormProps) {
   };
 
   const deleteData = async () => {
-    const url = `/api/grass/${grass.id}`;
+    const url = `${env.apiKey}/grass/${grass.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

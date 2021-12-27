@@ -15,6 +15,7 @@ import {
 import { FormatDate, FormatNumber } from "@lib/format";
 import SpanLink from "@components/ui/span-link";
 import { Checkbox } from "@react-spectrum/checkbox";
+import { env } from 'process';
 
 const SpecialOrderDetail = dynamic(
   () => import("@components/special-order/order-detail"),
@@ -60,7 +61,7 @@ const SpecialOrderComponent: NextPage<PiutangDagangProps> = (props) => {
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
-      let res = await fetch(`/api/category/2`, {
+      let res = await fetch(`${env.apiKey}/category/2`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -74,7 +75,7 @@ const SpecialOrderComponent: NextPage<PiutangDagangProps> = (props) => {
 
   let orders = useAsyncList<iSpecialOrder>({
     async load({ signal }) {
-      let res = await fetch(`/api/special-order/customer/${customer.id}/${isShowAll}`, {
+      let res = await fetch(`${env.apiKey}/special-order/customer/${customer.id}/${isShowAll}`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -96,7 +97,7 @@ const SpecialOrderComponent: NextPage<PiutangDagangProps> = (props) => {
   async function reloadOrder(all: boolean) {
     setIsReload(true);
 
-    const url = `/api/special-order/customer/${customer.id}/${all}`;
+    const url = `${env.apiKey}/special-order/customer/${customer.id}/${all}`;
     const fetchOptions = {
       method: "GET",
       headers: {

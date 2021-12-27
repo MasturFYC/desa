@@ -9,6 +9,7 @@ import { Form } from "@react-spectrum/form";
 import { TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
 import { ComboBox, Item } from "@react-spectrum/combobox";
+import { env } from 'process';
 
 
 export interface CustomerOrder extends iOrder {
@@ -56,7 +57,7 @@ function OrderForm(props: OrderFormProps) {
 
 
   async function postOrder(method: string) {
-    const url = `/api/orders/${order.id}`;
+    const url = `${env.apiKey}/orders/${order.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -86,7 +87,7 @@ function OrderForm(props: OrderFormProps) {
 
 
   const deleteOrder = async () => {
-    const url = `/api/orders/${order.id}`;
+    const url = `${env.apiKey}/orders/${order.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

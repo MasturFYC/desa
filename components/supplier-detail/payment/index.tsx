@@ -4,7 +4,7 @@ import { useAsyncList } from "@react-stately/data";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
-import { ActionButton } from "@react-spectrum/button";
+import { env } from 'process';
 import { Divider } from "@react-spectrum/divider";
 import { Flex } from "@react-spectrum/layout";
 import {Text} from "@react-spectrum/text";
@@ -54,7 +54,7 @@ const StockPaymentPage: NextPage<stockPaymentProps> = ({ supplierId }) => {
 
   let payments = useAsyncList<iStockPayment>({
     async load({ signal }) {
-      let res = await fetch(`/api/supplier/payment/${supplierId}`, {
+      let res = await fetch(`${env.apiKey}/supplier/payment/${supplierId}`, {
         signal,
         headers: {
           'Content-type': 'application/json; charset=UTF-8'

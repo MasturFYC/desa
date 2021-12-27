@@ -21,6 +21,7 @@ import { DialogContainer, Dialog } from "@react-spectrum/dialog";
 import { Heading } from "@react-spectrum/text";
 import InfoIcon from "@spectrum-icons/workflow/Info";
 import { SisaStock } from "./SisaStock";
+import { env } from 'process';
 
 const UnitComponent = dynamic(() => import("@components/unit/UnitComponent"), {
   ssr: false,
@@ -52,7 +53,7 @@ const ProductList: NextPage<ProductListProps> = (props) => {
   let [isOpen, setIsOpen] = useState<boolean>(false);
 
   const deleteData = async (id: number) => {
-    const url = `/api/product/${id}`;
+    const url = `${env.apiKey}/product/${id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {
@@ -80,7 +81,7 @@ const ProductList: NextPage<ProductListProps> = (props) => {
   };
 
   async function updateProduct(method: string, id: number, p: iProduct) {
-    const url = `/api/product/${id}`;
+    const url = `${env.apiKey}/product/${id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -320,7 +321,7 @@ const ProductList: NextPage<ProductListProps> = (props) => {
   }
 
   async function deleteCategoryData(id: number) {
-    const url = `/api/category/${id}`;
+    const url = `${env.apiKey}/category/${id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {
@@ -342,7 +343,7 @@ const ProductList: NextPage<ProductListProps> = (props) => {
   }
 
   async function insertCategoryData(p: iCategory) {
-    const url = "/api/category/0";
+    const url = env.apiKey + "/category/0";
 
     const fetchOptions = {
       method: "POST",
@@ -366,7 +367,7 @@ const ProductList: NextPage<ProductListProps> = (props) => {
   }
 
   async function updateCategoryData(id: number, p: iCategory) {
-    const url = `/api/category/${id}`;
+    const url = `${env.apiKey}/category/${id}`;
     const fetchOptions = {
       method: "PUT",
       headers: {

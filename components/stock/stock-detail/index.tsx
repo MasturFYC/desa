@@ -8,6 +8,7 @@ import { ActionButton } from "@react-spectrum/button";
 import { Divider } from "@react-spectrum/divider";
 import { Flex } from "@react-spectrum/layout";
 import PinAdd from "@spectrum-icons/workflow/Add";
+import { env } from 'process';
 
 import { iStockDetail, iStock, iProduct } from "@components/interfaces";
 import { FormatNumber } from "@lib/format";
@@ -49,7 +50,7 @@ const StockDetail: NextPage<StockDetailProps> = ({
 
   let stockDetails = useAsyncList<iStockDetail>({
     async load({ signal }) {
-      let res = await fetch(`/api/stock-detail/${stockId}`, {
+      let res = await fetch(`${env.apiKey}/stock-detail/${stockId}`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",

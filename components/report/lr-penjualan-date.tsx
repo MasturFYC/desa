@@ -1,7 +1,7 @@
 import React, { Fragment, useState } from "react";
 import { FormatDate, FormatNumber } from "@lib/format";
 import { useAsyncList } from "@react-stately/data";
-import WaitMe from "@components/ui/wait-me";
+import { env } from 'process';
 import { Flex } from "@react-spectrum/layout";
 import { Button } from "@react-spectrum/button";
 import SearchIcon from "@spectrum-icons/workflow/Search";
@@ -70,7 +70,7 @@ export default function ReportLrPenjualanByDate(props: ReportProps) {
   let { filter, children } = props;
   let reports = useAsyncList<reportLrToko>({
     async load({ signal }) {
-      let url: string = `/api/report/lr-penjualan-date/${filter.startDate}/${filter.endDate}/${filter.saleType}`;
+      let url: string = `${env.apiKey}/report/lr-penjualan-date/${filter.startDate}/${filter.endDate}/${filter.saleType}`;
       let res = await fetch(url, {
         signal,
         headers: {

@@ -6,7 +6,7 @@ import { calculateStock } from "./calculateStock";
 import {useToggleState} from '@react-stately/toggle';
 import { useToggleButton } from "react-aria";
 import { ToggleProps } from "@react-types/checkbox";
-import { Flex } from "@react-spectrum/layout";
+import { env } from 'process';
 
 interface SisaStockProps extends ToggleProps {
   product: iProduct;
@@ -23,7 +23,7 @@ export function SisaStock(props: SisaStockProps) {
     let isLoaded = false;
 
     async function loadUnits() {
-      const url = `/api/unit/list/${product.id}`;
+      const url = `${env.apiKey}/unit/list/${product.id}`;
       const fetchOptions = {
         method: "GET",
         headers: {

@@ -6,6 +6,7 @@ import { View } from "@react-spectrum/view";
 import { ActionButton, Button } from "@react-spectrum/button";
 import { Flex } from "@react-spectrum/layout";
 import { Text } from "@react-spectrum/text";
+import { env } from 'process';
 import {
   dateParam,
   iCustomer,
@@ -46,7 +47,7 @@ export default function Grass(props: GrassProps) {
 
   let grasses = useAsyncList<iGrass>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer/grass/${customerId}`, {
+      let res = await fetch(`${env.apiKey}/customer/grass/${customerId}`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -60,7 +61,7 @@ export default function Grass(props: GrassProps) {
 
   let customers = useAsyncList<iCustomer>({
     async load({ signal }) {
-      let res = await fetch("/api/customer", {
+      let res = await fetch(env.apiKey + "/customer", {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -74,7 +75,7 @@ export default function Grass(props: GrassProps) {
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
-      let res = await fetch("/api/category/2", {
+      let res = await fetch(env.apiKey + "/category/2", {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",

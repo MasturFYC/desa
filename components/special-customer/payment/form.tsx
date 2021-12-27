@@ -7,6 +7,7 @@ import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { TextArea, TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
+import { env } from 'process';
 
 type SpecialPaymentFormProps = {
   data: iSpecialPayment;
@@ -42,7 +43,7 @@ const SpecialPaymentForm: NextPage<SpecialPaymentFormProps> = (props) => {
   }, [data]);
 
   async function postPayment(method: string) {
-    const url = `/api/special-payment/${payment.id}`;
+    const url = `${env.apiKey}/special-payment/${payment.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -68,7 +69,7 @@ const SpecialPaymentForm: NextPage<SpecialPaymentFormProps> = (props) => {
   };
 
   const deletePayment = async () => {
-    const url = `/api/special-payment/${payment.id}`;
+    const url = `${env.apiKey}/special-payment/${payment.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

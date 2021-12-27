@@ -15,6 +15,7 @@ import WaitMe from "@components/ui/wait-me";
 import { CustomerSpecialOrder } from "./form";
 import SpanLink from "@components/ui/span-link";
 import { Checkbox } from "@react-spectrum/checkbox";
+import { env } from 'process';
 
 const siteTitle = "Penjualan (Khusus)";
 
@@ -57,7 +58,7 @@ const SpecialOrderComponent: NextPage = () => {
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
-      let res = await fetch(`/api/category/2`, {
+      let res = await fetch(`${env.apiKey}/category/2`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -71,7 +72,7 @@ const SpecialOrderComponent: NextPage = () => {
 
   let customers = useAsyncList<iCustomer>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer/special`, {
+      let res = await fetch(`${env.apiKey}/customer/special`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -85,7 +86,7 @@ const SpecialOrderComponent: NextPage = () => {
 
   let orders = useAsyncList<CustomerSpecialOrder>({
     async load({ signal }) {
-      let res = await fetch(`/api/special-order/list/`, {
+      let res = await fetch(`${env.apiKey}/special-order/list/`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -100,7 +101,7 @@ const SpecialOrderComponent: NextPage = () => {
   async function reloadOrder(all: boolean) {
     setIsReload(true);
 
-    const url = `/api/special-order/list/?all=${all}`;
+    const url = `${env.apiKey}/special-order/list/?all=${all}`;
     const fetchOptions = {
       method: "GET",
       headers: {

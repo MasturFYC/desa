@@ -7,6 +7,7 @@ import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
+import { env } from 'process';
 
 type PaymentFormProps = {
   data: iPayment;
@@ -42,7 +43,7 @@ export default function PaymentForm(props: PaymentFormProps) {
   }, [data]);
 
   async function postPayment(method: string) {
-    const url = `/api/payment/${payment.id}`;
+    const url = `${env.apiKey}/payment/${payment.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -69,7 +70,7 @@ export default function PaymentForm(props: PaymentFormProps) {
   };
 
   const deletePayment = async () => {
-    const url = `/api/payment/${payment.id}`;
+    const url = `${env.apiKey}/payment/${payment.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

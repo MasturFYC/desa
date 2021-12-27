@@ -7,8 +7,6 @@ import { Form } from "@react-spectrum/form";
 import { TextField } from "@react-spectrum/textfield";
 import { Button } from "@react-spectrum/button";
 import { NumberField } from "@react-spectrum/numberfield";
-import product from "@components/product";
-import { x } from "pdfkit";
 import { FormatNumber } from "@lib/format";
 
 type UnitFormProps = {

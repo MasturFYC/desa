@@ -7,6 +7,7 @@ import { NextPage } from "next";
 import { ActionButton, Button, ToggleButton } from '@react-spectrum/button';
 import { Flex } from '@react-spectrum/layout';
 import { Text } from '@react-spectrum/text';
+import { env } from 'process';
 
 import {
   dateParam,
@@ -52,7 +53,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
-      let res = await fetch(`/api/product/list`, { signal });
+      let res = await fetch(`${env.apiKey}/product/list`, { signal });
       let json = await res.json();
       return { items: json };
     },
@@ -61,7 +62,7 @@ const PiutangBarang: NextPage<PiutangBarangProps> = ({ customerId }) => {
  
   let orders = useAsyncList<iOrder>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer/order/${customerId}`, { signal });
+      let res = await fetch(`${env.apiKey}/customer/order/${customerId}`, { signal });
       let json = await res.json();
       return { items: json };
     },

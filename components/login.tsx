@@ -1,11 +1,11 @@
-import Head from 'next/head'
-import Link from 'next/link'
-import React, { FormEvent, useState } from 'react'
-import useUser from '@lib/use-user'
-import fetchJson from '@lib/fetch-json'
-import Layout from '@components/layout'
+import Head from 'next/head';
+import {env} from 'process';
+import React, { FormEvent, useState } from 'react';
+import useUser from '@lib/use-user';
+import fetchJson from '@lib/fetch-json';
+import Layout from '@components/layout';
 
-const siteTitle = 'UserLogin'
+const siteTitle = 'UserLogin';
 
 const LoginComponent = () => {
   const [userData, setUserData] = useState({
@@ -25,7 +25,7 @@ const LoginComponent = () => {
 
     try {
       mutateUser(
-        await fetchJson('/api/login', {
+        await fetchJson(env.apiKey + '/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(userData),

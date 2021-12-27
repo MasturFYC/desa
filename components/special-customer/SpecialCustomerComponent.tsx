@@ -7,6 +7,7 @@ import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { Item, TabList, Tabs } from "@react-spectrum/tabs";
+import { env } from 'process';
 
 const siteTitle = "Pelanggan";
 
@@ -44,7 +45,7 @@ const SpecialCustomerComponent: NextPage = () => {
     let isLoaded = false;
 
     const loadCustomer = async (id: number) => {
-      const url = `/api/customer/${id}`;
+      const url = `${env.apiKey}/customer/${id}`;
       const fetchOptions = {
         method: "GET",
         headers: {

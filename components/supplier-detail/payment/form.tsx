@@ -7,7 +7,7 @@ import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { TextArea, TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
-import stockApi from "@api/stock/[id]";
+import { env } from 'process';
 
 type StockPaymentFormProps = {
   data: iStockPayment;
@@ -45,7 +45,7 @@ const StockPaymentForm: NextPage<StockPaymentFormProps> = ({
   }, [data]);
 
   async function postPayment(method: string) {
-    const url = `/api/stock-payment/${payment.id}`;
+    const url = `${env.apiKey}/stock-payment/${payment.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -72,7 +72,7 @@ const StockPaymentForm: NextPage<StockPaymentFormProps> = ({
   };
 
   const deletePayment = async () => {
-    const url = `/api/stock-payment/${payment.id}`;
+    const url = `${env.apiKey}/stock-payment/${payment.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

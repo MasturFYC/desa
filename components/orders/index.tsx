@@ -21,6 +21,7 @@ import {
 import Div from "@components/ui/Div";
 import Span from "@components/ui/SpanValue";
 import { CustomerOrder } from "./form";
+import { env } from 'process';
 
 const siteTitle = "Penjualan (Toko)"
 
@@ -58,7 +59,7 @@ const OrderComponent: NextPage = () => {
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
-      let res = await fetch(`/api/product/list`, {
+      let res = await fetch(`${env.apiKey}/product/list`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -72,7 +73,7 @@ const OrderComponent: NextPage = () => {
 
   let customers = useAsyncList<iCustomer>({
     async load({ signal }) {
-      let res = await fetch(`/api/customer`, {
+      let res = await fetch(`${env.apiKey}/customer`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -86,7 +87,7 @@ const OrderComponent: NextPage = () => {
 
   let orders = useAsyncList<CustomerOrder>({
     async load({ signal }) {
-      let res = await fetch(`/api/orders/list`, {
+      let res = await fetch(`${env.apiKey}/orders/list`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
@@ -100,7 +101,7 @@ const OrderComponent: NextPage = () => {
 
   let searchOrders = async () => {
     const txt = txtSearch.toLocaleLowerCase();
-    const url = `/api/orders/search/${txt}`;
+    const url = `${env.apiKey}/orders/search/${txt}`;
     const fetchOptions = {
       method: "GET",
       headers: {
@@ -329,7 +330,7 @@ const OrderComponent: NextPage = () => {
   async function reloadOrder(all: boolean) {
     setIsReload(true);
 
-    const url = `/api/orders/list/?ls=${all ? 1 : 0}`;
+    const url = `${env.apiKey}/orders/list/?ls=${all ? 1 : 0}`;
     const fetchOptions = {
       method: "GET",
       headers: {

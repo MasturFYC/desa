@@ -7,6 +7,7 @@ import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
+import { env } from 'process';
 
 type KasbonFormProps = {
   data: iKasbon;
@@ -45,7 +46,7 @@ const KasbonForm: NextPage<KasbonFormProps> = ({
   }, [data]);
 
   async function postKasbon(method: string) {
-    const url = `/api/kasbon/${kasbon.id}`;
+    const url = `${env.apiKey}/kasbon/${kasbon.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -72,7 +73,7 @@ const KasbonForm: NextPage<KasbonFormProps> = ({
   };
 
   const deleteKasbon = async () => {
-    const url = `/api/kasbon/${kasbon.id}`;
+    const url = `${env.apiKey}/kasbon/${kasbon.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

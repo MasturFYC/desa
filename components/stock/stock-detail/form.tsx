@@ -8,6 +8,7 @@ import { NumberField } from "@react-spectrum/numberfield";
 import { AsyncListData } from "@react-stately/data";
 import { ComboBox, Item } from "@react-spectrum/combobox";
 import { Form } from "@react-spectrum/form";
+import { env } from 'process';
  
 export type StockDetailFormProps = {
   products: AsyncListData<iProduct>;
@@ -56,7 +57,7 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
   }, [data]);
 
   async function postData(method: string) {
-    const url = `/api/stock-detail/${detail.id}`;
+    const url = `${env.apiKey}/stock-detail/${detail.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -90,7 +91,7 @@ const StockDetailForm: NextPage<StockDetailFormProps> = ({
   };
 
   const deleteData = async () => {
-    const url = `/api/stock-detail/${detail.id}`;
+    const url = `${env.apiKey}/stock-detail/${detail.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {
