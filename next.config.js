@@ -50,6 +50,9 @@ module.exports = withBundleAnalyzer(withTM({
   trailingSlash: true,
   reactStrictMode: true,
   basePath: '/yana',
+  env: {
+	  pathKey: '/yana',
+	},
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias
