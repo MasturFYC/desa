@@ -49,6 +49,7 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 module.exports = withBundleAnalyzer(withTM({
   trailingSlash: true,
   reactStrictMode: true,
+  basePath: '/yana',
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias
