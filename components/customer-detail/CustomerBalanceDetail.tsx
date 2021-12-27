@@ -7,7 +7,7 @@ import WaitMe from "@components/ui/wait-me";
 import { Property } from "csstype";
 import Span from "@components/ui/SpanValue";
 import Div from "@components/ui/Div";
-import { env } from 'process';
+
 
 interface customerBalance {
   id: number;
@@ -55,7 +55,7 @@ export default function CustomerBalanceDetail({
 
   let payments = useAsyncList<customerBalance>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/customer/balance-detail/${customerId}`, {
+      let res = await fetch(`${process.env.apiKey}/customer/balance-detail/${customerId}`, {
         signal,
       });
       let json = await res.json();

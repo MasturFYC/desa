@@ -27,7 +27,7 @@ import { SearchField } from "@react-spectrum/searchfield";
 import InfoIcon from "@spectrum-icons/workflow/Info";
 import { Heading } from "@react-spectrum/text";
 import SpanLink from "@components/ui/span-link";
-import { env } from 'process';
+
 
 const SupplierForm = dynamic(() => import("./form"), {
   loading: () => <WaitMe />,
@@ -71,7 +71,7 @@ const SupplierComponent: NextPage = () => {
 
   let suppliers = useAsyncList<iSupplier>({
     async load({ signal }) {
-      let res = await fetch(env.apiKey + "/supplier", { signal,
+      let res = await fetch(process.env.apiKey + "/supplier", { signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
         } });
@@ -83,7 +83,7 @@ const SupplierComponent: NextPage = () => {
 
   const searchData = async () => {
     const txt = txtSearch.toLocaleLowerCase();
-    const url = `${env.apiKey}/supplier/search/${txt}`;
+    const url = `${process.env.apiKey}/supplier/search/${txt}`;
     const fetchOptions = {
       method: "GET",
       headers: {
@@ -111,7 +111,7 @@ const SupplierComponent: NextPage = () => {
   };
 
   const deleteData = async (id: number) => {
-    const url = `${env.apiKey}/supplier/${id}`;
+    const url = `${process.env.apiKey}/supplier/${id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {
@@ -141,7 +141,7 @@ const SupplierComponent: NextPage = () => {
   };
 
   async function updateData(method: string, id: number, p: iSupplier) {
-    const url = `${env.apiKey}/supplier/${id}`;
+    const url = `${process.env.apiKey}/supplier/${id}`;
     const fetchOptions = {
       method: method,
       headers: {

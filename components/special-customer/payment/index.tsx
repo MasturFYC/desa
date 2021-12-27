@@ -7,7 +7,7 @@ import { NextPage } from "next";
 import { ActionButton } from '@react-spectrum/button';
 import { Flex } from '@react-spectrum/layout';
 import { Text } from '@react-spectrum/text';
-import { env } from 'process';
+
 
 import { dateParam, iSpecialPayment } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
@@ -39,7 +39,7 @@ const SpecialPaymentPage: NextPage<SpecialPaymentProps> = (props) => {
 
   let payments = useAsyncList<iSpecialPayment>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/customer/special-payment/${customerId}`, { signal });
+      let res = await fetch(`${process.env.apiKey}/customer/special-payment/${customerId}`, { signal });
       let json = await res.json();
       return { items: json };
     },

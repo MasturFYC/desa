@@ -10,7 +10,7 @@ import { TextField } from "@react-spectrum/textfield";
 import Link from "next/link";
 import { reportLrToko } from "./lr-penjualan-date";
 import { ReportPenjualanByDateType, TableDateOrder } from "./TableDateOrder";
-import { env } from 'process';
+
 
 type columnType = {
   id: number;
@@ -43,7 +43,7 @@ export default function ReportLrPenjualanByYear(props: ReportProps) {
 
   let reports = useAsyncList<reportLrToko>({
     async load({ signal }) {
-      let url: string = `${env.apiKey}/report/lr-penjualan-year/${filter.year}/${filter.month}`;
+      let url: string = `${process.env.apiKey}/report/lr-penjualan-year/${filter.year}/${filter.month}`;
       let res = await fetch(url, {
         signal,
         headers: {
@@ -166,7 +166,7 @@ function TabelRow(props: TableRowProps): JSX.Element {
   let [details, setDetails] = useState<reportLrToko[]>([]);
 
   async function loadDetail(year: number, month: number) {
-    const url = `${env.apiKey}/report/lr-penjualan-month/${year}/${month}`;
+    const url = `${process.env.apiKey}/report/lr-penjualan-month/${year}/${month}`;
     const fetchOptions = {
       headers: {
         "Content-type": "application/json; charset=UTF-8",
@@ -414,7 +414,7 @@ function ReportPenjualanByDate(props: ReportByDateProps) {
   
   let reports = useAsyncList<ReportPenjualanByDateType>({
     async load({ signal }) {
-      let url: string = `${env.apiKey}/report/lr-penjualan-date-order/${startDate}`;
+      let url: string = `${process.env.apiKey}/report/lr-penjualan-date-order/${startDate}`;
       let res = await fetch(url, {
         signal,
         headers: {

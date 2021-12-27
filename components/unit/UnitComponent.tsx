@@ -12,7 +12,7 @@ import WaitMe from "@components/ui/wait-me";
 import PinAdd from "@spectrum-icons/workflow/Add";
 import dynamic from "next/dynamic";
 import { Checkbox } from "@react-spectrum/checkbox";
-import { env } from 'process';
+
 
 const UnitForm = dynamic(() => import("./form"), {
   ssr: false
@@ -42,7 +42,7 @@ const UnitComponent: NextPage<UnitComponentProps> = (props) => {
 
   let units = useAsyncList<iUnit>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/unit/list/${productId}`, { signal });
+      let res = await fetch(`${process.env.apiKey}/unit/list/${productId}`, { signal });
       let json = await res.json();
       return { items: json };
     },
@@ -50,7 +50,7 @@ const UnitComponent: NextPage<UnitComponentProps> = (props) => {
   })
 
   const deleteData = async (id: number) => {
-    const url = `${env.apiKey}/unit/${id}`;
+    const url = `${process.env.apiKey}/unit/${id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {
@@ -78,7 +78,7 @@ const UnitComponent: NextPage<UnitComponentProps> = (props) => {
   };
 
   async function updateUnit(method: string, id: number, p: iUnit) {
-    const url = `${env.apiKey}/unit/${id}`;
+    const url = `${process.env.apiKey}/unit/${id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -175,7 +175,7 @@ const UnitComponent: NextPage<UnitComponentProps> = (props) => {
   );
 
   async function updateUnits(prodId: number, unitId: number) {
-    const url = `${env.apiKey}/unit/set-default/${prodId}/${unitId}`;
+    const url = `${process.env.apiKey}/unit/set-default/${prodId}/${unitId}`;
     const fetchOptions = {
       headers: {
         "Content-type": "application/json; charset=UTF-8",

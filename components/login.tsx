@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import {env} from 'process';
 import React, { FormEvent, useState } from 'react';
 import useUser from '@lib/use-user';
 import fetchJson from '@lib/fetch-json';
@@ -25,7 +24,7 @@ const LoginComponent = () => {
 
     try {
       mutateUser(
-        await fetchJson(env.apiKey + '/login', {
+        await fetchJson(process.env.apiKey + '/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(userData),

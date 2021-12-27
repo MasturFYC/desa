@@ -12,7 +12,7 @@ import { Form } from "@react-spectrum/form";
 import { NumberField } from "@react-spectrum/numberfield";
 import { ComboBox, Item } from "@react-spectrum/combobox";
 import { AsyncListData } from "@react-stately/data";
-import { env } from 'process';
+
 
 
 export type GrassDetailFormProps = {
@@ -60,7 +60,7 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
   }, [data]);
 
   async function postGrassDetail(method: string) {
-    const url = `${env.apiKey}/grass-detail/${detail.id}`;
+    const url = `${process.env.apiKey}/grass-detail/${detail.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -92,7 +92,7 @@ const GrassDetailForm: NextPage<GrassDetailFormProps> = (props: GrassDetailFormP
   };
 
   const deleteGrassDetail = async () => {
-    const url = `${env.apiKey}/grass-detail/${detail.id}`;
+    const url = `${process.env.apiKey}/grass-detail/${detail.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

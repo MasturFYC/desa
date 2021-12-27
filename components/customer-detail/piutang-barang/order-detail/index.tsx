@@ -8,7 +8,7 @@ import { ActionButton } from "@react-spectrum/button";
 import { Divider } from "@react-spectrum/divider";
 import { Flex } from "@react-spectrum/layout";
 import PinAdd from "@spectrum-icons/workflow/Add";
-import { env } from 'process';
+
 
 import { iOrderDetail, iOrder, iProduct } from "@components/interfaces";
 import { FormatNumber } from "@lib/format";
@@ -53,7 +53,7 @@ const OrderDetail: NextPage<OrderDetailProps> = ({
 
   let orderDetails = useAsyncList<iOrderDetail>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/order-detail/${orderId}`, { signal });
+      let res = await fetch(`${process.env.apiKey}/order-detail/${orderId}`, { signal });
       let json = await res.json();
       return { items: json };
     },

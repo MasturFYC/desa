@@ -8,7 +8,7 @@ import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { Item, TabList, Tabs } from "@react-spectrum/tabs";
-import { env } from 'process';
+
 
 const siteTitle = "Supplier";
 
@@ -53,7 +53,7 @@ const SupplierDetailComponent: NextPage = () => {
     let isLoaded = false;
 
     const loadSupplier = async (id: number) => {
-      const url = `${env.apiKey}/supplier/${id}`;
+      const url = `${process.env.apiKey}/supplier/${id}`;
       const fetchOptions = {
         method: "GET",
         headers: {

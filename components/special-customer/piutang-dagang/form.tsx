@@ -17,7 +17,7 @@ import { Divider } from "@react-spectrum/divider";
 import { DialogContainer, Dialog } from "@react-spectrum/dialog";
 import { Heading } from "@react-spectrum/text";
 import { Content } from "@react-spectrum/view";
-import { env } from 'process';
+
 
 const SpecialPaymentForm = dynamic(() => import("../payment/form"), {
   ssr: false,
@@ -75,7 +75,7 @@ export default function SpecialOrderForm(props: SpecialOrderFormProps) {
   }, [data]);
 
   async function postOrder(method: string) {
-    const url = `${env.apiKey}/special-order/${order.id}`;
+    const url = `${process.env.apiKey}/special-order/${order.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -104,7 +104,7 @@ export default function SpecialOrderForm(props: SpecialOrderFormProps) {
   };
 
   const deleteOrder = async () => {
-    const url = `${env.apiKey}/special-order/${order.id}`;
+    const url = `${process.env.apiKey}/special-order/${order.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

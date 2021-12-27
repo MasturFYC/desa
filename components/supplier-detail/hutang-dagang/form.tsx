@@ -17,7 +17,7 @@ import {
 } from "@react-spectrum/dialog";
 import { Heading } from "@react-spectrum/text";
 import { Divider } from "@react-spectrum/divider";
-import { env } from 'process';
+
 
 const StockDetail = dynamic(
   () => import("@components/stock/stock-detail"),
@@ -72,7 +72,7 @@ const StockForm: NextPage<StockFormProps> = ({
   }, [data]);
 
   async function postStock(method: string) {
-    const url = `${env.apiKey}/stock/${stock.id}`;
+    const url = `${process.env.apiKey}/stock/${stock.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -116,7 +116,7 @@ const StockForm: NextPage<StockFormProps> = ({
   }
 
   const deleteStock = async () => {
-    const url = `${env.apiKey}/stock/${stock.id}`;
+    const url = `${process.env.apiKey}/stock/${stock.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

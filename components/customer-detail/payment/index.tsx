@@ -8,7 +8,7 @@ import { Flex } from '@react-spectrum/layout';
 import { Text } from '@react-spectrum/text';
 import { dateParam, iPayment } from "@components/interfaces";
 import { FormatDate, FormatNumber } from "@lib/format";
-import { env } from 'process';
+
 
 import Div from "@components/ui/Div";
 
@@ -37,7 +37,7 @@ export default function PaymentPage (props: paymentProps) {
 
   let payments = useAsyncList<iPayment>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/customer/payment/${customerId}`, { signal });
+      let res = await fetch(`${process.env.apiKey}/customer/payment/${customerId}`, { signal });
       let json = await res.json();
       return { items: json };
     },

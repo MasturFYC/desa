@@ -14,7 +14,7 @@ import {
   iProduct
 } from "@components/interfaces";
 import { FormatNumber } from "@lib/format";
-import { env } from 'process';
+
 
 const RenderStock = dynamic(() => import("@components/stock/RenderStock"), {
   ssr: false,
@@ -40,7 +40,7 @@ const StockPage: NextPage<{ supplierId: number }> = ({ supplierId }) => {
 
   let stocks = useAsyncList<iStock>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/supplier/stock/${supplierId}`, {
+      let res = await fetch(`${process.env.apiKey}/supplier/stock/${supplierId}`, {
         signal,
         headers: {
           'Content-type': 'application/json; charset=UTF-8'
@@ -54,7 +54,7 @@ const StockPage: NextPage<{ supplierId: number }> = ({ supplierId }) => {
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/product/list`, {
+      let res = await fetch(`${process.env.apiKey}/product/list`, {
         signal,
         headers: {
           'Content-type': 'application/json; charset=UTF-8'
@@ -68,7 +68,7 @@ const StockPage: NextPage<{ supplierId: number }> = ({ supplierId }) => {
 
   const searchData = async () => {
     const txt = txtSearch.toLocaleLowerCase();
-    const url = `${env.apiKey}/stock/search/${txt}`;
+    const url = `${process.env.apiKey}/stock/search/${txt}`;
     const fetchOptions = {
       method: "GET",
       headers: {

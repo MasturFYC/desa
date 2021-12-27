@@ -8,7 +8,7 @@ import { Form } from "@react-spectrum/form";
 import { NumberField } from "@react-spectrum/numberfield";
 import { AsyncListData } from "@react-stately/data";
 import { ComboBox, Item } from "@react-spectrum/combobox";
-import { env } from 'process';
+
 
 export type OrderDetailFormProps = {
   isLunas?: boolean,
@@ -59,7 +59,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = (props: OrderDetailFormP
   }, [data]);
 
   async function postOrderDetail(method: string) {
-    const url = `${env.apiKey}/order-detail/${orderDetail.id}`;
+    const url = `${process.env.apiKey}/order-detail/${orderDetail.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -91,7 +91,7 @@ const OrderDetailForm: NextPage<OrderDetailFormProps> = (props: OrderDetailFormP
   };
 
   const deleteOrderDetail = async () => {
-    const url = `${env.apiKey}/order-detail/${orderDetail.id}`;
+    const url = `${process.env.apiKey}/order-detail/${orderDetail.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

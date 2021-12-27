@@ -13,7 +13,7 @@ import {
 import { Content, View } from "@react-spectrum/view";
 import { Heading } from "@react-spectrum/text";
 import { Divider } from "@react-spectrum/divider";
-import { env } from 'process';
+
 
 const CustomerTransaction = dynamic(() => import("@components/customer-detail/transaction"), {
   ssr: false,
@@ -46,7 +46,7 @@ const PelupasantPage: NextPage<paymentProps> = (props) => {
 
   let lunas = useAsyncList<iLunas>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/lunas/${customerId}`, {
+      let res = await fetch(`${process.env.apiKey}/lunas/${customerId}`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",

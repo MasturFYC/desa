@@ -7,7 +7,7 @@ import { ActionButton } from "@react-spectrum/button";
 import { Flex } from "@react-spectrum/layout";
 import PinAdd from "@spectrum-icons/workflow/Add";
 import { AsyncListData } from "@react-stately/data";
-import { env } from 'process';
+
 import { iGrassDetail, iProduct } from "@components/interfaces";
 import Div from "@components/ui/Div";
 import { Divider } from "@react-spectrum/divider";
@@ -46,7 +46,7 @@ export default function GrassDetail(props: GrassDetailProps): JSX.Element {
 
   let grassDetails = useAsyncList<iGrassDetail>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/grass-detail/${grassId}`, {
+      let res = await fetch(`${process.env.apiKey}/grass-detail/${grassId}`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",

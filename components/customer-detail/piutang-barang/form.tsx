@@ -7,7 +7,7 @@ import { Button } from "@react-spectrum/button";
 import { Form } from "@react-spectrum/form";
 import { TextField } from "@react-spectrum/textfield";
 import { NumberField } from "@react-spectrum/numberfield";
-import { env } from 'process';
+
 
 type OrderFormProps = {
   data: iOrder;
@@ -44,7 +44,7 @@ const OrderForm: NextPage<OrderFormProps> = ({
 
 
   async function postOrder(method: string) {
-    const url = `${env.apiKey}/orders/${order.id}`;
+    const url = `${process.env.apiKey}/orders/${order.id}`;
     const fetchOptions = {
       method: method,
       headers: {
@@ -74,7 +74,7 @@ const OrderForm: NextPage<OrderFormProps> = ({
 
 
   const deleteOrder = async () => {
-    const url = `${env.apiKey}/orders/${order.id}`;
+    const url = `${process.env.apiKey}/orders/${order.id}`;
     const fetchOptions = {
       method: "DELETE",
       headers: {

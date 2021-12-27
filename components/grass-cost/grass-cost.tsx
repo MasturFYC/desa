@@ -1,7 +1,7 @@
 import { grassCostType } from "@components/interfaces";
 import { useAsyncList } from "@react-stately/data";
 import dynamic from "next/dynamic";
-import { env } from 'process';
+
 
 
 const GrassCostList = dynamic(() => import("./grass-cost-list"), { ssr: false });
@@ -17,7 +17,7 @@ function GrassCost(props: GrassCostProps): JSX.Element {
 
   let costs = useAsyncList<grassCostType>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/grass-cost/${grassId}`, {
+      let res = await fetch(`${process.env.apiKey}/grass-cost/${grassId}`, {
         signal,
         headers: {
           "Content-type": "application/json; charset=UTF-8",

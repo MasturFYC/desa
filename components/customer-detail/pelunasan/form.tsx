@@ -6,7 +6,7 @@ import { Flex } from "@react-spectrum/layout";
 import { Form } from "@react-spectrum/form";
 import { TextArea, TextField } from "@react-spectrum/textfield";
 import { Button } from "@react-spectrum/button";
-import { env } from 'process';
+
 import { NumberField } from "@react-spectrum/numberfield";
 
 type PelunasanFormProps = {
@@ -102,7 +102,7 @@ const PelunasanForm: NextPage<PelunasanFormProps> = (props) => {
 
   async function deletePelunasan() {
     if (confirm("Data pelunasan akan dihapus dari database, anda yakin?\n\nSemua transaksi yang sudah dilunasi dalam pelunasan ini akan dikembalikan menjadi belum terlunasi.")) {
-      const url = `${env.apiKey}/lunas/${lunas.id}`;
+      const url = `${process.env.apiKey}/lunas/${lunas.id}`;
       const fetchOptions = {
         method: "DELETE",
         headers: {
@@ -124,7 +124,7 @@ const PelunasanForm: NextPage<PelunasanFormProps> = (props) => {
   async function submitForm(e: FormEvent) {
     e.preventDefault();
 
-    const url = `${env.apiKey}/lunas/${lunas.id}`;
+    const url = `${process.env.apiKey}/lunas/${lunas.id}`;
     const fetchOptions = {
       method: lunas.id === 0 ? 'POST' : 'PUT',
       headers: {

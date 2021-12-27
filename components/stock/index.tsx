@@ -1,5 +1,5 @@
 import { NextPage } from "next";
-import { env } from 'process';
+
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import React, { useState } from "react";
@@ -51,7 +51,7 @@ const StockComponent: NextPage = () => {
 
   let stocks = useAsyncList<iStock>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/stock/?ls=${isLunas?1:0}`, {
+      let res = await fetch(`${process.env.apiKey}/stock/?ls=${isLunas?1:0}`, {
         signal,
         headers: {
           'Content-type': 'application/json; charset=UTF-8'
@@ -65,7 +65,7 @@ const StockComponent: NextPage = () => {
 
   let suppliers = useAsyncList<iSupplier>({
     async load({ signal }) {
-      let res = await fetch(env.apiKey + '/api/supplier', {
+      let res = await fetch(process.env.apiKey + '/api/supplier', {
         signal,
         headers: {
           'Content-type': 'application/json; charset=UTF-8'
@@ -79,7 +79,7 @@ const StockComponent: NextPage = () => {
 
   let products = useAsyncList<iProduct>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/product/list`, {
+      let res = await fetch(`${process.env.apiKey}/product/list`, {
         signal,
         headers: {
           'Content-type': 'application/json; charset=UTF-8'
@@ -238,7 +238,7 @@ const StockComponent: NextPage = () => {
 
   async function searchData  () {
     const txt = txtSearch.toLocaleLowerCase();
-    const url = `${env.apiKey}/stock/search/${txt}`;
+    const url = `${process.env.apiKey}/stock/search/${txt}`;
     const fetchOptions = {
       method: "GET",
       headers: {
@@ -300,7 +300,7 @@ const StockComponent: NextPage = () => {
   async function reloadOrder(all: boolean) {
     setIsReload(true);
 
-    const url = `${env.apiKey}/stock/?ls=${all?1:0}`;
+    const url = `${process.env.apiKey}/stock/?ls=${all?1:0}`;
     const fetchOptions = {
       method: "GET",
       headers: {

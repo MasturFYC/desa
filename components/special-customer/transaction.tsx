@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FormatDate, FormatNumber } from "@lib/format";
 import { useAsyncList } from "@react-stately/data";
-import { env } from 'process';
+
 
 interface transactionDetail {
   id: number;
@@ -49,7 +49,7 @@ export default function CustomerTransaction(props: TransactionProps) {
 
   let transactions = useAsyncList<transactionDetail>({
     async load({ signal }) {
-      let res = await fetch(`${env.apiKey}/customer/special-transaction/${customerId}`, {
+      let res = await fetch(`${process.env.apiKey}/customer/special-transaction/${customerId}`, {
         signal,
       });
       let json = await res.json();
