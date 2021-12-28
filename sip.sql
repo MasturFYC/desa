@@ -2312,41 +2312,6 @@ ALTER SEQUENCE public.lunas_id_seq OWNED BY public.lunas.id;
 
 
 --
--- Name: notes; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.notes (
-    id integer NOT NULL,
-    text character varying NOT NULL,
-    completed boolean NOT NULL
-);
-
-
-ALTER TABLE public.notes OWNER TO postgres;
-
---
--- Name: notes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.notes_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.notes_id_seq OWNER TO postgres;
-
---
--- Name: notes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.notes_id_seq OWNED BY public.notes.id;
-
-
---
 -- Name: order_details; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -2591,6 +2556,41 @@ CREATE TABLE public.stocks (
 ALTER TABLE public.stocks OWNER TO postgres;
 
 --
+-- Name: students; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.students (
+    id integer NOT NULL,
+    name character varying,
+    lastname character varying
+);
+
+
+ALTER TABLE public.students OWNER TO postgres;
+
+--
+-- Name: students_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.students_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.students_id_seq OWNER TO postgres;
+
+--
+-- Name: students_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.students_id_seq OWNED BY public.students.id;
+
+
+--
 -- Name: suppliers; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -2642,6 +2642,43 @@ CREATE TABLE public.units (
 ALTER TABLE public.units OWNER TO postgres;
 
 --
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    email character varying(128) NOT NULL,
+    password character varying(50) NOT NULL,
+    role character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.users_id_seq OWNER TO postgres;
+
+--
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
 -- Name: categories id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -2663,10 +2700,17 @@ ALTER TABLE ONLY public.lunas ALTER COLUMN id SET DEFAULT nextval('public.lunas_
 
 
 --
--- Name: notes id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: students id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.notes ALTER COLUMN id SET DEFAULT nextval('public.notes_id_seq'::regclass);
+ALTER TABLE ONLY public.students ALTER COLUMN id SET DEFAULT nextval('public.students_id_seq'::regclass);
+
+
+--
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
@@ -2697,7 +2741,7 @@ COPY public.customers (id, name, street, city, phone, customer_type) FROM stdin;
 
 COPY public.grass (customer_id, id, descriptions, order_date, total, qty, total_div, lunas_id, partner_id, cost) FROM stdin;
 1	208	Pembelian Rumput Laut	2021-12-16 08:20:00+07	292500.00	150.00	0.00	0	0	0.00
-2	206	Pembelian Rumput Laut	2021-12-15 19:21:00+07	4102500.00	750.00	0.00	0	0	22500.00
+2	206	Pembelian Rumput Laut	2021-12-15 19:21:00+07	3977500.00	750.00	0.00	0	0	147500.00
 \.
 
 
@@ -2707,6 +2751,7 @@ COPY public.grass (customer_id, id, descriptions, order_date, total, qty, total_
 
 COPY public.grass_costs (grass_id, id, memo, qty, price, subtotal, created_at, updated_at, unit) FROM stdin;
 206	84	kopi	15.00	1500.00	22500.00	2021-12-17 00:23:00+07	2021-12-17 00:24:35.395851+07	sch
+206	85	sega goreng	10.00	12500.00	125000.00	2021-12-22 17:17:00+07	2021-12-22 17:19:24.454384+07	bks
 \.
 
 
@@ -2737,14 +2782,6 @@ COPY public.kasbons (id, customer_id, descriptions, kasbon_date, jatuh_tempo, to
 --
 
 COPY public.lunas (id, customer_id, remain_payment, descriptions, created_at, updated_at) FROM stdin;
-\.
-
-
---
--- Data for Name: notes; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.notes (id, text, completed) FROM stdin;
 \.
 
 
@@ -2794,11 +2831,11 @@ COPY public.payments (id, customer_id, descriptions, ref_id, payment_date, total
 --
 
 COPY public.products (id, name, spec, price, stock, first_stock, unit, update_notif, category_id) FROM stdin;
-1	EM 4 Perikanan	1 ltr	30000.00	143.00	100.00	pcs	t	1
 7	Abachel	250cc	10000.00	79.00	90.00	btl	t	1
-15	Pakan Bandeng	Pelet KW1	250000.00	111.00	110.00	zak	t	1
 23	Rumput Laut KW-2	\N	3500.00	650.00	0.00	kg	t	2
 16	Rumput Laut	KW-1	1500.00	-1850.00	0.00	kg	t	2
+1	EM 4 Perikanan test	1 ltr	30000.00	143.00	100.00	pcs	t	1
+15	Pakan Bandeng test	Pelet KW1	250000.00	111.00	110.00	zak	t	1
 \.
 
 
@@ -2877,6 +2914,14 @@ COPY public.stocks (id, supplier_id, stock_num, stock_date, total, cash, payment
 
 
 --
+-- Data for Name: students; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.students (id, name, lastname) FROM stdin;
+\.
+
+
+--
 -- Data for Name: suppliers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -2909,6 +2954,15 @@ COPY public.units (product_id, id, name, content, price, buy_price, margin, is_d
 
 
 --
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.users (id, name, email, password, role) FROM stdin;
+1	Mastur	mastur.st12@gmail.com	t2z00a8y	admin
+\.
+
+
+--
 -- Name: categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -2926,7 +2980,7 @@ SELECT pg_catalog.setval('public.customer_seq', 4, true);
 -- Name: grass_costs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.grass_costs_id_seq', 84, true);
+SELECT pg_catalog.setval('public.grass_costs_id_seq', 85, true);
 
 
 --
@@ -2941,13 +2995,6 @@ SELECT pg_catalog.setval('public.grass_detail_seq', 9, true);
 --
 
 SELECT pg_catalog.setval('public.lunas_id_seq', 104, true);
-
-
---
--- Name: notes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.notes_id_seq', 1, false);
 
 
 --
@@ -2986,10 +3033,24 @@ SELECT pg_catalog.setval('public.seq_supplier', 40, true);
 
 
 --
+-- Name: students_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.students_id_seq', 1, true);
+
+
+--
 -- Name: unit_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.unit_seq', 28, true);
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 1, true);
 
 
 --
@@ -3046,14 +3107,6 @@ ALTER TABLE ONLY public.kasbons
 
 ALTER TABLE ONLY public.lunas
     ADD CONSTRAINT lunas_pkey PRIMARY KEY (id);
-
-
---
--- Name: notes notes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.notes
-    ADD CONSTRAINT notes_pkey PRIMARY KEY (id);
 
 
 --
@@ -3137,6 +3190,14 @@ ALTER TABLE ONLY public.stocks
 
 
 --
+-- Name: students students_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.students
+    ADD CONSTRAINT students_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: suppliers supplier_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -3150,6 +3211,14 @@ ALTER TABLE ONLY public.suppliers
 
 ALTER TABLE ONLY public.units
     ADD CONSTRAINT units_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
 
 --
@@ -3213,13 +3282,6 @@ CREATE INDEX ix_grass_details ON public.grass_details USING btree (grass_id);
 --
 
 CREATE INDEX ix_kasbon_customer ON public.kasbons USING btree (customer_id);
-
-
---
--- Name: ix_notes_id; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX ix_notes_id ON public.notes USING btree (id);
 
 
 --

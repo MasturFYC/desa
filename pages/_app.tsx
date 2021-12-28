@@ -6,7 +6,7 @@ import { SSRProvider } from "@react-aria/ssr";
 import { Provider } from '@react-spectrum/provider'
 import { theme as defaultTheme } from "@react-spectrum/theme-default";
 import { I18nProvider } from '@react-aria/i18n';
-import fetchJson from "@lib/fetch-json";
+import fetchJson from "@lib/fetchJson";
 
 export default function MyApp(props: AppProps) {
   const { Component, pageProps } = props;

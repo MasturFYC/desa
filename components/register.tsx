@@ -1,9 +1,11 @@
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import React from 'react'
-import useUser from '../lib/use-user'
-import fetchJson from '../lib/fetch-json'
+import useUser from '../lib/useUser'
+import fetchJson from '../lib/fetchJson'
 import Layout from './layout'
+import { Button, Flex, Form, TextField, View } from '@adobe/react-spectrum'
+import Link from 'next/link'
 
 const siteTitle = 'Register'
 
@@ -63,7 +65,6 @@ const RegisterComponent = () => {
       <Head>
         <title>{siteTitle}</title>
       </Head>
-    {/*
       <Form onSubmit={handleSubmit}>
         <Flex
           justifySelf="center"
@@ -129,7 +130,6 @@ const RegisterComponent = () => {
           </View>
         </Flex>
       </Form>
-    */}
     </Layout>
   )
 }

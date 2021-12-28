@@ -19,8 +19,6 @@ export interface iUser {
   email: string;
   password: string;
   role: string;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export enum customerType { BANDENG = "Bandeng", RUMPUT = "Rumput Laut", PABRIK = "Pabrik" }
@@ -30,10 +28,11 @@ export const isNullOrEmpty = (s: string | undefined): string | null => {
   if (s.trim().length === 0) return null;
   return s.trim();
 }
+
 export interface iUserLogin {
   userId: number;
   login: string;
-  role: string;
+  role: boolean;
   isLoggedIn: boolean;
   avatarUrl?: string;
 }

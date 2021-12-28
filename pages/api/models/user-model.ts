@@ -1,4 +1,3 @@
-import moment from 'moment';
 import { iUser } from '@components/interfaces'
 import db, { sql } from "../config";
 
@@ -12,10 +11,10 @@ interface apiFunction {
   insert: (data: iUser) => apiReturn;
 }
 
-const apiUser: apiFunction = {
+export const apiUser: apiFunction = {
   getUser: async (email: string, password: string) => {
 
-    const query = sql`SELECT id, name, email, password, role, spbu_id, photo
+    const query = sql`SELECT id, name, email, password, role
       FROM users
       WHERE email = ${email} AND password = ${password}`;
 
@@ -42,9 +41,7 @@ const apiUser: apiFunction = {
       UPDATE users SET
       name = ${p.name},
       email = ${p.email},
-      password = ${p.password},
-      updated_at = to_timestamp(${moment().format()}, 'YYYY-MM-DD HH:MI'),
-      role = ${p.role}
+      password = ${p.password}
       WHERE (email = ${p.email} AND password = ${p.password})
       RETURNING *
     `;
@@ -62,8 +59,8 @@ const apiUser: apiFunction = {
       ) VALUES (
         ${p.name},
         ${p.email},
-        ${p.password},
-        ${p.role}
+        ${p.password}
+        ${'User'}
       )
       RETURNING *
     `;
@@ -74,5 +71,3 @@ const apiUser: apiFunction = {
       .catch((error) => [undefined, error]);
   },
 };
-
-export default apiUser;

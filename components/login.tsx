@@ -1,8 +1,10 @@
 import Head from 'next/head';
 import React, { FormEvent, useState } from 'react';
-import useUser from '@lib/use-user';
-import fetchJson from '@lib/fetch-json';
+import useUser from '@lib/useUser';
+import fetchJson from '@lib/fetchJson';
 import Layout from '@components/layout';
+import { Button, Flex, Form, TextField, View } from '@adobe/react-spectrum';
+import Link from 'next/link';
 
 const siteTitle = 'UserLogin';
 
@@ -45,7 +47,7 @@ const LoginComponent = () => {
       <Head>
         <title>{siteTitle}</title>
       </Head>
-      {/*
+      
       <Form onSubmit={handleSubmit}>
         <Flex
           justifySelf="center"
@@ -90,7 +92,7 @@ const LoginComponent = () => {
                 </Button>
                 <View marginTop="size-300">
                   Jika anda belum punya akun, silahkan{' '}
-                  <Link href="/register">
+                  <Link href="/register" passHref>
                     <a>Register</a>
                   </Link>{' '}
                   dulu.
@@ -100,7 +102,6 @@ const LoginComponent = () => {
           </View>
         </Flex>
       </Form>
-      */}
     </Layout>
   )
 }
