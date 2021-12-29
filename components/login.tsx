@@ -2,7 +2,7 @@ import Head from 'next/head';
 import React, { FormEvent, useState } from 'react';
 import useUser from '@lib/useUser';
 import fetchJson from '@lib/fetchJson';
-import Layout from '@components/layout';
+import Layout from '@components/layout-2';
 import { Button, Flex, Form, TextField, View } from '@adobe/react-spectrum';
 import Link from 'next/link';
 
@@ -80,6 +80,7 @@ const LoginComponent = () => {
                 <TextField
                   aria-label="Username"
                   width="100%"
+                  autoFocus
                   type="text"
                   onChange={(e) => handleChange('email', e)}
                 />

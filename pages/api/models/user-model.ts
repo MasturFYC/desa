@@ -53,17 +53,18 @@ export const apiUser: apiFunction = {
   },
 
   insert: async (p: iUser) => {
-    const query = sql`
-      INSERT INTO users (
+
+    const query = sql`INSERT INTO public.users (
         name, email, password, role
       ) VALUES (
         ${p.name},
         ${p.email},
-        ${p.password}
-        ${'User'}
+        ${p.password},
+        ${p.role}
       )
-      RETURNING *
-    `;
+      RETURNING *`;
+
+//    console.log(query.sql, query.values, query.type)
 
     return await db
       .query(query)

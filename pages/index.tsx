@@ -1,7 +1,7 @@
 import dynamic from "next/dynamic";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
-const Layout = dynamic(() => import("@components/layout"), { ssr: false });
+const Layout = dynamic(() => import("@components/layout-2"), { ssr: false });
 const Logo = dynamic(() => import("@components/logo"), { ssr: false });
 
 export default function Index() {

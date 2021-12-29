@@ -71,7 +71,7 @@ const MainMenu: NextPage<LayoutProps> = (props) => {
 
   return (
     <Flex direction={{ base: "row", M: "row", L: "column" }} wrap={{ base: "wrap", L: "nowrap" }} gap={{ base: "size-25", L: "size-100" }}>
-      {menus && menus.map((x, i) => (
+      {user?.admin && menus && menus.map((x, i) => (
         <View
           isHidden={{ base: i === 0 ? true : false, M: false }}
           key={x.id}
@@ -94,23 +94,24 @@ const MainMenu: NextPage<LayoutProps> = (props) => {
         alignSelf={{ base: "end", L: "self-start" }}
       >
 
-      {!user?.isLoggedIn && (
-        <Link href="/login"><a>Login</a></Link>
-      )}
+        {!user?.isLoggedIn && (
+          <Link href="/login"><a>Login</a></Link>
+        )}
         {user?.isLoggedIn === true && (
-          <a
-            href="/api/logout"
-            onClick={async (e) => {
-              e.preventDefault();
-              mutateUser && mutateUser(
-                await fetchJson(process.env.apiKey + "/logout", { method: "POST" }),
-                false,
-              );
-              router.push("/");
-            }}
-          >
-            Logout{' '} {user.login}!
-          </a>
+          <Link href="/api/logout" passHref>
+            <a
+              onClick={async (e) => {
+                e.preventDefault();
+                mutateUser && mutateUser(
+                  await fetchJson(process.env.apiKey + "/logout", { method: "POST" }),
+                  false,
+                );
+                router.push("/");
+              }}
+            >
+              Logout{' '} {user.login}!
+            </a>
+          </Link>
         )}
       </View>
     </Flex>

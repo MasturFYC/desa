@@ -8,14 +8,13 @@ import { iUserLogin } from "@components/interfaces";
 export default withIronSessionApiRoute(loginRoute, sessionOptions);
 
 async function loginRoute(req: NextApiRequest, res: NextApiResponse) {
-  const { email, password } = await req.body;
-  const result = await apiUser.getUser(email, password);
-  const [data] = result;
+  const { userData } = await req.body;
+  const result = await apiUser.insert(userData);
+  const [data, error] = result;
 
-  console.log(data)
 
   try {
-    const {id, name, role} = data;
+    const { id, name, role } = data;
     const user = { isLoggedIn: true, login: name, userId: id, admin: role === 'admin' } as iUserLogin;
     req.session.user = user;
     await req.session.save();

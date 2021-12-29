@@ -30,13 +30,12 @@ const Layout: NextPage<LayoutProps> = ({
   home,
   activeMenu,
 }) => {
-  const { user, mutateUser } = useUser({
-    redirectTo: '/login',
-    redirectIfFound: false
-  })
 
-
-
+    const { user, mutateUser } = useUser({
+        redirectTo: '',
+        redirectIfFound: false
+      })
+    
   let titleStyle = {
     fontSize: "120%",
     fontWeight: 700,
@@ -104,7 +103,7 @@ const Layout: NextPage<LayoutProps> = ({
 
       <View gridArea="content" backgroundColor="gray-50" height={"100%"}>
         <View paddingX={{ base: "size-75", M: "size-200", L: "size-400" }} marginTop={"size-200"}>
-          {user?.admin && children}
+          {children}
         </View>
       </View>
 

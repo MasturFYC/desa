@@ -8,6 +8,7 @@ import {
 } from 'slonik';
 
 import {
+  ClientConfigurationType,
   InterceptorType,
   PrimitiveValueExpressionType,
   QueryResultRowType,
@@ -82,16 +83,14 @@ type CacheAttributesType = {
   ttl: number;
 };
 
+
 const db: DatabasePoolType = createPool(
   process.env.DATABASE_URL || '',
   {
-    //preferNativeBindings: true,
-    // connectionRetryLimit: 6,
     connectionTimeout: 'DISABLE_TIMEOUT',
     idleInTransactionSessionTimeout: 'DISABLE_TIMEOUT',
     idleTimeout: 'DISABLE_TIMEOUT',
     // maximumPoolSize: 10,
-
     typeParsers: _typeParsers,
     interceptors: _interceptors,
   }
