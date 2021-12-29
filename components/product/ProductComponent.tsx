@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 import React from "react";
 import { useAsyncList } from "@react-stately/data";
 import Layout from "@components/layout";
-import { iProduct, iCategory } from "@components/interfaces";
+import { iProduct, iCategory, iUserLogin } from "@components/interfaces";
 import WaitMe from "@components/ui/wait-me";
 import { View } from "@react-spectrum/view";
 import { NextPage } from "next";
@@ -19,7 +19,8 @@ const ProductInfo  = dynamic(() => import("./productInfo"), {
 
 const siteTitle = "Produk";
 
-const ProductComponent: NextPage = () => {
+
+const ProductComponent: NextPage = ( ) => {
   const { query } = useRouter();
 
   let categories = useAsyncList<iCategory>({

@@ -9,6 +9,7 @@ import { View } from "@react-spectrum/view";
 import MainMenu from "./main-menu";
 import { Flex } from "@react-spectrum/layout";
 import { Footer } from "@react-spectrum/view";
+import useUser from "@lib/useUser";
 export const siteTitle = "SPBU";
 
 const Logo = dynamic(()=> import("./logo"),{ssr:false});
@@ -27,11 +28,15 @@ type LayoutProps = {
 const Layout: NextPage<LayoutProps> = ({
   children,
   home,
-  user,
-  mutateUser,
   activeMenu,
 }) => {
-  const router = useRouter();
+  const { user, mutateUser } = useUser({
+    redirectTo: '/login',
+    redirectIfFound: false
+  })
+
+
+
   let titleStyle = {
     fontSize: "120%",
     fontWeight: 700,
@@ -94,7 +99,7 @@ const Layout: NextPage<LayoutProps> = ({
         borderBottomWidth={{base: "thin", L:undefined}}
         borderBottomColor={"gray-200"}
       >
-        <MainMenu activeMenu={home ? "Home" : activeMenu} />
+        <MainMenu activeMenu={home ? "Home" : activeMenu} user={user} mutateUser={mutateUser} />
       </View>
 
       <View gridArea="content" backgroundColor="gray-50" height={"100%"}>

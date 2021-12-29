@@ -29,10 +29,10 @@ export const isNullOrEmpty = (s: string | undefined): string | null => {
   return s.trim();
 }
 
-export interface iUserLogin {
+export type iUserLogin = {
   userId: number;
   login: string;
-  role: boolean;
+  admin: boolean;
   isLoggedIn: boolean;
   avatarUrl?: string;
 }

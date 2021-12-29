@@ -5,6 +5,8 @@ import React from "react";
 import { iUserLogin } from "@components/interfaces";
 import { View } from "@react-spectrum/view";
 import { Flex } from "@react-spectrum/layout";
+import fetchJson from "@lib/fetchJson";
+import { KeyedMutator } from "swr";
 
 export const siteTitle = "SPBU";
 
@@ -60,23 +62,25 @@ const menus: MenuType[] = [
 type LayoutProps = {
   activeMenu?: string;
   user?: iUserLogin;
+  mutateUser?: KeyedMutator<iUserLogin>
 };
 
 const MainMenu: NextPage<LayoutProps> = (props) => {
-  const { user, activeMenu } = props;
+  const { user, activeMenu, mutateUser } = props;
   const router = useRouter();
+
   return (
-    <Flex direction={{ base: "row", M: "row", L: "column" }} wrap={{base: "wrap", L:"nowrap"}} gap={{base: "size-25", L:"size-100"}}>
+    <Flex direction={{ base: "row", M: "row", L: "column" }} wrap={{ base: "wrap", L: "nowrap" }} gap={{ base: "size-25", L: "size-100" }}>
       {menus && menus.map((x, i) => (
         <View
-          isHidden={{base: i === 0 ? true : false, M:false }}
+          isHidden={{ base: i === 0 ? true : false, M: false }}
           key={x.id}
-          alignSelf={{base: "end", L:"self-start"}}
-          paddingStart={{base: 0, L:"size-100"}}
+          alignSelf={{ base: "end", L: "self-start" }}
+          paddingStart={{ base: 0, L: "size-100" }}
           // backgroundColor={activeMenu === x.name ? "indigo-600" : "transparent"}
           borderStartColor={{ base: "transparent", L: activeMenu === x.name ? "orange-500" : "transparent" }}
           borderStartWidth={{ base: undefined, L: "thicker" }}
-          borderBottomColor={{ base: activeMenu === x.name ? "orange-500" : "transparent",  L: "transparent" }}
+          borderBottomColor={{ base: activeMenu === x.name ? "orange-500" : "transparent", L: "transparent" }}
           borderBottomWidth={{ base: "thick", L: undefined }}
         //borderRadius={"medium"}
         ><Link href={x.link} passHref><a style={{
@@ -85,6 +89,30 @@ const MainMenu: NextPage<LayoutProps> = (props) => {
           // fontWeight: activeMenu === x.name ? 700 : 400,
         }}>{x.name}</a></Link></View>
       ))}
+      <View
+        paddingStart={{ base: 6, L: "size-125" }}
+        alignSelf={{ base: "end", L: "self-start" }}
+      >
+
+      {!user?.isLoggedIn && (
+        <Link href="/login"><a>Login</a></Link>
+      )}
+        {user?.isLoggedIn === true && (
+          <a
+            href="/api/logout"
+            onClick={async (e) => {
+              e.preventDefault();
+              mutateUser && mutateUser(
+                await fetchJson(process.env.apiKey + "/logout", { method: "POST" }),
+                false,
+              );
+              router.push("/");
+            }}
+          >
+            Logout{' '} {user.login}!
+          </a>
+        )}
+      </View>
     </Flex>
   );
 };
